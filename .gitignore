@@ -1,0 +1,45 @@
+# local agent configs
+.agents/
+.codex/
+.impeccable/
+
+# dependencies
+fe/node_modules/
+fe/.pnp
+fe/.pnp.*
+fe/.yarn/*
+!fe/.yarn/patches
+!fe/.yarn/plugins
+!fe/.yarn/releases
+!fe/.yarn/versions
+
+# testing
+fe/coverage
+
+# next.js
+fe/.next/
+fe/out/
+
+# production
+fe/build
+
+# misc
+.DS_Store
+*.pem
+Thumbs.db
+
+# debug
+fe/npm-debug.log*
+fe/yarn-debug.log*
+fe/yarn-error.log*
+fe/.pnpm-debug.log*
+
+# env files
+fe/.env*
+
+# vercel
+fe/.vercel
+
+# typescript
+fe/*.tsbuildinfo
+fe/next-env.d.ts
