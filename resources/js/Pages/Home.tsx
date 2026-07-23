@@ -639,7 +639,7 @@ export default function Home({ servicePillars, latestNews, banners = [], reviews
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
             {/* Left Column: Text & Buttons */}
-            <div className="lg:col-span-7 flex flex-col gap-4 text-center lg:text-left">
+            <div className="lg:col-span-7 flex flex-col gap-6 text-center lg:text-left">
               <h3 className="text-2xl md:text-3xl lg:text-4xl font-extrabold text-white leading-tight">
                 Bảo vệ trái tim của bạn cùng BSCKII Đoàn Khôi
               </h3>
