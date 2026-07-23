@@ -24,6 +24,7 @@ import {
   Lock,
   Search,
   Layers,
+  Tags,
   Check,
   Download,
   UserPlus,
@@ -81,6 +82,7 @@ interface Article {
   id: number;
   slug: string;
   title: string;
+  article_category_id?: number;
   category: string;
   excerpt: string;
   content?: string;
@@ -215,6 +217,14 @@ interface Stats {
   total_faqs: number;
 }
 
+interface ArticleCategory {
+  id: number;
+  name: string;
+  slug: string;
+  order?: number;
+  articles?: Article[];
+}
+
 interface ServicePillar {
   id: number;
   title: string;
@@ -232,6 +242,7 @@ interface Props {
   authors: Author[];
   services: Service[];
   pillars: ServicePillar[];
+  articleCategories: ArticleCategory[];
   reviews: Review[];
   banners: Banner[];
   doctors: Doctor[];
@@ -247,7 +258,7 @@ interface Props {
 
 export default function AdminDashboard(props: Props) {
   const { 
-    appointments, consultations, articles, authors, services, pillars, reviews, 
+    appointments, consultations, articles, authors, services, pillars, articleCategories, reviews, 
     banners, doctors, schedules, faqs, treatmentResults, policies, 
     settings, mediaFiles, stats, auth 
   } = props;
@@ -389,6 +400,7 @@ export default function AdminDashboard(props: Props) {
     title: '',
     author_link: '-- Không liên kết / Tự nhập --',
     author: 'BSCKII Đoàn Khôi',
+    article_category_id: 0,
     category: 'Tăng huyết áp',
     excerpt: '',
     content: '',
@@ -1353,6 +1365,7 @@ export default function AdminDashboard(props: Props) {
       title: '',
       author_link: '-- Không liên kết / Tự nhập --',
       author: 'BSCKII Đoàn Khôi',
+      article_category_id: articleCategories[0]?.id || 0,
       category: 'Tăng huyết áp',
       excerpt: '',
       content: '',
@@ -1374,6 +1387,7 @@ export default function AdminDashboard(props: Props) {
       title: art.title,
       author_link: art.author,
       author: art.author,
+      article_category_id: art.article_category_id || 0,
       category: art.category,
       excerpt: art.excerpt || '',
       content: art.content || '',
@@ -1748,6 +1762,65 @@ export default function AdminDashboard(props: Props) {
     }
   };
 
+  // --- ARTICLE CATEGORIES CRUD ---
+  const [editingArticleCategory, setEditingArticleCategory] = useState<ArticleCategory | null>(null);
+  const [showArticleCategoryModal, setShowArticleCategoryModal] = useState(false);
+  const [articleCategorySearch, setArticleCategorySearch] = useState('');
+
+  const articleCategoryForm = useForm({
+    name: '',
+    order: 0,
+  });
+
+  const handleOpenCreateArticleCategory = () => {
+    setEditingArticleCategory(null);
+    articleCategoryForm.setData({
+      name: '',
+      order: articleCategories.length,
+    });
+    setShowArticleCategoryModal(true);
+  };
+
+  const handleOpenEditArticleCategory = (cat: ArticleCategory) => {
+    setEditingArticleCategory(cat);
+    articleCategoryForm.setData({
+      name: cat.name,
+      order: cat.order || 0,
+    });
+    setShowArticleCategoryModal(true);
+  };
+
+  const handleSaveArticleCategory = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (editingArticleCategory) {
+      articleCategoryForm.put(`/admin/article-categories/${editingArticleCategory.id}`, {
+        onSuccess: () => {
+          setShowArticleCategoryModal(false);
+          setEditingArticleCategory(null);
+          triggerNotification(`Đã cập nhật danh mục "${articleCategoryForm.data.name}" thành công!`);
+        }
+      });
+    } else {
+      articleCategoryForm.post('/admin/article-categories', {
+        onSuccess: () => {
+          setShowArticleCategoryModal(false);
+          articleCategoryForm.reset();
+          triggerNotification(`Đã tạo danh mục mới "${articleCategoryForm.data.name}" thành công!`);
+        }
+      });
+    }
+  };
+
+  const handleDeleteArticleCategory = (cat: ArticleCategory) => {
+    if (confirm(`CẢNH BÁO: Xóa danh mục "${cat.name}" sẽ xóa TOÀN BỘ các bài viết trực thuộc danh mục này! Bạn có chắc chắn muốn xóa không?`)) {
+      router.delete(`/admin/article-categories/${cat.id}`, {
+        onSuccess: () => {
+          triggerNotification(`Đã xóa danh mục "${cat.name}" và tất cả bài viết đi kèm!`);
+        }
+      });
+    }
+  };
+
   const handleExportCSV = () => {
     const csvContent = "data:text/csv;charset=utf-8," 
       + "STT,ID,Benh Nhan,So Dien Thoai,Trang Thai,Ghi Chu Tu Van,Ngay Dang Ky\n"
@@ -1868,6 +1941,11 @@ export default function AdminDashboard(props: Props) {
   // Unique Pillars list
   const uniquePillars = Array.from(new Set(services.map(s => s.pillar_title)));
 
+  // Filtered Article Categories
+  const filteredArticleCategories = articleCategories.filter(cat => {
+    return cat.name.toLowerCase().includes(articleCategorySearch.toLowerCase());
+  });
+
   // Filtered Pillars for the Category list
   const filteredPillars = pillars.filter(p => {
     return p.title.toLowerCase().includes(pillarSearch.toLowerCase()) ||
@@ -1880,12 +1958,13 @@ export default function AdminDashboard(props: Props) {
   const startIndex = (currentPage - 1) * itemsPerPage;
   const paginatedAppointments = filteredAppointments.slice(startIndex, startIndex + itemsPerPage);
 
-  // 16 Sidebar Navigation Items
+  // 17 Sidebar Navigation Items
   const sidebarItems = [
     { id: 'overview', label: 'Tổng quan hệ thống', icon: LayoutDashboard, badge: null },
     { id: 'consultations', label: 'Đăng ký tư vấn', icon: PhoneCall, badge: stats.pending_consultations },
     { id: 'appointments', label: 'Lịch hẹn trực tuyến', icon: CalendarIcon, badge: stats.total_appointments },
-    { id: 'articles', label: 'Bài viết tin tức', icon: BookOpen, badge: null },
+    { id: 'articles', label: 'Bài viết', icon: BookOpen, badge: null },
+    { id: 'articleCategories', label: 'Danh mục bài viết', icon: Tags, badge: articleCategories.length },
     { id: 'authors', label: 'Tác giả bài viết', icon: Users, badge: null },
     { id: 'services', label: 'Dịch vụ', icon: Sparkles, badge: services.length },
     { id: 'pillars', label: 'Danh mục dịch vụ', icon: Layers, badge: pillars.length },
@@ -4414,16 +4493,15 @@ export default function AdminDashboard(props: Props) {
                         DANH MỤC
                       </label>
                       <select
-                        value={articleForm.data.category}
-                        onChange={(e) => articleForm.setData('category', e.target.value)}
+                        value={articleForm.data.article_category_id}
+                        onChange={(e) => articleForm.setData('article_category_id', parseInt(e.target.value))}
                         className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-xs font-bold text-slate-800 outline-none focus:border-[#004b87] cursor-pointer"
                       >
-                        <option value="Tăng huyết áp">Tăng huyết áp</option>
-                        <option value="Kiến thức Y khoa">Kiến thức Y khoa</option>
-                        <option value="Chẩn đoán hình ảnh">Chẩn đoán hình ảnh</option>
-                        <option value="Dinh dưỡng & Lối sống">Dinh dưỡng & Lối sống</option>
-                        <option value="Cấp cứu tim mạch">Cấp cứu tim mạch</option>
-                        <option value="Dược phẩm & Điều trị">Dược phẩm & Điều trị</option>
+                        {articleCategories.map((cat) => (
+                          <option key={cat.id} value={cat.id}>
+                            {cat.name}
+                          </option>
+                        ))}
                       </select>
                     </div>
 
@@ -4524,8 +4602,8 @@ export default function AdminDashboard(props: Props) {
                       className="bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2 text-xs font-bold text-slate-700 outline-none focus:border-[#004b87] cursor-pointer shadow-xs"
                     >
                       <option value="all">Tất cả chuyên mục tin tức</option>
-                      {Array.from(new Set(articles.map(a => a.category))).map((cat, i) => (
-                        <option key={i} value={cat}>{cat}</option>
+                      {articleCategories.map((cat) => (
+                        <option key={cat.id} value={cat.name}>{cat.name}</option>
                       ))}
                     </select>
 
@@ -4768,6 +4846,184 @@ export default function AdminDashboard(props: Props) {
 
             </div>
           )
+        )}
+
+        {/* TAB 4B: QUẢN LÝ DANH MỤC BÀI VIẾT (ARTICLE CATEGORIES) */}
+        {activeTab === 'articleCategories' && (
+          <div className="space-y-6 w-full animate-fadeIn">
+            <div className="flex items-center gap-2 text-xs font-semibold text-slate-400">
+              <Link href="/admin/dashboard" className="hover:text-[#004b87]">Tổng quan</Link>
+              <ChevronRight size={12} />
+              <span className="text-slate-700 font-bold">Danh Mục Bài Viết</span>
+            </div>
+
+            <div className="bg-white border border-slate-200/80 rounded-2xl p-8 shadow-sm space-y-6 w-full">
+              
+              {/* Header Toolbar */}
+              <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 pb-4 border-b border-slate-100">
+                <div>
+                  <h2 className="text-xl font-extrabold text-[#004b87]">Quản Lý Danh Mục Bài Viết</h2>
+                  <p className="text-xs text-slate-500 mt-1">
+                    Quản lý danh mục bài viết cẩm nang y khoa để nhóm các bài đăng tin tức ({filteredArticleCategories.length} danh mục)
+                  </p>
+                </div>
+
+                <div className="flex flex-wrap items-center gap-3 w-full md:w-auto">
+                  <div className="relative flex-1 md:w-64">
+                    <Search size={15} className="absolute left-3.5 top-3 text-slate-400" />
+                    <input
+                      type="text"
+                      placeholder="Tìm danh mục bài viết..."
+                      value={articleCategorySearch}
+                      onChange={(e) => setArticleCategorySearch(e.target.value)}
+                      className="w-full bg-slate-50 border border-slate-200 rounded-xl pl-9 pr-4 py-2 text-xs text-slate-800 outline-none focus:border-[#004b87] focus:bg-white shadow-xs"
+                    />
+                  </div>
+
+                  <button
+                    onClick={handleOpenCreateArticleCategory}
+                    className="flex items-center gap-1.5 bg-[#004b87] hover:bg-[#003866] text-white font-bold text-xs px-4 py-2.5 rounded-xl transition-all cursor-pointer shrink-0 shadow-sm"
+                  >
+                    <Plus size={16} /> Thêm danh mục mới
+                  </button>
+                </div>
+              </div>
+
+              {/* Table */}
+              <div className="overflow-x-auto">
+                <table className="w-full text-left text-xs text-slate-700">
+                  <thead className="bg-slate-50/80 text-slate-400 uppercase font-extrabold tracking-wider border-b border-slate-200">
+                    <tr>
+                      <th className="p-4 w-12 text-center">STT</th>
+                      <th className="p-4">TÊN DANH MỤC</th>
+                      <th className="p-4">ĐƯỜNG DẪN TĨNH (SLUG)</th>
+                      <th className="p-4 text-center">THỨ TỰ HÌNH</th>
+                      <th className="p-4 text-center">SỐ BÀI VIẾT CON</th>
+                      <th className="p-4 text-center">THAO TÁC</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-100">
+                    {filteredArticleCategories.length === 0 ? (
+                      <tr>
+                        <td colSpan={6} className="text-center py-12 text-slate-400 font-medium">
+                          Không tìm thấy danh mục bài viết nào.
+                        </td>
+                      </tr>
+                    ) : (
+                      filteredArticleCategories.map((cat, index) => (
+                        <tr key={cat.id} className="hover:bg-slate-50/70 transition-colors">
+                          <td className="p-4 text-center font-bold text-slate-500 font-mono">
+                            #{index + 1}
+                          </td>
+
+                          <td className="p-4 font-bold text-[#004b87] text-sm">
+                            <span className="hover:underline cursor-pointer" onClick={() => handleOpenEditArticleCategory(cat)}>
+                              {cat.name}
+                            </span>
+                          </td>
+
+                          <td className="p-4 font-mono text-slate-500">
+                            {cat.slug}
+                          </td>
+
+                          <td className="p-4 text-center font-bold font-mono">
+                            {cat.order || 0}
+                          </td>
+
+                          <td className="p-4 text-center">
+                            <span className="px-2.5 py-1 bg-teal-50 text-[#00a896] font-bold border border-teal-150 rounded-lg">
+                              {(articles.filter(a => a.article_category_id === cat.id) || []).length} bài viết
+                            </span>
+                          </td>
+
+                          <td className="p-4 text-center">
+                            <div className="flex items-center justify-center gap-1.5">
+                              <button
+                                onClick={() => handleOpenEditArticleCategory(cat)}
+                                className="p-2 text-slate-400 hover:text-[#004b87] hover:bg-blue-50 rounded-xl transition-all cursor-pointer"
+                                title="Sửa danh mục"
+                              >
+                                <Edit size={16} />
+                              </button>
+                              <button
+                                onClick={() => handleDeleteArticleCategory(cat)}
+                                className="p-2 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-xl transition-all cursor-pointer"
+                                title="Xóa danh mục"
+                              >
+                                <Trash2 size={16} />
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      ))
+                    )}
+                  </tbody>
+                </table>
+              </div>
+
+            </div>
+
+            {/* Modal Edit / Add Article Category */}
+            {showArticleCategoryModal && (
+              <div className="fixed inset-0 bg-black/50 backdrop-blur-xs flex items-center justify-center z-50 p-4 animate-fadeIn">
+                <div className="bg-white rounded-3xl border border-slate-200 shadow-2xl max-w-lg w-full overflow-hidden animate-scaleIn">
+                  <div className="px-6 py-4 bg-slate-50 border-b border-slate-200 flex items-center justify-between">
+                    <h3 className="text-sm font-black text-[#004b87] uppercase tracking-wider">
+                      {editingArticleCategory ? 'Chỉnh Sửa Danh Mục Bài Viết' : 'Thêm Danh Mục Bài Viết Mới'}
+                    </h3>
+                    <button
+                      onClick={() => setShowArticleCategoryModal(false)}
+                      className="p-1.5 hover:bg-slate-200 text-slate-400 hover:text-slate-600 rounded-lg transition-colors cursor-pointer"
+                    >
+                      <X size={18} />
+                    </button>
+                  </div>
+
+                  <form onSubmit={handleSaveArticleCategory} className="p-6 space-y-4 text-xs font-semibold text-slate-700">
+                    <div>
+                      <label className="block text-slate-500 uppercase tracking-wider mb-1.5 font-bold">Tên danh mục *</label>
+                      <input
+                        type="text"
+                        required
+                        placeholder="Ví dụ: Kiến thức Y khoa, Sức khỏe tim mạch..."
+                        value={articleCategoryForm.data.name}
+                        onChange={(e) => articleCategoryForm.setData('name', e.target.value)}
+                        className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-slate-800 outline-none focus:border-[#004b87] focus:bg-white"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-slate-500 uppercase tracking-wider mb-1.5 font-bold">Thứ tự hiển thị</label>
+                      <input
+                        type="number"
+                        min={0}
+                        value={articleCategoryForm.data.order}
+                        onChange={(e) => articleCategoryForm.setData('order', parseInt(e.target.value) || 0)}
+                        className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-slate-800 font-mono outline-none focus:border-[#004b87] focus:bg-white"
+                      />
+                    </div>
+
+                    <div className="pt-4 border-t border-slate-100 flex items-center justify-end gap-2">
+                      <button
+                        type="button"
+                        onClick={() => setShowArticleCategoryModal(false)}
+                        className="px-4 py-2.5 bg-slate-150 hover:bg-slate-200 rounded-xl font-bold cursor-pointer transition-colors text-slate-600"
+                      >
+                        Hủy bỏ
+                      </button>
+                      <button
+                        type="submit"
+                        disabled={articleCategoryForm.processing}
+                        className="px-5 py-2.5 bg-[#004b87] hover:bg-[#003866] text-white font-extrabold rounded-xl shadow-xs cursor-pointer transition-colors"
+                      >
+                        {articleCategoryForm.processing ? 'Đang lưu...' : 'Lưu lại'}
+                      </button>
+                    </div>
+                  </form>
+                </div>
+              </div>
+            )}
+          </div>
         )}
 
         {/* TAB QUẢN LÝ BANNERS (LIST VIEW MỞ RỘNG) */}

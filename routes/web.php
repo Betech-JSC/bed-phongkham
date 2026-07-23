@@ -48,6 +48,9 @@ Route::middleware(['auth', 'verified'])->prefix('admin')->group(function () {
     Route::put('/articles/{article}', [AdminDashboardController::class, 'updateArticle'])->name('admin.articles.update');
     Route::delete('/articles/{article}', [AdminDashboardController::class, 'deleteArticle'])->name('admin.articles.delete');
     Route::post('/articles/batch-action', [AdminDashboardController::class, 'batchUpdateArticles'])->name('admin.articles.batch');
+    Route::post('/article-categories', [AdminDashboardController::class, 'storeArticleCategory'])->name('admin.article-categories.store');
+    Route::put('/article-categories/{category}', [AdminDashboardController::class, 'updateArticleCategory'])->name('admin.article-categories.update');
+    Route::delete('/article-categories/{category}', [AdminDashboardController::class, 'deleteArticleCategory'])->name('admin.article-categories.delete');
 
     // Authors CMS CRUD
     Route::post('/authors', [AdminDashboardController::class, 'storeAuthor'])->name('admin.authors.store');

@@ -10,6 +10,7 @@ use App\Models\Appointment;
 use App\Models\ServicePillar;
 use App\Models\Service;
 use App\Models\Article;
+use App\Models\ArticleCategory;
 use App\Models\SiteSetting;
 use App\Models\Author;
 use App\Models\Review;
@@ -206,6 +207,7 @@ class DashboardController extends Controller
             'authors' => $authors,
             'pillars' => $pillars,
             'services' => $services,
+            'articleCategories' => ArticleCategory::orderBy('order')->get(),
             'reviews' => $reviews,
             'banners' => $banners,
             'doctors' => $doctors,
@@ -724,7 +726,7 @@ class DashboardController extends Controller
     {
         $validated = $request->validate([
             'title' => 'required|string|max:255',
-            'category' => 'required|string|max:255',
+            'article_category_id' => 'required|integer|exists:article_categories,id',
             'author' => 'required|string|max:255',
             'excerpt' => 'nullable|string',
             'content' => 'required|string',
@@ -740,6 +742,9 @@ class DashboardController extends Controller
         $validated['read_time'] = $validated['read_time'] ?? '5 phút đọc';
         $validated['is_published'] = $request->boolean('is_published', true);
 
+        $cat = ArticleCategory::findOrFail($validated['article_category_id']);
+        $validated['category'] = $cat->name;
+
         Article::create($validated);
 
         return back()->with('success', 'Đã xuất bản bài viết cẩm nang y khoa mới!');
@@ -749,7 +754,7 @@ class DashboardController extends Controller
     {
         $validated = $request->validate([
             'title' => 'required|string|max:255',
-            'category' => 'required|string|max:255',
+            'article_category_id' => 'required|integer|exists:article_categories,id',
             'author' => 'required|string|max:255',
             'excerpt' => 'nullable|string',
             'content' => 'required|string',
@@ -764,6 +769,9 @@ class DashboardController extends Controller
         }
         $validated['is_published'] = $request->boolean('is_published', true);
 
+        $cat = ArticleCategory::findOrFail($validated['article_category_id']);
+        $validated['category'] = $cat->name;
+
         $article->update($validated);
 
         return back()->with('success', 'Đã cập nhật bài viết y khoa thành công!');
@@ -774,6 +782,47 @@ class DashboardController extends Controller
         $article->delete();
 
         return back()->with('success', 'Đã xóa bài viết cẩm nang y khoa!');
+    }
+
+    // --- ARTICLE CATEGORY CRUD ---
+    public function storeArticleCategory(Request $request)
+    {
+        $validated = $request->validate([
+            'name' => 'required|string|max:255',
+            'order' => 'nullable|integer',
+        ]);
+
+        $validated['slug'] = Str::slug($validated['name']);
+        $validated['order'] = $validated['order'] ?? 0;
+
+        ArticleCategory::create($validated);
+
+        return back()->with('success', 'Đã tạo mới danh mục bài viết!');
+    }
+
+    public function updateArticleCategory(Request $request, ArticleCategory $category)
+    {
+        $validated = $request->validate([
+            'name' => 'required|string|max:255',
+            'order' => 'nullable|integer',
+        ]);
+
+        $validated['order'] = $validated['order'] ?? 0;
+        $oldName = $category->name;
+        $category->update($validated);
+
+        if ($oldName !== $category->name) {
+            Article::where('article_category_id', $category->id)->update(['category' => $category->name]);
+        }
+
+        return back()->with('success', 'Đã cập nhật danh mục bài viết!');
+    }
+
+    public function deleteArticleCategory(ArticleCategory $category)
+    {
+        $category->delete();
+
+        return back()->with('success', 'Đã xóa danh mục bài viết và tất cả các bài viết trực thuộc!');
     }
 
     public function uploadMedia(Request $request)

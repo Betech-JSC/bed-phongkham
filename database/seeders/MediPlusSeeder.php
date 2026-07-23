@@ -521,6 +521,27 @@ class MediPlusSeeder extends Seeder
         );
 
         // 12. Articles (6 Rich Medical Articles)
+        $categoriesMap = [];
+        $categoriesList = [
+            'Tăng huyết áp',
+            'Kiến thức Y khoa',
+            'Chẩn đoán hình ảnh',
+            'Dinh dưỡng & Lối sống',
+            'Cấp cứu tim mạch',
+            'Dược phẩm & Điều trị'
+        ];
+
+        foreach ($categoriesList as $index => $catName) {
+            $cat = \App\Models\ArticleCategory::updateOrCreate(
+                ['slug' => \Illuminate\Support\Str::slug($catName)],
+                [
+                    'name' => $catName,
+                    'order' => $index + 1
+                ]
+            );
+            $categoriesMap[$catName] = $cat->id;
+        }
+
         $articlesList = [
             [
                 'slug' => '5-dau-hieu-canh-bao-tang-huyet-ap-am-thang',
@@ -597,6 +618,7 @@ class MediPlusSeeder extends Seeder
         ];
 
         foreach ($articlesList as $art) {
+            $art['article_category_id'] = $categoriesMap[$art['category']];
             Article::updateOrCreate(['slug' => $art['slug']], $art);
         }
     }
