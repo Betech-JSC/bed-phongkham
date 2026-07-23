@@ -2007,14 +2007,31 @@ export default function AdminDashboard(props: Props) {
       <aside className="w-72 bg-white border-r border-slate-200/80 flex flex-col shrink-0 min-h-screen shadow-xs">
         
         {/* Brand Header */}
-        <div className="p-6 flex items-center gap-3.5 border-b border-slate-100 bg-gradient-to-r from-blue-50/50 to-emerald-50/30">
-          <div className="w-11 h-11 rounded-2xl bg-gradient-to-tr from-[#004b87] to-[#00a896] text-white font-black flex items-center justify-center text-xl shadow-md">
-            <Sparkles size={24} />
-          </div>
-          <div>
-            <h1 className="text-base font-black tracking-wider text-[#004b87] uppercase">MEDIPLUS HP</h1>
-            <p className="text-[11px] text-[#00a896] font-bold uppercase tracking-widest mt-0.5">MEDICAL CENTRE</p>
-          </div>
+        <div className="p-6 flex items-center gap-3 border-b border-slate-100 bg-gradient-to-r from-blue-50/50 to-emerald-50/30 min-h-[92px] justify-center">
+          {settings.logo_dark ? (
+            <img
+              src={settings.logo_dark}
+              alt="Logo"
+              className="h-11 w-auto max-w-[220px] object-contain"
+              onError={(e) => {
+                (e.target as HTMLImageElement).src = '/assets/logo.png';
+              }}
+            />
+          ) : (
+            <>
+              <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-[#004b87] to-[#00a896] text-white font-black flex items-center justify-center text-xl shadow-md shrink-0">
+                <Sparkles size={20} />
+              </div>
+              <div>
+                <h1 className="text-sm font-black tracking-wider text-[#004b87] uppercase truncate max-w-[150px]">
+                  {settings.site_name || 'MEDIPLUS HP'}
+                </h1>
+                <p className="text-[10px] text-[#00a896] font-bold uppercase tracking-widest mt-0.5">
+                  MEDICAL CENTRE
+                </p>
+              </div>
+            </>
+          )}
         </div>
 
         {/* Navigation items */}
