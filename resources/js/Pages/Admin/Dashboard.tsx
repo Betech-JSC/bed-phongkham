@@ -1246,6 +1246,22 @@ export default function AdminDashboard(props: Props) {
     about_story_img1: settings.about_story_img1 || '/assets/screening_service.png',
     about_story_img2: settings.about_story_img2 || '/assets/telehealth_service.png',
     about_story_img3: settings.about_story_img3 || '/assets/heart_care.png',
+
+    clinic_name: settings.clinic_name || 'Phòng Khám Chuyên Khoa Nội - BSCKII Đoàn Khôi',
+    hotline_1: settings.hotline_1 || '038 432 6785',
+    hotline_1_clean: settings.hotline_1_clean || '0384326785',
+    hotline_2: settings.hotline_2 || '0328 699 799',
+    hotline_2_clean: settings.hotline_2_clean || '0328699799',
+    email: settings.email || 'doankhoiclinic@gmail.com',
+    address: settings.address || '348 Nguyễn Lương Bằng, Lê Thanh Nghị, Hải Phòng',
+    working_hours: settings.working_hours || 'Sáng: 07:30 – 11:30 | Chiều: 13:30 – 18:30 (Thứ 2 - Chủ Nhật)',
+    logo_dark: settings.logo_dark || '',
+    logo_light: settings.logo_light || '',
+    logo_favicon: settings.logo_favicon || '',
+    logo_favicon_light: settings.logo_favicon_light || '',
+    zalo_link: settings.zalo_link || 'https://zalo.me/0384326785',
+    social_facebook: settings.social_facebook || 'https://facebook.com/theq.vn',
+    social_youtube: settings.social_youtube || 'https://youtube.com',
   });
 
   useEffect(() => {
@@ -7452,28 +7468,81 @@ export default function AdminDashboard(props: Props) {
 
             <div className="bg-white border border-slate-200/80 rounded-3xl p-8 shadow-xs space-y-6 text-xs">
               
+              {/* CLINIC NAME */}
+              <div>
+                <label className="block font-black text-slate-700 uppercase tracking-wider mb-1.5">
+                  TÊN PHÒNG KHÁM / TRUNG TÂM TIM MẠCH
+                </label>
+                <input
+                  type="text"
+                  value={settingsData.clinic_name || ''}
+                  onChange={(e) => setSettingsData({ ...settingsData, clinic_name: e.target.value })}
+                  className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3.5 text-xs text-slate-800 outline-none focus:border-[#004b87] focus:bg-white font-bold"
+                />
+              </div>
+
               {/* CONTACT INFO */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <label className="block font-black text-slate-700 uppercase tracking-wider mb-1.5">
-                    SỐ ĐIỆN THOẠI HOTLINE
+                    SỐ ĐIỆN THOẠI HOTLINE CHÍNH
                   </label>
                   <input
                     type="text"
-                    value={settingsData.site_hotline || '19009999'}
-                    onChange={(e) => setSettingsData({ ...settingsData, site_hotline: e.target.value })}
-                    className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3.5 text-xs text-slate-800 outline-none focus:border-[#004b87] focus:bg-white font-bold"
+                    value={settingsData.hotline_1 || ''}
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      setSettingsData({ 
+                        ...settingsData, 
+                        hotline_1: val,
+                        hotline_1_clean: val.replace(/\s+/g, '') 
+                      });
+                    }}
+                    className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3.5 text-xs text-slate-800 outline-none focus:border-[#004b87] focus:bg-white font-bold font-mono"
                   />
                 </div>
 
+                <div>
+                  <label className="block font-black text-slate-700 uppercase tracking-wider mb-1.5">
+                    SỐ ĐIỆN THOẠI HOTLINE PHỤ
+                  </label>
+                  <input
+                    type="text"
+                    value={settingsData.hotline_2 || ''}
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      setSettingsData({ 
+                        ...settingsData, 
+                        hotline_2: val,
+                        hotline_2_clean: val.replace(/\s+/g, '') 
+                      });
+                    }}
+                    className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3.5 text-xs text-slate-800 outline-none focus:border-[#004b87] focus:bg-white font-bold font-mono"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <label className="block font-black text-slate-700 uppercase tracking-wider mb-1.5">
                     EMAIL LIÊN HỆ
                   </label>
                   <input
                     type="email"
-                    value={settingsData.site_email || 'info@theq.vn'}
-                    onChange={(e) => setSettingsData({ ...settingsData, site_email: e.target.value })}
+                    value={settingsData.email || ''}
+                    onChange={(e) => setSettingsData({ ...settingsData, email: e.target.value })}
+                    className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3.5 text-xs text-slate-800 outline-none focus:border-[#004b87] focus:bg-white font-bold"
+                  />
+                </div>
+
+                <div>
+                  <label className="block font-black text-slate-700 uppercase tracking-wider mb-1.5">
+                    GIỜ LÀM VIỆC CHI TIẾT
+                  </label>
+                  <input
+                    type="text"
+                    value={settingsData.working_hours || ''}
+                    onChange={(e) => setSettingsData({ ...settingsData, working_hours: e.target.value })}
                     className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3.5 text-xs text-slate-800 outline-none focus:border-[#004b87] focus:bg-white font-bold"
                   />
                 </div>
@@ -7485,8 +7554,8 @@ export default function AdminDashboard(props: Props) {
                 </label>
                 <input
                   type="text"
-                  value={settingsData.site_address || 'Phường Buôn Ma Thuột, Tỉnh Đắk Lắk'}
-                  onChange={(e) => setSettingsData({ ...settingsData, site_address: e.target.value })}
+                  value={settingsData.address || ''}
+                  onChange={(e) => setSettingsData({ ...settingsData, address: e.target.value })}
                   className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3.5 text-xs text-slate-800 outline-none focus:border-[#004b87] focus:bg-white font-bold"
                 />
               </div>
@@ -7581,7 +7650,7 @@ export default function AdminDashboard(props: Props) {
                     <label className="block font-bold text-slate-600 mb-1">ĐƯỜNG DẪN FACEBOOK</label>
                     <input
                       type="text"
-                      value={settingsData.social_facebook || 'https://facebook.com/theq.vn'}
+                      value={settingsData.social_facebook || ''}
                       onChange={(e) => setSettingsData({ ...settingsData, social_facebook: e.target.value })}
                       className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-xs text-slate-800 outline-none focus:border-[#004b87]"
                     />
@@ -7591,8 +7660,8 @@ export default function AdminDashboard(props: Props) {
                     <label className="block font-bold text-slate-600 mb-1">ĐƯỜNG DẪN ZALO</label>
                     <input
                       type="text"
-                      value={settingsData.social_zalo || 'https://zalo.me/19005006'}
-                      onChange={(e) => setSettingsData({ ...settingsData, social_zalo: e.target.value })}
+                      value={settingsData.zalo_link || ''}
+                      onChange={(e) => setSettingsData({ ...settingsData, zalo_link: e.target.value })}
                       className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-xs text-slate-800 outline-none focus:border-[#004b87]"
                     />
                   </div>
@@ -7601,7 +7670,7 @@ export default function AdminDashboard(props: Props) {
                     <label className="block font-bold text-slate-600 mb-1">KÊNH YOUTUBE</label>
                     <input
                       type="text"
-                      value={settingsData.social_youtube || 'https://youtube.com'}
+                      value={settingsData.social_youtube || ''}
                       onChange={(e) => setSettingsData({ ...settingsData, social_youtube: e.target.value })}
                       className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-xs text-slate-800 outline-none focus:border-[#004b87]"
                     />

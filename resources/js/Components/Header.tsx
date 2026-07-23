@@ -55,7 +55,7 @@ export default function Header() {
             <Link href="/" className="flex items-center gap-3 group">
               <div className="relative w-12 h-12 flex items-center justify-center shrink-0">
                 <img
-                  src="/assets/logo.png"
+                  src={settings.logo_dark || "/assets/logo.png"}
                   alt="Phòng khám BSCKII Đoàn Khôi Logo"
                   width={44}
                   height={44}

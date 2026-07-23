@@ -6,6 +6,8 @@
 
         <title inertia>Phòng Khám Chuyên Khoa Nội - BSCKII Đoàn Khôi</title>
 
+        <link rel="icon" type="image/x-icon" href="{{ \App\Models\SiteSetting::where('key', 'logo_favicon')->value('value') ?: '/favicon.ico' }}">
+
         <!-- Google Fonts: Inter -->
         <link rel="preconnect" href="https://fonts.googleapis.com">
         <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
