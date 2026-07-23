@@ -58,6 +58,47 @@ export default function Footer() {
               <ShieldCheck size={16} className="text-secondary" />
               <span>Đạt tiêu chuẩn chất lượng Sở Y tế Hải Phòng</span>
             </div>
+
+            {/* Social Media Links */}
+            <div className="flex items-center gap-2.5 mt-4">
+              {settings.social_facebook && (
+                <a
+                  href={settings.social_facebook}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="w-9 h-9 rounded-full bg-slate-100 hover:bg-[#1877f2] text-slate-500 hover:text-white flex items-center justify-center transition-all shadow-xs border border-slate-200/50 hover:scale-105"
+                  aria-label="Facebook"
+                >
+                  <svg className="w-4 h-4 fill-current" viewBox="0 0 24 24">
+                    <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
+                  </svg>
+                </a>
+              )}
+              {settings.zalo_link && (
+                <a
+                  href={settings.zalo_link}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="w-9 h-9 rounded-full bg-slate-100 hover:bg-[#0068ff] text-slate-500 hover:text-white flex items-center justify-center transition-all shadow-xs border border-slate-200/50 hover:scale-105"
+                  aria-label="Zalo"
+                >
+                  <span className="text-[10px] font-black uppercase tracking-tighter">Zalo</span>
+                </a>
+              )}
+              {settings.social_youtube && (
+                <a
+                  href={settings.social_youtube}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="w-9 h-9 rounded-full bg-slate-100 hover:bg-[#ff0000] text-slate-500 hover:text-white flex items-center justify-center transition-all shadow-xs border border-slate-200/50 hover:scale-105"
+                  aria-label="Youtube"
+                >
+                  <svg className="w-4 h-4 fill-current" viewBox="0 0 24 24">
+                    <path d="M23.498 6.163a3.003 3.003 0 0 0-2.11-2.11C19.518 3.545 12 3.545 12 3.545s-7.518 0-9.388.507a3.003 3.003 0 0 0-2.11 2.11C0 8.033 0 12 0 12s0 3.967.502 5.837a3.003 3.003 0 0 0 2.11 2.11c1.87.508 9.388.508 9.388.508s7.518 0 9.388-.508a3.003 3.003 0 0 0 2.11-2.11C24 15.967 24 12 24 12s0-3.967-.502-5.837zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/>
+                  </svg>
+                </a>
+              )}
+            </div>
           </div>
 
           {/* Column 2: Quick Links */}
