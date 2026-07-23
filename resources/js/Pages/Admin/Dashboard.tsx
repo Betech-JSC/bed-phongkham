@@ -20,6 +20,8 @@ import {
   Wrench,
   LogOut,
   Plus,
+  Copy,
+  Lock,
   Search,
   Check,
   Download,
@@ -2349,7 +2351,7 @@ export default function AdminDashboard(props: Props) {
                 <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-extrabold ${
                   capacityPercent > 80 ? 'bg-rose-100 text-rose-800' : capacityPercent > 50 ? 'bg-amber-100 text-amber-800' : 'bg-emerald-100 text-emerald-800'
                 }`}>
-                  {capacityPercent > 80 ? '🔴 Quá tải' : capacityPercent > 50 ? '🟡 Đông khách' : '🟢 Bình thường'}
+                  {capacityPercent > 80 ? 'Quá tải' : capacityPercent > 50 ? 'Đông khách' : 'Bình thường'}
                 </span>
               </div>
             </div>
@@ -2672,9 +2674,17 @@ export default function AdminDashboard(props: Props) {
                         <button
                           type="button"
                           onClick={() => setIsManualServiceSlug(!isManualServiceSlug)}
-                          className="px-2.5 py-1 bg-blue-50 hover:bg-blue-100 text-[#004b87] font-bold rounded-lg cursor-pointer shrink-0 ml-2 border border-blue-200 transition-all"
+                          className="px-2.5 py-1 bg-blue-50 hover:bg-blue-100 text-[#004b87] font-bold rounded-lg cursor-pointer shrink-0 ml-2 border border-blue-200 transition-all flex items-center gap-1"
                         >
-                          {isManualServiceSlug ? '🔒 Khóa Slug' : '✏️ Chỉnh Slug URL'}
+                          {isManualServiceSlug ? (
+                            <>
+                              <Lock size={11} /> Khóa Slug
+                            </>
+                          ) : (
+                            <>
+                              <Edit size={11} /> Chỉnh Slug URL
+                            </>
+                          )}
                         </button>
                       </div>
 
@@ -3175,27 +3185,53 @@ export default function AdminDashboard(props: Props) {
                   </div>
 
                   {/* 2. ẢNH ĐẠI DIỆN GÓI DỊCH VỤ (FEATURED IMAGE PICKER) */}
-                  <div className="bg-white p-6 rounded-2xl border border-slate-200/80 shadow-xs space-y-4">
-                    <h3 className="text-xs font-black text-slate-700 uppercase tracking-wider border-b border-slate-100 pb-3">
+                  <div className="bg-white p-6 rounded-3xl border border-slate-200/80 shadow-xs space-y-4 text-xs">
+                    <label className="block font-black text-slate-700 uppercase tracking-wider border-b border-slate-100 pb-2">
                       ẢNH ĐẠI DIỆN DỊCH VỤ
-                    </h3>
+                    </label>
 
-                    <div className="relative rounded-2xl overflow-hidden bg-slate-100 aspect-video border border-slate-200 flex items-center justify-center">
-                      <img
-                        src={serviceForm.data.image || '/assets/screening_service.png'}
-                        alt="Ảnh dịch vụ"
-                        className="w-full h-full object-cover"
-                        onError={(e) => { (e.target as HTMLImageElement).src = '/assets/screening_service.png'; }}
-                      />
-                    </div>
+                    {serviceForm.data.image ? (
+                      <div className="relative rounded-3xl overflow-hidden border border-slate-200 group bg-slate-900 aspect-video flex items-center justify-center shadow-xs">
+                        <img
+                          src={serviceForm.data.image}
+                          alt="Ảnh dịch vụ"
+                          className="w-full h-full object-cover opacity-90 group-hover:opacity-75 transition-opacity"
+                          onError={(e) => { (e.target as HTMLImageElement).src = '/assets/screening_service.png'; }}
+                        />
+                        
+                        {/* Center 'Thay đổi ảnh' Black Button */}
+                        <div className="absolute inset-0 flex items-center justify-center">
+                          <button
+                            type="button"
+                            onClick={() => handleOpenMediaPicker('service_featured')}
+                            className="px-5 py-2.5 bg-black/85 hover:bg-black text-white font-extrabold rounded-2xl text-xs shadow-lg cursor-pointer transition-all flex items-center gap-1.5 backdrop-blur-xs hover:scale-105"
+                          >
+                            Thay đổi ảnh
+                          </button>
+                        </div>
 
-                    <button
-                      type="button"
-                      onClick={() => handleOpenMediaPicker('service_featured')}
-                      className="w-full py-2.5 bg-blue-50 hover:bg-blue-100 text-[#004b87] border border-blue-200 font-bold text-xs rounded-xl transition-all cursor-pointer flex items-center justify-center gap-2"
-                    >
-                      <ImageIcon size={15} /> Chọn ảnh từ Thư viện Tệp
-                    </button>
+                        {/* Top-Right Circular Red Trash Button */}
+                        <button
+                          type="button"
+                          onClick={() => serviceForm.setData('image', '')}
+                          className="absolute top-3 right-3 w-8 h-8 rounded-full bg-rose-600 hover:bg-rose-700 text-white flex items-center justify-center shadow-md cursor-pointer transition-transform hover:scale-110"
+                          title="Xóa hình ảnh dịch vụ"
+                        >
+                          <Trash2 size={15} />
+                        </button>
+                      </div>
+                    ) : (
+                      <div
+                        onClick={() => handleOpenMediaPicker('service_featured')}
+                        className="rounded-3xl border-2 border-dashed border-slate-300 hover:border-[#004b87] bg-slate-50 hover:bg-blue-50/50 aspect-video flex flex-col items-center justify-center text-center p-4 cursor-pointer transition-all group"
+                      >
+                        <div className="w-12 h-12 rounded-2xl bg-white text-[#004b87] shadow-xs flex items-center justify-center mb-2 group-hover:scale-110 transition-transform">
+                          <FolderOpen size={24} />
+                        </div>
+                        <p className="font-extrabold text-[#004b87] text-xs">Bấm Để Chọn Ảnh Đại Diện</p>
+                        <p className="text-[11px] text-slate-400 mt-0.5">Tải tệp từ máy tính (Kéo & thả) hoặc từ Quản lý tệp</p>
+                      </div>
+                    )}
                   </div>
 
                   {/* 3. CẤU HÌNH SEO META */}
@@ -3326,21 +3362,21 @@ export default function AdminDashboard(props: Props) {
                     <div className="flex items-center gap-2">
                       <button
                         onClick={() => handleBatchServiceAction('feature')}
-                        className="px-3 py-1.5 bg-amber-500 hover:bg-amber-600 text-white font-bold rounded-lg cursor-pointer transition-all shadow-xs"
+                        className="px-3 py-1.5 bg-amber-500 hover:bg-amber-600 text-white font-bold rounded-lg cursor-pointer transition-all shadow-xs flex items-center gap-1"
                       >
-                        ⭐ Bật nổi bật
+                        <Star size={13} className="fill-white" /> Bật nổi bật
                       </button>
                       <button
                         onClick={() => handleBatchServiceAction('unfeature')}
-                        className="px-3 py-1.5 bg-slate-600 hover:bg-slate-700 text-white font-bold rounded-lg cursor-pointer transition-all shadow-xs"
+                        className="px-3 py-1.5 bg-slate-600 hover:bg-slate-700 text-white font-bold rounded-lg cursor-pointer transition-all shadow-xs flex items-center gap-1"
                       >
-                        ⚪ Tắt nổi bật
+                        <Star size={13} className="text-slate-300" /> Tắt nổi bật
                       </button>
                       <button
                         onClick={() => handleBatchServiceAction('delete')}
-                        className="px-3 py-1.5 bg-rose-600 hover:bg-rose-700 text-white font-bold rounded-lg cursor-pointer transition-all shadow-xs"
+                        className="px-3 py-1.5 bg-rose-600 hover:bg-rose-700 text-white font-bold rounded-lg cursor-pointer transition-all shadow-xs flex items-center gap-1"
                       >
-                        🗑️ Xóa hàng loạt
+                        <Trash2 size={13} /> Xóa hàng loạt
                       </button>
                     </div>
                   </div>
@@ -3425,7 +3461,9 @@ export default function AdminDashboard(props: Props) {
                             <td className="p-4 font-black text-slate-900 text-sm font-mono">
                               <div>{service.price}</div>
                               {service.estimated_time && (
-                                <div className="text-[11px] text-slate-400 font-normal mt-0.5">⏱ {service.estimated_time}</div>
+                                <div className="text-[11px] text-slate-400 font-normal mt-0.5 flex items-center gap-1">
+                                  <Clock size={11} /> {service.estimated_time}
+                                </div>
                               )}
                             </td>
 
@@ -3549,9 +3587,17 @@ export default function AdminDashboard(props: Props) {
                         <button
                           type="button"
                           onClick={() => setIsManualSlug(!isManualSlug)}
-                          className="px-2.5 py-1 bg-blue-50 hover:bg-blue-100 text-[#004b87] font-bold rounded-lg cursor-pointer shrink-0 ml-2 border border-blue-200 transition-all"
+                          className="px-2.5 py-1 bg-blue-50 hover:bg-blue-100 text-[#004b87] font-bold rounded-lg cursor-pointer shrink-0 ml-2 border border-blue-200 transition-all flex items-center gap-1"
                         >
-                          {isManualSlug ? '🔒 Khóa Slug' : '✏️ Chỉnh Slug URL'}
+                          {isManualSlug ? (
+                            <>
+                              <Lock size={11} /> Khóa Slug
+                            </>
+                          ) : (
+                            <>
+                              <Edit size={11} /> Chỉnh Slug URL
+                            </>
+                          )}
                         </button>
                       </div>
 
@@ -4177,24 +4223,26 @@ export default function AdminDashboard(props: Props) {
                     <button
                       type="button"
                       onClick={() => setArticleStatusTab('published')}
-                      className={`px-3.5 py-1.5 rounded-lg transition-all cursor-pointer ${
+                      className={`px-3.5 py-1.5 rounded-lg transition-all cursor-pointer flex items-center gap-1.5 ${
                         articleStatusTab === 'published'
                           ? 'bg-emerald-600 text-white shadow-xs'
                           : 'text-slate-600 hover:bg-slate-200'
                       }`}
                     >
-                      🟢 Đã xuất bản ({articles.filter(a => a.is_published !== false).length})
+                      <span className={`w-2 h-2 rounded-full ${articleStatusTab === 'published' ? 'bg-white' : 'bg-emerald-500'}`} />
+                      Đã xuất bản ({articles.filter(a => a.is_published !== false).length})
                     </button>
                     <button
                       type="button"
                       onClick={() => setArticleStatusTab('draft')}
-                      className={`px-3.5 py-1.5 rounded-lg transition-all cursor-pointer ${
+                      className={`px-3.5 py-1.5 rounded-lg transition-all cursor-pointer flex items-center gap-1.5 ${
                         articleStatusTab === 'draft'
                           ? 'bg-amber-600 text-white shadow-xs'
                           : 'text-slate-600 hover:bg-slate-200'
                       }`}
                     >
-                      🟡 Tạm ẩn ({articles.filter(a => a.is_published === false).length})
+                      <span className={`w-2 h-2 rounded-full ${articleStatusTab === 'draft' ? 'bg-white' : 'bg-amber-500'}`} />
+                      Tạm ẩn ({articles.filter(a => a.is_published === false).length})
                     </button>
                   </div>
                 </div>
@@ -4215,21 +4263,21 @@ export default function AdminDashboard(props: Props) {
                         onClick={() => handleBatchArticleAction('publish')}
                         className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl shadow-xs cursor-pointer flex items-center gap-1.5 transition-all"
                       >
-                        👁️ Chuyển sang Hiển thị
+                        <Eye size={13} /> Chuyển sang Hiển thị
                       </button>
                       <button
                         type="button"
                         onClick={() => handleBatchArticleAction('hide')}
                         className="px-4 py-2 bg-amber-600 hover:bg-amber-700 text-white rounded-xl shadow-xs cursor-pointer flex items-center gap-1.5 transition-all"
                       >
-                        🙈 Chuyển sang Tạm ẩn
+                        <Eye size={13} className="opacity-50" /> Chuyển sang Tạm ẩn
                       </button>
                       <button
                         type="button"
                         onClick={() => handleBatchArticleAction('delete')}
                         className="px-4 py-2 bg-rose-600 hover:bg-rose-700 text-white rounded-xl shadow-xs cursor-pointer flex items-center gap-1.5 transition-all"
                       >
-                        🗑️ Xóa hàng loạt bài đã chọn
+                        <Trash2 size={13} /> Xóa hàng loạt bài đã chọn
                       </button>
                     </div>
                   </div>
@@ -4337,12 +4385,12 @@ export default function AdminDashboard(props: Props) {
 
                             <td className="p-4 text-center">
                               {art.is_published !== false ? (
-                                <span className="px-2.5 py-1 bg-emerald-50 text-emerald-700 font-bold rounded-lg text-[11px] border border-emerald-200">
-                                  🟢 Hiển thị
+                                <span className="inline-flex items-center gap-1 px-2.5 py-1 bg-emerald-50 text-emerald-700 font-bold rounded-lg text-[11px] border border-emerald-200">
+                                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" /> Hiển thị
                                 </span>
                               ) : (
-                                <span className="px-2.5 py-1 bg-amber-50 text-amber-700 font-bold rounded-lg text-[11px] border border-amber-200">
-                                  🟡 Tạm ẩn
+                                <span className="inline-flex items-center gap-1 px-2.5 py-1 bg-amber-50 text-amber-700 font-bold rounded-lg text-[11px] border border-amber-200">
+                                  <span className="w-1.5 h-1.5 rounded-full bg-amber-500" /> Tạm ẩn
                                 </span>
                               )}
                             </td>
@@ -4445,24 +4493,26 @@ export default function AdminDashboard(props: Props) {
                   <button
                     type="button"
                     onClick={() => setBannerStatusTab('active')}
-                    className={`px-3.5 py-1.5 rounded-lg transition-all cursor-pointer ${
+                    className={`px-3.5 py-1.5 rounded-lg transition-all cursor-pointer flex items-center gap-1.5 ${
                       bannerStatusTab === 'active'
                         ? 'bg-emerald-600 text-white shadow-xs'
                         : 'text-slate-600 hover:bg-slate-200'
                     }`}
                   >
-                    🟢 Kích Hoạt ({banners.filter(b => b.is_active !== false).length})
+                    <span className={`w-2 h-2 rounded-full ${bannerStatusTab === 'active' ? 'bg-white' : 'bg-emerald-500'}`} />
+                    Kích Hoạt ({banners.filter(b => b.is_active !== false).length})
                   </button>
                   <button
                     type="button"
                     onClick={() => setBannerStatusTab('inactive')}
-                    className={`px-3.5 py-1.5 rounded-lg transition-all cursor-pointer ${
+                    className={`px-3.5 py-1.5 rounded-lg transition-all cursor-pointer flex items-center gap-1.5 ${
                       bannerStatusTab === 'inactive'
                         ? 'bg-rose-600 text-white shadow-xs'
                         : 'text-slate-600 hover:bg-slate-200'
                     }`}
                   >
-                    🔴 Tạm Ẩn ({banners.filter(b => b.is_active === false).length})
+                    <span className={`w-2 h-2 rounded-full ${bannerStatusTab === 'inactive' ? 'bg-white' : 'bg-rose-500'}`} />
+                    Tạm Ẩn ({banners.filter(b => b.is_active === false).length})
                   </button>
                 </div>
               </div>
@@ -4483,21 +4533,21 @@ export default function AdminDashboard(props: Props) {
                       onClick={() => handleBatchBannerAction('activate')}
                       className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl shadow-xs cursor-pointer flex items-center gap-1.5 transition-all"
                     >
-                      🟢 Kích Hoạt Hàng Loạt
+                      <CheckCircle2 size={13} /> Kích Hoạt Hàng Loạt
                     </button>
                     <button
                       type="button"
                       onClick={() => handleBatchBannerAction('deactivate')}
                       className="px-4 py-2 bg-amber-600 hover:bg-amber-700 text-white rounded-xl shadow-xs cursor-pointer flex items-center gap-1.5 transition-all"
                     >
-                      🔴 Tạm Ẩn Hàng Loạt
+                      <AlertCircle size={13} /> Tạm Ẩn Hàng Loạt
                     </button>
                     <button
                       type="button"
                       onClick={() => handleBatchBannerAction('delete')}
                       className="px-4 py-2 bg-rose-600 hover:bg-rose-700 text-white rounded-xl shadow-xs cursor-pointer flex items-center gap-1.5 transition-all"
                     >
-                      🗑️ Xóa Hàng Loạt
+                      <Trash2 size={13} /> Xóa Hàng Loạt
                     </button>
                   </div>
                 </div>
@@ -4629,14 +4679,14 @@ export default function AdminDashboard(props: Props) {
                             </span>
                           </td>
 
-                          <td className="p-4 text-center">
+                           <td className="p-4 text-center">
                             {b.is_active !== false ? (
                               <span className="inline-flex items-center gap-1 px-3 py-1 bg-emerald-50 text-emerald-700 font-extrabold rounded-full text-xs border border-emerald-200">
-                                🟢 Kích hoạt
+                                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" /> Kích hoạt
                               </span>
                             ) : (
                               <span className="inline-flex items-center gap-1 px-3 py-1 bg-rose-50 text-rose-700 font-extrabold rounded-full text-xs border border-rose-200">
-                                🔴 Tạm ẩn
+                                <span className="w-1.5 h-1.5 rounded-full bg-rose-500" /> Tạm ẩn
                               </span>
                             )}
                           </td>
@@ -4653,7 +4703,7 @@ export default function AdminDashboard(props: Props) {
                                     : 'bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-100'
                                 }`}
                               >
-                                {b.is_active !== false ? '🔴 Ẩn' : '🟢 Hiện'}
+                                {b.is_active !== false ? 'Ẩn' : 'Hiện'}
                               </button>
 
                               {/* EDIT BUTTON */}
@@ -4954,25 +5004,36 @@ export default function AdminDashboard(props: Props) {
                           alt={doctorForm.data.name}
                           className="w-full h-full object-cover opacity-90 group-hover:opacity-75 transition-opacity"
                         />
+                        {/* Center 'Thay đổi ảnh' Black Button */}
                         <div className="absolute inset-0 flex items-center justify-center">
                           <button
                             type="button"
                             onClick={() => handleOpenMediaPicker('doctor_avatar')}
-                            className="px-5 py-2.5 bg-black/85 hover:bg-black text-white font-extrabold rounded-2xl text-xs shadow-lg cursor-pointer transition-all flex items-center gap-1.5"
+                            className="px-5 py-2.5 bg-black/85 hover:bg-black text-white font-extrabold rounded-2xl text-xs shadow-lg cursor-pointer transition-all flex items-center gap-1.5 backdrop-blur-xs hover:scale-105"
                           >
-                            📁 Đổi ảnh bác sĩ
+                            Thay đổi ảnh
                           </button>
                         </div>
+                        {/* Top-Right Circular Red Trash Button for Doctor Avatar */}
+                        <button
+                          type="button"
+                          onClick={() => doctorForm.setData('avatar', '')}
+                          className="absolute top-3 right-3 w-8 h-8 rounded-full bg-rose-600 hover:bg-rose-700 text-white flex items-center justify-center shadow-md cursor-pointer transition-transform hover:scale-110 z-10"
+                          title="Xóa hình ảnh bác sĩ"
+                        >
+                          <Trash2 size={15} />
+                        </button>
                       </div>
                     ) : (
                       <div
                         onClick={() => handleOpenMediaPicker('doctor_avatar')}
                         className="rounded-3xl border-2 border-dashed border-slate-300 hover:border-[#004b87] bg-slate-50 hover:bg-blue-50/50 h-48 flex flex-col items-center justify-center text-center p-4 cursor-pointer transition-all group"
                       >
-                        <div className="w-12 h-12 rounded-2xl bg-white text-[#004b87] shadow-xs flex items-center justify-center mb-2">
+                        <div className="w-12 h-12 rounded-2xl bg-white text-[#004b87] shadow-xs flex items-center justify-center mb-2 group-hover:scale-110 transition-transform">
                           <FolderOpen size={24} />
                         </div>
                         <p className="font-extrabold text-[#004b87] text-xs">Bấm Để Chọn Ảnh Đại Diện</p>
+                        <p className="text-[11px] text-slate-400 mt-0.5">Tải tệp từ máy tính (Kéo & thả) hoặc từ Quản lý tệp</p>
                       </div>
                     )}
                   </div>
@@ -5016,9 +5077,10 @@ export default function AdminDashboard(props: Props) {
                     <button
                       type="button"
                       onClick={() => setDoctorStatusTab('featured')}
-                      className={`px-3.5 py-1.5 rounded-lg transition-all cursor-pointer ${doctorStatusTab === 'featured' ? 'bg-amber-600 text-white shadow-xs' : 'text-slate-600 hover:bg-slate-200'}`}
+                      className={`px-3.5 py-1.5 rounded-lg transition-all cursor-pointer flex items-center gap-1.5 ${doctorStatusTab === 'featured' ? 'bg-amber-600 text-white shadow-xs' : 'text-slate-600 hover:bg-slate-200'}`}
                     >
-                      ⭐ Bác sĩ Nổi bật ({doctors.filter(d => d.is_featured !== false).length})
+                      <Star size={13} className={doctorStatusTab === 'featured' ? 'fill-white' : 'fill-amber-500 text-amber-500'} />
+                      Bác sĩ Nổi bật ({doctors.filter(d => d.is_featured !== false).length})
                     </button>
                     <button
                       type="button"
@@ -5041,9 +5103,9 @@ export default function AdminDashboard(props: Props) {
                     </div>
 
                     <div className="flex items-center gap-2">
-                      <button type="button" onClick={() => handleBatchDoctorAction('feature')} className="px-4 py-2 bg-amber-500 hover:bg-amber-600 text-white rounded-xl shadow-xs cursor-pointer">⭐ Bật Nổi bật</button>
-                      <button type="button" onClick={() => handleBatchDoctorAction('unfeature')} className="px-4 py-2 bg-slate-600 hover:bg-slate-700 text-white rounded-xl shadow-xs cursor-pointer">Tắt Nổi bật</button>
-                      <button type="button" onClick={() => handleBatchDoctorAction('delete')} className="px-4 py-2 bg-rose-600 hover:bg-rose-700 text-white rounded-xl shadow-xs cursor-pointer">🗑️ Xóa hàng loạt</button>
+                      <button type="button" onClick={() => handleBatchDoctorAction('feature')} className="px-4 py-2 bg-amber-500 hover:bg-amber-600 text-white rounded-xl shadow-xs cursor-pointer flex items-center gap-1"><Star size={13} className="fill-white" /> Bật Nổi bật</button>
+                      <button type="button" onClick={() => handleBatchDoctorAction('unfeature')} className="px-4 py-2 bg-slate-600 hover:bg-slate-700 text-white rounded-xl shadow-xs cursor-pointer flex items-center gap-1"><Star size={13} className="text-slate-300" /> Tắt Nổi bật</button>
+                      <button type="button" onClick={() => handleBatchDoctorAction('delete')} className="px-4 py-2 bg-rose-600 hover:bg-rose-700 text-white rounded-xl shadow-xs cursor-pointer flex items-center gap-1"><Trash2 size={13} /> Xóa hàng loạt</button>
                     </div>
                   </div>
                 )}
@@ -5138,7 +5200,7 @@ export default function AdminDashboard(props: Props) {
                             <td className="p-4 text-center">
                               {doc.is_featured !== false ? (
                                 <span className="inline-flex items-center gap-1 px-3 py-1 bg-amber-50 text-amber-700 font-extrabold rounded-full text-xs border border-amber-200">
-                                  ⭐ Nổi bật
+                                  <Star size={12} className="fill-amber-500 text-amber-500" /> Nổi bật
                                 </span>
                               ) : (
                                 <span className="inline-flex items-center gap-1 px-3 py-1 bg-slate-100 text-slate-600 font-extrabold rounded-full text-xs border border-slate-200">
@@ -5435,34 +5497,104 @@ export default function AdminDashboard(props: Props) {
                       HÌNH ÁNH LÂM SÀNG TRƯỚC & SAU (BEFORE / AFTER)
                     </label>
 
-                    <div className="space-y-3">
-                      <div>
-                        <span className="block font-bold text-slate-600 mb-1">Ảnh trước điều trị (Before):</span>
-                        <div className="flex items-center gap-3">
-                          <img src={resultForm.data.before_image} alt="Before" className="w-14 h-14 rounded-xl object-cover border border-slate-200" />
-                          <button
-                            type="button"
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      
+                      {/* Before Image Card */}
+                      <div className="space-y-2">
+                        <span className="block font-bold text-slate-500 text-[10px] uppercase tracking-wider">
+                          Trước điều trị (Before)
+                        </span>
+                        
+                        {resultForm.data.before_image ? (
+                          <div className="relative rounded-2xl overflow-hidden border border-slate-200 bg-slate-950 h-36 flex items-center justify-center group shadow-xs">
+                            <img
+                              src={resultForm.data.before_image}
+                              alt="Before Treatment"
+                              className="w-full h-full object-cover opacity-90 group-hover:opacity-75 transition-all duration-300"
+                              onError={(e) => { (e.target as HTMLImageElement).src = '/assets/screening_service.png'; }}
+                            />
+                            {/* Hover Overlay */}
+                            <div className="absolute inset-0 flex items-center justify-center">
+                              <button
+                                type="button"
+                                onClick={() => handleOpenMediaPicker('result_before')}
+                                className="px-4 py-2 bg-black/85 hover:bg-black text-white font-extrabold rounded-xl text-[11px] shadow-md cursor-pointer transition-all hover:scale-105"
+                              >
+                                Thay đổi ảnh
+                              </button>
+                            </div>
+                            {/* Delete Button */}
+                            <button
+                              type="button"
+                              onClick={() => resultForm.setData('before_image', '')}
+                              className="absolute top-2 right-2 w-7 h-7 rounded-full bg-rose-600 hover:bg-rose-700 text-white flex items-center justify-center shadow-md cursor-pointer transition-transform hover:scale-110 z-10"
+                              title="Xóa hình ảnh Before"
+                            >
+                              <Trash2 size={13} />
+                            </button>
+                          </div>
+                        ) : (
+                          <div
                             onClick={() => handleOpenMediaPicker('result_before')}
-                            className="px-3 py-1.5 bg-blue-50 text-[#004b87] font-bold rounded-xl text-xs border border-blue-200 cursor-pointer"
+                            className="rounded-2xl border-2 border-dashed border-slate-200 hover:border-[#004b87] bg-slate-50 hover:bg-blue-50/30 h-36 flex flex-col items-center justify-center text-center p-3 cursor-pointer transition-all group"
                           >
-                            📁 Chọn ảnh Before
-                          </button>
-                        </div>
+                            <div className="w-10 h-10 rounded-xl bg-white text-blue-600 shadow-3xs flex items-center justify-center mb-1.5 group-hover:scale-110 transition-transform">
+                              <FolderOpen size={20} />
+                            </div>
+                            <p className="font-extrabold text-blue-600 text-[11px]">Chọn ảnh Before</p>
+                            <p className="text-[9px] text-slate-400 mt-0.5">Tải lên từ thiết bị hoặc quản lý tệp</p>
+                          </div>
+                        )}
                       </div>
 
-                      <div className="pt-2 border-t border-slate-100">
-                        <span className="block font-bold text-slate-600 mb-1">Ảnh sau điều trị (After):</span>
-                        <div className="flex items-center gap-3">
-                          <img src={resultForm.data.after_image} alt="After" className="w-14 h-14 rounded-xl object-cover border border-slate-200" />
-                          <button
-                            type="button"
+                      {/* After Image Card */}
+                      <div className="space-y-2">
+                        <span className="block font-bold text-slate-500 text-[10px] uppercase tracking-wider">
+                          Sau điều trị (After)
+                        </span>
+
+                        {resultForm.data.after_image ? (
+                          <div className="relative rounded-2xl overflow-hidden border border-slate-200 bg-slate-950 h-36 flex items-center justify-center group shadow-xs">
+                            <img
+                              src={resultForm.data.after_image}
+                              alt="After Treatment"
+                              className="w-full h-full object-cover opacity-90 group-hover:opacity-75 transition-all duration-300"
+                              onError={(e) => { (e.target as HTMLImageElement).src = '/assets/screening_service.png'; }}
+                            />
+                            {/* Hover Overlay */}
+                            <div className="absolute inset-0 flex items-center justify-center">
+                              <button
+                                type="button"
+                                onClick={() => handleOpenMediaPicker('result_after')}
+                                className="px-4 py-2 bg-black/85 hover:bg-black text-white font-extrabold rounded-xl text-[11px] shadow-md cursor-pointer transition-all hover:scale-105"
+                              >
+                                Thay đổi ảnh
+                              </button>
+                            </div>
+                            {/* Delete Button */}
+                            <button
+                              type="button"
+                              onClick={() => resultForm.setData('after_image', '')}
+                              className="absolute top-2 right-2 w-7 h-7 rounded-full bg-rose-600 hover:bg-rose-700 text-white flex items-center justify-center shadow-md cursor-pointer transition-transform hover:scale-110 z-10"
+                              title="Xóa hình ảnh After"
+                            >
+                              <Trash2 size={13} />
+                            </button>
+                          </div>
+                        ) : (
+                          <div
                             onClick={() => handleOpenMediaPicker('result_after')}
-                            className="px-3 py-1.5 bg-emerald-50 text-emerald-700 font-bold rounded-xl text-xs border border-emerald-200 cursor-pointer"
+                            className="rounded-2xl border-2 border-dashed border-slate-200 hover:border-emerald-500 bg-slate-50 hover:bg-emerald-50/30 h-36 flex flex-col items-center justify-center text-center p-3 cursor-pointer transition-all group"
                           >
-                            📁 Chọn ảnh After
-                          </button>
-                        </div>
+                            <div className="w-10 h-10 rounded-xl bg-white text-emerald-600 shadow-3xs flex items-center justify-center mb-1.5 group-hover:scale-110 transition-transform">
+                              <FolderOpen size={20} />
+                            </div>
+                            <p className="font-extrabold text-emerald-600 text-[11px]">Chọn ảnh After</p>
+                            <p className="text-[9px] text-slate-400 mt-0.5">Tải lên từ thiết bị hoặc quản lý tệp</p>
+                          </div>
+                        )}
                       </div>
+
                     </div>
                   </div>
 
@@ -5505,9 +5637,10 @@ export default function AdminDashboard(props: Props) {
                     <button
                       type="button"
                       onClick={() => setResultStatusTab('featured')}
-                      className={`px-3.5 py-1.5 rounded-lg transition-all cursor-pointer ${resultStatusTab === 'featured' ? 'bg-amber-600 text-white shadow-xs' : 'text-slate-600 hover:bg-slate-200'}`}
+                      className={`px-3.5 py-1.5 rounded-lg transition-all cursor-pointer flex items-center gap-1.5 ${resultStatusTab === 'featured' ? 'bg-amber-600 text-white shadow-xs' : 'text-slate-600 hover:bg-slate-200'}`}
                     >
-                      ⭐ Ca Nổi bật ({treatmentResults.filter(r => r.is_featured !== false).length})
+                      <Star size={13} className={resultStatusTab === 'featured' ? 'fill-white' : 'fill-amber-500 text-amber-500'} />
+                      Ca Nổi bật ({treatmentResults.filter(r => r.is_featured !== false).length})
                     </button>
                     <button
                       type="button"
@@ -5530,9 +5663,9 @@ export default function AdminDashboard(props: Props) {
                     </div>
 
                     <div className="flex items-center gap-2">
-                      <button type="button" onClick={() => handleBatchResultAction('feature')} className="px-4 py-2 bg-amber-500 hover:bg-amber-600 text-white rounded-xl shadow-xs cursor-pointer">⭐ Bật Nổi bật</button>
-                      <button type="button" onClick={() => handleBatchResultAction('unfeature')} className="px-4 py-2 bg-slate-600 hover:bg-slate-700 text-white rounded-xl shadow-xs cursor-pointer">Tắt Nổi bật</button>
-                      <button type="button" onClick={() => handleBatchResultAction('delete')} className="px-4 py-2 bg-rose-600 hover:bg-rose-700 text-white rounded-xl shadow-xs cursor-pointer">🗑️ Xóa hàng loạt</button>
+                      <button type="button" onClick={() => handleBatchResultAction('feature')} className="px-4 py-2 bg-amber-500 hover:bg-amber-600 text-white rounded-xl shadow-xs cursor-pointer flex items-center gap-1"><Star size={13} className="fill-white" /> Bật Nổi bật</button>
+                      <button type="button" onClick={() => handleBatchResultAction('unfeature')} className="px-4 py-2 bg-slate-600 hover:bg-slate-700 text-white rounded-xl shadow-xs cursor-pointer flex items-center gap-1"><Star size={13} className="text-slate-300" /> Tắt Nổi bật</button>
+                      <button type="button" onClick={() => handleBatchResultAction('delete')} className="px-4 py-2 bg-rose-600 hover:bg-rose-700 text-white rounded-xl shadow-xs cursor-pointer flex items-center gap-1"><Trash2 size={13} /> Xóa hàng loạt</button>
                     </div>
                   </div>
                 )}
@@ -5617,8 +5750,8 @@ export default function AdminDashboard(props: Props) {
 
                             <td className="p-4 space-y-1">
                               <h3 className="font-extrabold text-[#004b87] text-sm leading-snug">{res.patient_title}</h3>
-                              <span className="inline-block px-2 py-0.5 bg-emerald-50 text-emerald-700 font-bold rounded-md text-[10px] border border-emerald-200">
-                                📋 {res.diagnosis}
+                              <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-emerald-50 text-emerald-700 font-bold rounded-md text-[10px] border border-emerald-200">
+                                {res.diagnosis}
                               </span>
                             </td>
 
@@ -5629,7 +5762,7 @@ export default function AdminDashboard(props: Props) {
                             <td className="p-4 text-center">
                               {res.is_featured !== false ? (
                                 <span className="inline-flex items-center gap-1 px-3 py-1 bg-amber-50 text-amber-700 font-extrabold rounded-full text-xs border border-amber-200">
-                                  ⭐ Ca Nổi bật
+                                  <Star size={12} className="fill-amber-500 text-amber-500" /> Ca Nổi bật
                                 </span>
                               ) : (
                                 <span className="inline-flex items-center gap-1 px-3 py-1 bg-slate-100 text-slate-600 font-extrabold rounded-full text-xs border border-slate-200">
@@ -6048,26 +6181,40 @@ export default function AdminDashboard(props: Props) {
 
                     {/* Circular Avatar Container matching screenshot */}
                     <div className="flex flex-col items-center justify-center space-y-4">
-                      <div
-                        onClick={() => handleOpenMediaPicker('author_avatar')}
-                        className="relative w-36 h-36 rounded-full border-2 border-dashed border-slate-300 hover:border-[#004b87] bg-slate-50 flex flex-col items-center justify-center cursor-pointer transition-all overflow-hidden group shadow-sm"
-                      >
-                        {authorForm.data.avatar ? (
-                          <img
-                            src={authorForm.data.avatar}
-                            alt="Avatar Preview"
-                            className="w-full h-full object-cover group-hover:opacity-75 transition-opacity"
-                          />
-                        ) : (
-                          <div className="flex flex-col items-center text-slate-400 group-hover:text-[#004b87]">
-                            <User size={36} />
-                            <span className="text-[11px] font-extrabold uppercase mt-1">CHỌN ẢNH</span>
-                          </div>
-                        )}
+                      <div className="relative group w-36 h-36">
+                        <div
+                          onClick={() => handleOpenMediaPicker('author_avatar')}
+                          className="w-full h-full rounded-full border-2 border-dashed border-slate-300 hover:border-[#004b87] bg-slate-50 flex flex-col items-center justify-center cursor-pointer transition-all overflow-hidden shadow-sm"
+                        >
+                          {authorForm.data.avatar ? (
+                            <img
+                              src={authorForm.data.avatar}
+                              alt="Avatar Preview"
+                              className="w-full h-full object-cover group-hover:opacity-75 transition-opacity"
+                            />
+                          ) : (
+                            <div className="flex flex-col items-center text-slate-400 group-hover:text-[#004b87]">
+                              <User size={36} />
+                              <span className="text-[11px] font-extrabold uppercase mt-1">CHỌN ẢNH</span>
+                            </div>
+                          )}
 
-                        <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white text-xs font-bold">
-                          Đổi ảnh 📁
+                          <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white text-xs font-bold gap-1">
+                            <FolderOpen size={13} className="text-white fill-white/20" /> Đổi ảnh
+                          </div>
                         </div>
+
+                        {/* Top-Right Circular Red Trash Button for Author Avatar */}
+                        {authorForm.data.avatar && (
+                          <button
+                            type="button"
+                            onClick={() => authorForm.setData('avatar', '')}
+                            className="absolute top-0 right-0 w-8 h-8 rounded-full bg-rose-600 hover:bg-rose-700 text-white flex items-center justify-center shadow-md cursor-pointer transition-transform hover:scale-110 z-10"
+                            title="Xóa hình ảnh đại diện"
+                          >
+                            <Trash2 size={15} />
+                          </button>
+                        )}
                       </div>
 
                       <div className="space-y-2 w-full pt-2">
@@ -6272,11 +6419,11 @@ export default function AdminDashboard(props: Props) {
                     className="bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2 text-xs font-bold text-slate-700 outline-none focus:border-[#004b87] cursor-pointer shadow-xs"
                   >
                     <option value="all">Tất cả xếp hạng (1 - 5 sao)</option>
-                    <option value="5">⭐️⭐️⭐️⭐️⭐️ 5 Sao</option>
-                    <option value="4">⭐️⭐️⭐️⭐️ 4 Sao</option>
-                    <option value="3">⭐️⭐️⭐️ 3 Sao</option>
-                    <option value="2">⭐️⭐️ 2 Sao</option>
-                    <option value="1">⭐️ 1 Sao</option>
+                    <option value="5">★★★★★ 5 Sao</option>
+                    <option value="4">★★★★☆ 4 Sao</option>
+                    <option value="3">★★★☆☆ 3 Sao</option>
+                    <option value="2">★★☆☆☆ 2 Sao</option>
+                    <option value="1">★☆☆☆☆ 1 Sao</option>
                   </select>
 
                   {/* Create New Review Button */}
@@ -6306,24 +6453,26 @@ export default function AdminDashboard(props: Props) {
                   <button
                     type="button"
                     onClick={() => setReviewStatusTab('approved')}
-                    className={`px-3.5 py-1.5 rounded-lg transition-all cursor-pointer ${
+                    className={`px-3.5 py-1.5 rounded-lg transition-all cursor-pointer flex items-center gap-1.5 ${
                       reviewStatusTab === 'approved'
                         ? 'bg-emerald-600 text-white shadow-xs'
                         : 'text-slate-600 hover:bg-slate-200'
                     }`}
                   >
-                    🟢 Đã Phê Duyệt ({reviews.filter(r => r.is_approved !== false).length})
+                    <span className={`w-2 h-2 rounded-full ${reviewStatusTab === 'approved' ? 'bg-white' : 'bg-emerald-500'}`} />
+                    Đã Phê Duyệt ({reviews.filter(r => r.is_approved !== false).length})
                   </button>
                   <button
                     type="button"
                     onClick={() => setReviewStatusTab('rejected')}
-                    className={`px-3.5 py-1.5 rounded-lg transition-all cursor-pointer ${
+                    className={`px-3.5 py-1.5 rounded-lg transition-all cursor-pointer flex items-center gap-1.5 ${
                       reviewStatusTab === 'rejected'
                         ? 'bg-rose-600 text-white shadow-xs'
                         : 'text-slate-600 hover:bg-slate-200'
                     }`}
                   >
-                    🔴 Từ Chối / Chờ Duyệt ({reviews.filter(r => r.is_approved === false).length})
+                    <span className={`w-2 h-2 rounded-full ${reviewStatusTab === 'rejected' ? 'bg-white' : 'bg-rose-500'}`} />
+                    Từ Chối / Chờ Duyệt ({reviews.filter(r => r.is_approved === false).length})
                   </button>
                 </div>
               </div>
@@ -6344,21 +6493,21 @@ export default function AdminDashboard(props: Props) {
                       onClick={() => handleBatchReviewAction('approve')}
                       className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl shadow-xs cursor-pointer flex items-center gap-1.5 transition-all"
                     >
-                      🟢 Phê Duyệt Hàng Loạt
+                      <CheckCircle2 size={13} /> Phê Duyệt Hàng Loạt
                     </button>
                     <button
                       type="button"
                       onClick={() => handleBatchReviewAction('reject')}
                       className="px-4 py-2 bg-amber-600 hover:bg-amber-700 text-white rounded-xl shadow-xs cursor-pointer flex items-center gap-1.5 transition-all"
                     >
-                      🔴 Từ Chối Hàng Loạt
+                      <AlertCircle size={13} /> Từ Chối Hàng Loạt
                     </button>
                     <button
                       type="button"
                       onClick={() => handleBatchReviewAction('delete')}
                       className="px-4 py-2 bg-rose-600 hover:bg-rose-700 text-white rounded-xl shadow-xs cursor-pointer flex items-center gap-1.5 transition-all"
                     >
-                      🗑️ Xóa Hàng Loạt
+                      <Trash2 size={13} /> Xóa Hàng Loạt
                     </button>
                   </div>
                 </div>
@@ -6447,8 +6596,8 @@ export default function AdminDashboard(props: Props) {
                               </div>
                               <div>
                                 <span className="block font-bold text-slate-900 text-sm">{rev.patient_name}</span>
-                                <span className="text-[11px] font-medium text-[#00a896] block mt-0.5">
-                                  🩺 {rev.service_name || 'Khám tim mạch tổng quát'}
+                                <span className="text-[11px] font-medium text-[#00a896] flex items-center gap-1 mt-0.5">
+                                  <Activity size={11} /> {rev.service_name || 'Khám tim mạch tổng quát'}
                                 </span>
                               </div>
                             </div>
@@ -6476,11 +6625,11 @@ export default function AdminDashboard(props: Props) {
                           <td className="p-4 text-center">
                             {rev.is_approved !== false ? (
                               <span className="inline-flex items-center gap-1 px-3 py-1 bg-emerald-50 text-emerald-700 font-extrabold rounded-full text-xs border border-emerald-200">
-                                🟢 Đã phê duyệt
+                                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" /> Đã phê duyệt
                               </span>
                             ) : (
                               <span className="inline-flex items-center gap-1 px-3 py-1 bg-rose-50 text-rose-700 font-extrabold rounded-full text-xs border border-rose-200">
-                                🔴 Từ chối / Ẩn
+                                <span className="w-1.5 h-1.5 rounded-full bg-rose-500" /> Từ chối / Ẩn
                               </span>
                             )}
                           </td>
@@ -6492,19 +6641,19 @@ export default function AdminDashboard(props: Props) {
                                 <button
                                   type="button"
                                   onClick={() => handleToggleReviewApproval(rev)}
-                                  className="px-2.5 py-1 bg-rose-50 text-rose-700 hover:bg-rose-100 font-extrabold rounded-lg text-[11px] border border-rose-200 transition-all cursor-pointer shadow-2xs"
+                                  className="px-2.5 py-1 bg-rose-50 text-rose-700 hover:bg-rose-100 font-extrabold rounded-lg text-[11px] border border-rose-200 transition-all cursor-pointer shadow-2xs flex items-center gap-1"
                                   title="Bấm để Từ Chối / Tạm Ẩn đánh giá này khỏi website"
                                 >
-                                  ❌ Từ chối
+                                  <AlertCircle size={11} /> Từ chối
                                 </button>
                               ) : (
                                 <button
                                   type="button"
                                   onClick={() => handleToggleReviewApproval(rev)}
-                                  className="px-2.5 py-1 bg-emerald-50 text-emerald-700 hover:bg-emerald-100 font-extrabold rounded-lg text-[11px] border border-emerald-200 transition-all cursor-pointer shadow-2xs"
+                                  className="px-2.5 py-1 bg-emerald-50 text-emerald-700 hover:bg-emerald-100 font-extrabold rounded-lg text-[11px] border border-emerald-200 transition-all cursor-pointer shadow-2xs flex items-center gap-1"
                                   title="Bấm để Phê Duyệt đánh giá này hiển thị trên website"
                                 >
-                                  ✅ Phê duyệt
+                                  <CheckCircle2 size={11} /> Phê duyệt
                                 </button>
                               )}
 
@@ -6734,9 +6883,9 @@ export default function AdminDashboard(props: Props) {
                   </div>
 
                   <div className="flex items-center gap-2">
-                    <button type="button" onClick={() => handleBatchFaqAction('show')} className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl shadow-xs cursor-pointer">🟢 Bật Hiển Thị</button>
-                    <button type="button" onClick={() => handleBatchFaqAction('hide')} className="px-4 py-2 bg-amber-600 hover:bg-amber-700 text-white rounded-xl shadow-xs cursor-pointer">🔴 Tạm Ẩn</button>
-                    <button type="button" onClick={() => handleBatchFaqAction('delete')} className="px-4 py-2 bg-rose-600 hover:bg-rose-700 text-white rounded-xl shadow-xs cursor-pointer">🗑️ Xóa Hàng Loạt</button>
+                    <button type="button" onClick={() => handleBatchFaqAction('show')} className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl shadow-xs cursor-pointer flex items-center gap-1"><CheckCircle2 size={13} /> Bật Hiển Thị</button>
+                    <button type="button" onClick={() => handleBatchFaqAction('hide')} className="px-4 py-2 bg-amber-600 hover:bg-amber-700 text-white rounded-xl shadow-xs cursor-pointer flex items-center gap-1"><AlertCircle size={13} /> Tạm Ẩn</button>
+                    <button type="button" onClick={() => handleBatchFaqAction('delete')} className="px-4 py-2 bg-rose-600 hover:bg-rose-700 text-white rounded-xl shadow-xs cursor-pointer flex items-center gap-1"><Trash2 size={13} /> Xóa Hàng Loạt</button>
                   </div>
                 </div>
               )}
@@ -6946,7 +7095,7 @@ export default function AdminDashboard(props: Props) {
                         onClick={() => handleOpenMediaPicker('about_main_image')}
                         className="px-4 py-2 bg-white/95 text-slate-800 font-extrabold rounded-xl text-xs shadow-lg cursor-pointer hover:bg-white transition-all flex items-center gap-1.5"
                       >
-                        📁 Chọn Ảnh Từ Thư Viện
+                        <FolderOpen size={13} className="text-slate-800 fill-slate-200" /> Chọn Ảnh Từ Thư Viện
                       </button>
                     </div>
                   </div>
@@ -7110,9 +7259,9 @@ export default function AdminDashboard(props: Props) {
                           <button
                             type="button"
                             onClick={() => handleOpenMediaPicker('about_story_img1')}
-                            className="px-3 py-1.5 bg-white text-slate-800 font-bold rounded-lg text-xs cursor-pointer"
+                            className="px-3 py-1.5 bg-white text-slate-800 font-bold rounded-lg text-xs cursor-pointer flex items-center gap-1"
                           >
-                            📁 Đổi ảnh 1
+                            <FolderOpen size={11} className="text-slate-700 fill-slate-100" /> Đổi ảnh 1
                           </button>
                         </div>
                       </div>
@@ -7138,9 +7287,9 @@ export default function AdminDashboard(props: Props) {
                           <button
                             type="button"
                             onClick={() => handleOpenMediaPicker('about_story_img2')}
-                            className="px-3 py-1.5 bg-white text-slate-800 font-bold rounded-lg text-xs cursor-pointer"
+                            className="px-3 py-1.5 bg-white text-slate-800 font-bold rounded-lg text-xs cursor-pointer flex items-center gap-1"
                           >
-                            📁 Đổi ảnh 2
+                            <FolderOpen size={11} className="text-slate-700 fill-slate-100" /> Đổi ảnh 2
                           </button>
                         </div>
                       </div>
@@ -7166,9 +7315,9 @@ export default function AdminDashboard(props: Props) {
                           <button
                             type="button"
                             onClick={() => handleOpenMediaPicker('about_story_img3')}
-                            className="px-3 py-1.5 bg-white text-slate-800 font-bold rounded-lg text-xs cursor-pointer"
+                            className="px-3 py-1.5 bg-white text-slate-800 font-bold rounded-lg text-xs cursor-pointer flex items-center gap-1"
                           >
-                            📁 Đổi ảnh 3
+                            <FolderOpen size={11} className="text-slate-700 fill-slate-100" /> Đổi ảnh 3
                           </button>
                         </div>
                       </div>
@@ -7625,7 +7774,9 @@ export default function AdminDashboard(props: Props) {
                           : 'hover:bg-slate-50 text-slate-700 border border-transparent'
                       }`}
                     >
-                      <span className="flex items-center gap-2">📁 File Manager</span>
+                      <span className="flex items-center gap-2">
+                        <FolderOpen size={14} className="text-amber-500 fill-amber-100" /> File Manager
+                      </span>
                       <span className="px-2 py-0.5 bg-white/80 rounded-md font-mono text-[10px] text-slate-500">{mediaFiles.length}</span>
                     </button>
                   </div>
@@ -7713,7 +7864,7 @@ export default function AdminDashboard(props: Props) {
                           }`}
                         >
                           <span className="flex items-center gap-1.5 truncate">
-                            📁 {folderName}
+                            <FolderOpen size={13} className="text-amber-500 fill-amber-100 shrink-0" /> {folderName}
                           </span>
                         </button>
                       </div>
@@ -7783,7 +7934,7 @@ export default function AdminDashboard(props: Props) {
                         onClick={() => setCurrentFolderPath('root')}
                         className={`hover:underline cursor-pointer flex items-center gap-1 ${currentFolderPath === 'root' ? 'text-[#004b87] font-extrabold' : 'text-slate-600'}`}
                       >
-                        📁 File Manager
+                        <FolderOpen size={13} className="text-amber-500 fill-amber-100" /> File Manager
                       </button>
                       {currentFolderPath !== 'root' && (
                         currentFolderPath.split('/').map((segment, idx, arr) => {
@@ -7876,7 +8027,7 @@ export default function AdminDashboard(props: Props) {
                                   onClick={() => setCurrentFolderPath(subPath)}
                                   className="p-4 border border-slate-200 rounded-2xl bg-slate-50 hover:bg-amber-50/60 hover:border-amber-300 transition-all cursor-pointer flex items-center gap-3 group relative shadow-2xs hover:shadow-md"
                                 >
-                                  <span className="text-2xl group-hover:scale-110 transition-transform">📁</span>
+                                  <FolderOpen size={32} className="text-amber-500 fill-amber-100 group-hover:scale-110 transition-transform shrink-0" />
                                   <div className="truncate flex-1">
                                     <span className="text-xs font-bold text-slate-800 block truncate" title={folderName}>
                                       {folderName}
@@ -7961,7 +8112,7 @@ export default function AdminDashboard(props: Props) {
                                   className="p-2 bg-white text-slate-800 rounded-xl text-xs font-bold shadow-md cursor-pointer hover:bg-slate-100 transition-transform active:scale-95"
                                   title="Sao chép đường dẫn URL"
                                 >
-                                  📋
+                                  <Copy size={13} />
                                 </button>
 
                                 <button
@@ -7970,7 +8121,7 @@ export default function AdminDashboard(props: Props) {
                                   className="p-2 bg-blue-600 text-white rounded-xl text-xs font-bold shadow-md cursor-pointer hover:bg-blue-700 transition-transform active:scale-95"
                                   title="Xem ảnh kích thước đầy đủ"
                                 >
-                                  👁️
+                                  <Eye size={13} />
                                 </button>
 
                                 <button
@@ -7985,7 +8136,7 @@ export default function AdminDashboard(props: Props) {
                                   className="p-2 bg-rose-600 text-white rounded-xl text-xs font-bold shadow-md cursor-pointer hover:bg-rose-700 transition-transform active:scale-95"
                                   title="Xóa tệp khỏi hệ thống"
                                 >
-                                  🗑️
+                                  <Trash2 size={13} />
                                 </button>
                               </div>
                             </div>
@@ -8551,7 +8702,7 @@ export default function AdminDashboard(props: Props) {
                     onClick={() => handleOpenMediaPicker('service')}
                     className="px-2.5 py-1 bg-blue-50 hover:bg-blue-100 text-[#004b87] font-bold rounded-lg border border-blue-200 text-[11px] flex items-center gap-1 cursor-pointer transition-all"
                   >
-                    📁 Chèn Ảnh Từ Quản Lý Tệp
+                    <FolderOpen size={11} className="text-[#004b87] fill-blue-100" /> Chèn Ảnh Từ Quản Lý Tệp
                   </button>
                 </div>
                 <textarea
@@ -9010,7 +9161,7 @@ export default function AdminDashboard(props: Props) {
       {/* UNIVERSAL MEDIA PICKER MODAL (WITH DRAG & DROP UPLOAD) */}
       {showMediaPickerModal && (
         <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-[70] flex items-center justify-center p-4">
-          <div className="bg-white border border-slate-200 p-6 rounded-3xl max-w-4xl w-full text-xs space-y-4 shadow-2xl relative max-h-[90vh] flex flex-col">
+          <div className="bg-white border border-slate-200 p-6 rounded-3xl max-w-6xl w-full text-xs space-y-4 shadow-2xl relative max-h-[90vh] flex flex-col">
             <button
               onClick={() => setShowMediaPickerModal(false)}
               className="absolute top-5 right-5 p-2 text-slate-400 hover:text-slate-700 cursor-pointer"
@@ -9019,24 +9170,26 @@ export default function AdminDashboard(props: Props) {
             </button>
 
             {/* Header */}
-            <div className="flex items-center justify-between border-b border-slate-100 pb-3 pr-8">
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-slate-100 pb-4 pr-8">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-blue-50 text-[#004b87] font-bold flex items-center justify-center">
+                <div className="w-10 h-10 rounded-xl bg-blue-50 text-[#004b87] font-bold flex items-center justify-center shrink-0">
                   <FolderOpen size={20} />
                 </div>
                 <div>
-                  <h3 className="text-base font-black text-[#004b87]">CHỌN HÌNH ÁNH TỪ QUẢN LÝ TỆP</h3>
+                  <h3 className="text-base font-black text-[#004b87] uppercase tracking-wide">CHỌN HÌNH ẢNH TỪ QUẢN LÝ TỆP</h3>
                   <p className="text-xs text-slate-500 mt-0.5">Chọn hình có sẵn hoặc Kéo & thả tệp từ máy tính để tải lên</p>
                 </div>
               </div>
 
-              <button
-                type="button"
-                onClick={() => fileInputRef.current?.click()}
-                className="px-4 py-2 bg-[#004b87] hover:bg-[#003866] text-white font-bold rounded-xl text-xs flex items-center gap-2 cursor-pointer shadow-xs"
-              >
-                <Upload size={14} /> Tải ảnh từ máy tính
-              </button>
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => fileInputRef.current?.click()}
+                  className="px-4 py-2.5 bg-[#004b87] hover:bg-[#003866] text-white font-extrabold rounded-xl text-xs flex items-center gap-2 cursor-pointer shadow-sm transition-all uppercase tracking-wider"
+                >
+                  <Upload size={14} /> Tải ảnh từ máy tính
+                </button>
+              </div>
             </div>
 
             {/* Hidden file input for upload button */}
@@ -9051,49 +9204,297 @@ export default function AdminDashboard(props: Props) {
               className="hidden"
             />
 
-            {/* Search Bar */}
-            <div className="relative">
-              <Search size={14} className="absolute left-3 top-2.5 text-slate-400" />
-              <input
-                type="text"
-                placeholder="Tìm tên tệp hình ảnh..."
-                value={mediaSearchQuery}
-                onChange={(e) => setMediaSearchQuery(e.target.value)}
-                className="w-full pl-8 pr-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs outline-none focus:border-[#004b87]"
-              />
-            </div>
+            {/* Two-Column Layout */}
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start flex-grow overflow-hidden min-h-[350px]">
+              
+              {/* Left Sidebar: Folder Tree */}
+              <div className="lg:col-span-3 bg-slate-50 border border-slate-200/80 rounded-2xl p-4 space-y-4 max-h-[55vh] overflow-y-auto">
+                <div className="flex items-center justify-between border-b border-slate-200 pb-2">
+                  <h4 className="font-black text-slate-700 uppercase tracking-wider flex items-center gap-1.5 text-[11px]">
+                    <FolderOpen size={14} className="text-[#004b87]" /> Thư mục
+                  </h4>
+                </div>
 
-            {/* Media Thumbnails Grid */}
-            <div className="flex-1 overflow-y-auto min-h-[300px] max-h-[400px] pr-1">
-              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
-                {mediaFiles
-                  .filter((m) => m.filename.toLowerCase().includes(mediaSearchQuery.toLowerCase()))
-                  .map((media) => (
-                    <div
-                      key={media.id}
-                      onClick={() => handleSelectMediaItem(media.url)}
-                      className="group bg-slate-50 border-2 border-slate-200 hover:border-[#004b87] rounded-2xl overflow-hidden shadow-2xs hover:shadow-md transition-all cursor-pointer flex flex-col relative"
+                <div className="space-y-1">
+                  {/* Root Folder Item */}
+                  <div className="flex items-center gap-1">
+                    <button
+                      type="button"
+                      onClick={() => setIsRootCollapsed(prev => !prev)}
+                      className="p-1 text-[#004b87] hover:text-slate-700 cursor-pointer rounded-lg hover:bg-slate-200/50"
                     >
-                      <div className="h-28 bg-slate-200 overflow-hidden relative">
-                        <img
-                          src={media.url}
-                          alt={media.filename}
-                          className="w-full h-full object-cover group-hover:scale-105 transition-transform"
-                        />
-                        <div className="absolute inset-0 bg-[#004b87]/30 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                          <span className="px-3 py-1 bg-[#004b87] text-white font-bold rounded-lg text-xs shadow-md">
-                            ✓ Chọn hình
-                          </span>
+                      {isRootCollapsed ? <ChevronRight size={14} /> : <ChevronDown size={14} />}
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setCurrentFolderPath('root');
+                        if (isRootCollapsed) setIsRootCollapsed(false);
+                      }}
+                      className={`flex-1 text-left px-2 py-1.5 rounded-xl flex items-center justify-between transition-all cursor-pointer font-bold ${
+                        currentFolderPath === 'root'
+                          ? 'bg-amber-100/60 text-amber-900 border border-amber-200'
+                          : 'hover:bg-slate-200/30 text-slate-700'
+                      }`}
+                    >
+                      <span className="flex items-center gap-1.5 truncate">
+                        <FolderOpen size={13} className="text-amber-500 fill-amber-100" /> File Manager
+                      </span>
+                      <span className="px-1.5 py-0.2 bg-white/80 rounded text-[9px] text-slate-500 font-mono">{mediaFiles.length}</span>
+                    </button>
+                  </div>
+
+                  {/* Hierarchical Folders */}
+                  {!isRootCollapsed && (() => {
+                    const sortFoldersHierarchically = (folderList: string[]) => {
+                      const result: string[] = [];
+                      const addChildren = (parentPath: string) => {
+                        const children = folderList.filter(f => {
+                          if (parentPath === 'root') {
+                            return !f.includes('/');
+                          }
+                          const prefix = parentPath + '/';
+                          return f.startsWith(prefix) && !f.slice(prefix.length).includes('/');
+                        });
+                        children.sort((a, b) => a.localeCompare(b));
+                        for (const child of children) {
+                          result.push(child);
+                          addChildren(child);
+                        }
+                      };
+                      addChildren('root');
+                      return result;
+                    };
+
+                    const sortedFolders = sortFoldersHierarchically(folders);
+
+                    return sortedFolders.map((fPath) => {
+                      const depth = fPath.split('/').length - 1;
+                      const folderName = fPath.split('/').pop();
+                      const hasSubfolders = folders.some(child => child.startsWith(fPath + '/'));
+                      const isCollapsed = collapsedFolders.includes(fPath);
+
+                      const parts = fPath.split('/');
+                      let isVisible = true;
+                      for (let i = 1; i < parts.length; i++) {
+                        const ancestor = parts.slice(0, i).join('/');
+                        if (collapsedFolders.includes(ancestor)) {
+                          isVisible = false;
+                          break;
+                        }
+                      }
+
+                      if (!isVisible) return null;
+
+                      return (
+                        <div
+                          key={fPath}
+                          style={{ paddingLeft: `${(depth + 1) * 8}px` }}
+                          className="flex items-center gap-1"
+                        >
+                          {hasSubfolders ? (
+                            <button
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setCollapsedFolders(prev =>
+                                  prev.includes(fPath) ? prev.filter(p => p !== fPath) : [...prev, fPath]
+                                );
+                              }}
+                              className="p-1 text-slate-400 hover:text-slate-700 cursor-pointer rounded-lg hover:bg-slate-200/50"
+                            >
+                              {isCollapsed ? <ChevronRight size={13} /> : <ChevronDown size={13} />}
+                            </button>
+                          ) : (
+                            <span className="w-4 text-center text-slate-300 font-mono text-[9px]">↳</span>
+                          )}
+
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setCurrentFolderPath(fPath);
+                              if (isCollapsed) {
+                                setCollapsedFolders(prev => prev.filter(p => p !== fPath));
+                              }
+                            }}
+                            className={`flex-1 text-left px-2 py-1.5 rounded-xl flex items-center justify-between transition-all cursor-pointer text-xs ${
+                              currentFolderPath === fPath
+                                ? 'bg-amber-100/60 text-amber-900 border border-amber-200 font-bold'
+                                : 'hover:bg-slate-200/30 text-slate-600'
+                            }`}
+                          >
+                            <span className="flex items-center gap-1.5 truncate">
+                              <FolderOpen size={12} className="text-amber-500 fill-amber-100 shrink-0" /> {folderName}
+                            </span>
+                          </button>
+                        </div>
+                      );
+                    });
+                  })()}
+                </div>
+              </div>
+
+              {/* Right Panel */}
+              <div className="lg:col-span-9 flex flex-col gap-4 overflow-hidden max-h-[55vh] w-full">
+                
+                {/* Drag Drop wrapping panel */}
+                <div
+                  className={`bg-white border-2 border-dashed rounded-2xl p-4 shadow-2xs transition-all flex flex-col flex-1 overflow-y-auto max-h-[52vh] ${
+                    isDragOver ? 'border-[#004b87] bg-blue-50/40 ring-4 ring-[#004b87]/10' : 'border-slate-200'
+                  }`}
+                  onDragOver={(e) => { e.preventDefault(); setIsDragOver(true); }}
+                  onDragLeave={() => setIsDragOver(false)}
+                  onDrop={(e) => {
+                    e.preventDefault();
+                    setIsDragOver(false);
+                    if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+                      handleUploadFiles(e.dataTransfer.files);
+                    }
+                  }}
+                >
+                  
+                  {/* Breadcrumbs & Search */}
+                  <div className="flex flex-col sm:flex-row gap-3 justify-between items-stretch sm:items-center bg-slate-50 p-3 rounded-xl border border-slate-200 mb-3 shrink-0">
+                    <div className="flex items-center gap-1.5 text-xs font-bold text-slate-700 truncate">
+                      <button
+                        type="button"
+                        onClick={() => setCurrentFolderPath('root')}
+                        className={`hover:underline cursor-pointer flex items-center gap-1 shrink-0 ${currentFolderPath === 'root' ? 'text-[#004b87] font-black' : 'text-slate-600'}`}
+                      >
+                        <FolderOpen size={12} className="text-amber-500 fill-amber-100" /> File Manager
+                      </button>
+                      {currentFolderPath !== 'root' && (
+                        currentFolderPath.split('/').map((segment, idx, arr) => {
+                          const subPath = arr.slice(0, idx + 1).join('/');
+                          const isLast = idx === arr.length - 1;
+                          return (
+                            <div key={subPath} className="flex items-center gap-1.5 truncate">
+                              <ChevronRight size={10} className="text-slate-400 shrink-0" />
+                              <button
+                                type="button"
+                                onClick={() => setCurrentFolderPath(subPath)}
+                                className={`hover:underline cursor-pointer truncate ${isLast ? 'text-[#004b87] font-black' : 'text-slate-600 font-bold'}`}
+                              >
+                                {segment}
+                              </button>
+                            </div>
+                          );
+                        })
+                      )}
+                    </div>
+
+                    <div className="relative w-full sm:w-60 shrink-0">
+                      <Search size={13} className="absolute left-2.5 top-2 text-slate-400" />
+                      <input
+                        type="text"
+                        placeholder="Tìm tên tệp hình ảnh..."
+                        value={mediaSearchQuery}
+                        onChange={(e) => setMediaSearchQuery(e.target.value)}
+                        className="w-full pl-7 pr-3 py-1.5 bg-white border border-slate-200 rounded-lg text-xs outline-none focus:border-[#004b87]"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Uploading indicator */}
+                  {isUploadingMedia && (
+                    <div className="p-3 bg-blue-50 border border-blue-200 rounded-xl flex items-center justify-center gap-2 text-[11px] font-bold text-[#004b87] mb-3 shrink-0">
+                      <div className="w-4 h-4 border-2 border-[#004b87] border-t-transparent rounded-full animate-spin" />
+                      <span>Đang tải tệp hình ảnh lên máy chủ, vui lòng đợi...</span>
+                    </div>
+                  )}
+
+                  {/* Subfolders inside this folder */}
+                  {(() => {
+                    const getDirectSubfolders = (parent: string) => {
+                      if (parent === 'root') {
+                        return folders.filter(f => !f.includes('/'));
+                      }
+                      const prefix = parent + '/';
+                      return folders.filter(f => f.startsWith(prefix) && !f.slice(prefix.length).includes('/'));
+                    };
+                    const directSubfolders = getDirectSubfolders(currentFolderPath);
+
+                    if (directSubfolders.length === 0) return null;
+
+                    return (
+                      <div className="space-y-2 mb-4 shrink-0">
+                        <span className="text-[9px] font-extrabold text-slate-400 uppercase tracking-wider block">
+                          Thư mục con ({directSubfolders.length})
+                        </span>
+                        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                          {directSubfolders.map(subPath => {
+                            const folderName = subPath.split('/').pop();
+                            return (
+                              <div
+                                key={subPath}
+                                onClick={() => setCurrentFolderPath(subPath)}
+                                className="p-3 border border-slate-200 rounded-xl bg-slate-50 hover:bg-amber-50/50 hover:border-amber-300 transition-all cursor-pointer flex items-center gap-2 shadow-3xs group"
+                              >
+                                <FolderOpen size={24} className="text-amber-500 fill-amber-100 group-hover:scale-105 transition-transform shrink-0" />
+                                <span className="text-[11px] font-bold text-slate-700 truncate" title={folderName}>
+                                  {folderName}
+                                </span>
+                              </div>
+                            );
+                          })}
                         </div>
                       </div>
-                      <div className="p-2 text-[11px] bg-white border-t border-slate-100">
-                        <p className="font-bold text-slate-800 line-clamp-1 truncate" title={media.filename}>
-                          {media.filename}
-                        </p>
+                    );
+                  })()}
+
+                  {/* Files inside this folder */}
+                  <div className="flex-1 overflow-y-auto pr-1">
+                    <span className="text-[9px] font-extrabold text-slate-400 uppercase tracking-wider block mb-2 shrink-0">
+                      Danh sách hình ảnh ({mediaFiles.filter(m => m.filename.toLowerCase().includes(mediaSearchQuery.toLowerCase())).length})
+                    </span>
+
+                    {mediaFiles.filter(m => m.filename.toLowerCase().includes(mediaSearchQuery.toLowerCase())).length === 0 ? (
+                      <div className="py-12 text-center text-slate-400 space-y-2 bg-slate-50/50 rounded-xl border border-slate-100">
+                        <ImageIcon size={32} className="mx-auto text-slate-300" />
+                        <p className="font-bold text-[11px] text-slate-500">Chưa có tệp hình ảnh nào khớp</p>
                       </div>
-                    </div>
-                  ))}
+                    ) : (
+                      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
+                        {mediaFiles
+                          .filter(m => m.filename.toLowerCase().includes(mediaSearchQuery.toLowerCase()))
+                          .map((media) => (
+                            <div
+                              key={media.id}
+                              onClick={() => handleSelectMediaItem(media.url)}
+                              className="group bg-slate-50 border border-slate-200 hover:border-[#004b87] rounded-xl overflow-hidden shadow-3xs hover:shadow-sm transition-all cursor-pointer flex flex-col relative"
+                            >
+                              <div className="h-24 bg-slate-200 overflow-hidden relative">
+                                <img
+                                  src={media.url}
+                                  alt={media.filename}
+                                  className="w-full h-full object-cover group-hover:scale-105 transition-transform"
+                                  onError={(e) => { (e.target as HTMLImageElement).src = '/assets/screening_service.png'; }}
+                                />
+                                <div className="absolute inset-0 bg-[#004b87]/30 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                                  <span className="px-2.5 py-1 bg-[#004b87] text-white font-extrabold rounded-lg text-[10px] shadow-sm">
+                                    ✓ Chọn ảnh này
+                                  </span>
+                                </div>
+                              </div>
+                              <div className="p-2 text-[10px] bg-white border-t border-slate-100">
+                                <p className="font-bold text-slate-700 truncate" title={media.filename}>
+                                  {media.filename}
+                                </p>
+                                <span className="text-[9px] text-slate-400 font-mono block mt-0.5">
+                                  {media.file_size || 'JPG'}
+                                </span>
+                              </div>
+                            </div>
+                          ))}
+                      </div>
+                    )}
+                  </div>
+
+                </div>
+
               </div>
+
             </div>
 
             {/* Footer */}
@@ -9101,7 +9502,7 @@ export default function AdminDashboard(props: Props) {
               <button
                 type="button"
                 onClick={() => setShowMediaPickerModal(false)}
-                className="px-5 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl text-xs cursor-pointer"
+                className="px-5 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl text-xs cursor-pointer shadow-3xs"
               >
                 Đóng
               </button>
@@ -9645,7 +10046,7 @@ export default function AdminDashboard(props: Props) {
                           onClick={() => handleOpenMediaPicker('banner_desktop')}
                           className="bg-[#004b87] hover:bg-[#003866] text-white font-extrabold text-[11px] px-3 py-1.5 rounded-xl shadow-xs transition-all cursor-pointer flex items-center gap-1"
                         >
-                          Đổi ảnh 📁
+                          Đổi ảnh <FolderOpen size={11} className="text-white fill-white/20" />
                         </button>
                       </div>
                     </div>
@@ -9690,7 +10091,7 @@ export default function AdminDashboard(props: Props) {
                           onClick={() => handleOpenMediaPicker('banner_mobile')}
                           className="bg-[#004b87] hover:bg-[#003866] text-white font-extrabold text-[11px] px-3 py-1.5 rounded-xl shadow-xs transition-all cursor-pointer flex items-center gap-1"
                         >
-                          Đổi ảnh 📁
+                          Đổi ảnh <FolderOpen size={11} className="text-white fill-white/20" />
                         </button>
                       </div>
                     </div>

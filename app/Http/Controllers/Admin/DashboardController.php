@@ -21,6 +21,7 @@ use App\Models\TreatmentResult;
 use App\Models\Policy;
 use App\Models\MediaFile;
 use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Log;
 
 class DashboardController extends Controller
 {
@@ -746,25 +747,37 @@ class DashboardController extends Controller
         $uploadedFiles = [];
         $files = $request->file('files') ?? ($request->hasFile('file') ? [$request->file('file')] : []);
 
-        foreach ($files as $file) {
-            $filename = time() . '_' . Str::random(6) . '.' . $file->getClientOriginalExtension();
-            $destinationPath = public_path('uploads/media');
-            
-            if (!file_exists($destinationPath)) {
-                mkdir($destinationPath, 0777, true);
+        try {
+            foreach ($files as $file) {
+                $originalName = $file->getClientOriginalName();
+                $mimeType = $file->getClientMimeType() ?? 'image';
+                $fileSize = number_format($file->getSize() / 1024, 1) . ' KB';
+
+                $filename = time() . '_' . Str::random(6) . '.' . $file->getClientOriginalExtension();
+                $destinationPath = public_path('uploads/media');
+                
+                if (!file_exists($destinationPath)) {
+                    mkdir($destinationPath, 0777, true);
+                }
+
+                $file->move($destinationPath, $filename);
+                $url = '/uploads/media/' . $filename;
+
+                $media = MediaFile::create([
+                    'filename' => $originalName,
+                    'url' => $url,
+                    'file_type' => $mimeType,
+                    'file_size' => $fileSize,
+                ]);
+
+                $uploadedFiles[] = $media;
             }
-
-            $file->move($destinationPath, $filename);
-            $url = '/uploads/media/' . $filename;
-
-            $media = MediaFile::create([
-                'filename' => $file->getClientOriginalName(),
-                'url' => $url,
-                'file_type' => $file->getClientMimeType() ?? 'image',
-                'file_size' => number_format($file->getSize() / 1024, 1) . ' KB',
-            ]);
-
-            $uploadedFiles[] = $media;
+        } catch (\Exception $e) {
+            Log::error('Media Upload Error: ' . $e->getMessage());
+            if ($request->wantsJson()) {
+                return response()->json(['success' => false, 'message' => 'Lỗi tải lên tệp tin: ' . $e->getMessage()], 500);
+            }
+            return back()->withErrors(['error' => 'Lỗi tải lên tệp tin: ' . $e->getMessage()]);
         }
 
         if ($request->wantsJson()) {
@@ -776,8 +789,10 @@ class DashboardController extends Controller
 
     public function deleteMedia(MediaFile $mediaFile)
     {
-        if (file_exists(public_path($mediaFile->url))) {
-            @unlink(public_path($mediaFile->url));
+        $url = ltrim($mediaFile->url, '/');
+        $fullPath = public_path($url);
+        if ($url && file_exists($fullPath) && is_file($fullPath)) {
+            @unlink($fullPath);
         }
 
         $mediaFile->delete();
@@ -794,8 +809,10 @@ class DashboardController extends Controller
 
         $files = MediaFile::whereIn('id', $validated['ids'])->get();
         foreach ($files as $file) {
-            if (file_exists(public_path($file->url))) {
-                @unlink(public_path($file->url));
+            $url = ltrim($file->url, '/');
+            $fullPath = public_path($url);
+            if ($url && file_exists($fullPath) && is_file($fullPath)) {
+                @unlink($fullPath);
             }
             $file->delete();
         }
