@@ -573,7 +573,7 @@ class DashboardController extends Controller
         $validated = $request->validate([
             'title' => 'required|string|max:255',
             'slug' => 'nullable|string|max:255',
-            'pillar_title' => 'required|string|max:255',
+            'service_pillar_id' => 'required|integer|exists:service_pillars,id',
             'price' => 'required|string|max:100',
             'estimated_time' => 'nullable|string|max:100',
             'tagline' => 'nullable|string|max:255',
@@ -588,8 +588,8 @@ class DashboardController extends Controller
         ]);
 
         $validated['slug'] = !empty($validated['slug']) ? Str::slug($validated['slug']) : Str::slug($validated['title']);
-        $pillar = ServicePillar::firstOrCreate(['title' => $validated['pillar_title']]);
-        $validated['service_pillar_id'] = $pillar->id;
+        $pillar = ServicePillar::findOrFail($validated['service_pillar_id']);
+        $validated['pillar_title'] = $pillar->title;
         $validated['is_featured'] = $request->boolean('is_featured');
         $validated['tagline'] = $validated['tagline'] ?? '';
         $validated['description'] = $validated['description'] ?? '';
@@ -609,7 +609,7 @@ class DashboardController extends Controller
         $validated = $request->validate([
             'title' => 'required|string|max:255',
             'slug' => 'nullable|string|max:255',
-            'pillar_title' => 'required|string|max:255',
+            'service_pillar_id' => 'required|integer|exists:service_pillars,id',
             'price' => 'required|string|max:100',
             'estimated_time' => 'nullable|string|max:100',
             'tagline' => 'nullable|string|max:255',
@@ -629,8 +629,8 @@ class DashboardController extends Controller
             $validated['slug'] = Str::slug($validated['title']);
         }
 
-        $pillar = ServicePillar::firstOrCreate(['title' => $validated['pillar_title']]);
-        $validated['service_pillar_id'] = $pillar->id;
+        $pillar = ServicePillar::findOrFail($validated['service_pillar_id']);
+        $validated['pillar_title'] = $pillar->title;
         $validated['is_featured'] = $request->boolean('is_featured');
 
         $service->update($validated);
@@ -671,13 +671,52 @@ class DashboardController extends Controller
     {
         $validated = $request->validate([
             'title' => 'required|string|max:255',
-            'subtitle' => 'nullable|string',
+            'tagline' => 'nullable|string|max:255',
+            'description' => 'nullable|string',
+            'icon_name' => 'nullable|string|max:100',
+            'order' => 'nullable|integer',
         ]);
 
-        $validated['slug'] = Str::slug($validated['title']);
+        $validated['icon_name'] = $validated['icon_name'] ?? 'Search';
+        $validated['order'] = $validated['order'] ?? 0;
+        $validated['tagline'] = $validated['tagline'] ?? '';
+        $validated['description'] = $validated['description'] ?? '';
+
         ServicePillar::create($validated);
 
         return back()->with('success', 'Đã tạo mới nhóm trụ cột dịch vụ!');
+    }
+
+    public function updatePillar(Request $request, ServicePillar $pillar)
+    {
+        $validated = $request->validate([
+            'title' => 'required|string|max:255',
+            'tagline' => 'nullable|string|max:255',
+            'description' => 'nullable|string',
+            'icon_name' => 'nullable|string|max:100',
+            'order' => 'nullable|integer',
+        ]);
+
+        $validated['icon_name'] = $validated['icon_name'] ?? 'Search';
+        $validated['order'] = $validated['order'] ?? 0;
+        $validated['tagline'] = $validated['tagline'] ?? '';
+        $validated['description'] = $validated['description'] ?? '';
+
+        $oldTitle = $pillar->title;
+        $pillar->update($validated);
+
+        if ($oldTitle !== $pillar->title) {
+            Service::where('service_pillar_id', $pillar->id)->update(['pillar_title' => $pillar->title]);
+        }
+
+        return back()->with('success', 'Đã cập nhật danh mục dịch vụ!');
+    }
+
+    public function deletePillar(ServicePillar $pillar)
+    {
+        $pillar->delete();
+
+        return back()->with('success', 'Đã xóa danh mục dịch vụ và tất cả các gói dịch vụ trực thuộc!');
     }
 
     // --- ARTICLES BLOG CRUD ---

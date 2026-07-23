@@ -23,6 +23,7 @@ import {
   Copy,
   Lock,
   Search,
+  Layers,
   Check,
   Download,
   UserPlus,
@@ -99,6 +100,7 @@ interface Author {
 
 interface Service {
   id: number;
+  service_pillar_id?: number;
   slug?: string;
   title: string;
   pillar_title: string;
@@ -213,12 +215,23 @@ interface Stats {
   total_faqs: number;
 }
 
+interface ServicePillar {
+  id: number;
+  title: string;
+  tagline?: string;
+  description?: string;
+  icon_name?: string;
+  order?: number;
+  services?: Service[];
+}
+
 interface Props {
   appointments: Appointment[];
   consultations: Appointment[];
   articles: Article[];
   authors: Author[];
   services: Service[];
+  pillars: ServicePillar[];
   reviews: Review[];
   banners: Banner[];
   doctors: Doctor[];
@@ -234,7 +247,7 @@ interface Props {
 
 export default function AdminDashboard(props: Props) {
   const { 
-    appointments, consultations, articles, authors, services, reviews, 
+    appointments, consultations, articles, authors, services, pillars, reviews, 
     banners, doctors, schedules, faqs, treatmentResults, policies, 
     settings, mediaFiles, stats, auth 
   } = props;
@@ -1534,10 +1547,10 @@ export default function AdminDashboard(props: Props) {
   const serviceForm = useForm({
     title: '',
     slug: '',
-    pillar_title: 'Tầm soát & Phát hiện sớm',
-    tagline: '',
+    service_pillar_id: 0,
     price: '500.000 VNĐ - 1.200.000 VNĐ',
     estimated_time: '60 - 90 phút',
+    tagline: '',
     description: '',
     detailed_description: '',
     includes: [] as string[],
@@ -1595,10 +1608,10 @@ export default function AdminDashboard(props: Props) {
     serviceForm.setData({
       title: '',
       slug: '',
-      pillar_title: 'Tầm soát & Phát hiện sớm',
-      tagline: '',
+      service_pillar_id: pillars[0]?.id || 0,
       price: '500.000 VNĐ - 1.200.000 VNĐ',
       estimated_time: '60 - 90 phút',
+      tagline: '',
       description: '',
       detailed_description: '',
       includes: ['Khám chuyên khoa Tim mạch', 'Đo ECG 12 đầu cần', 'Siêu âm tim Doppler màu', 'Xét nghiệm mỡ máu'],
@@ -1618,10 +1631,10 @@ export default function AdminDashboard(props: Props) {
     serviceForm.setData({
       title: service.title,
       slug: service.slug || '',
-      pillar_title: service.pillar_title,
-      tagline: service.tagline || '',
+      service_pillar_id: service.service_pillar_id || 0,
       price: service.price,
       estimated_time: service.estimated_time || '60 phút',
+      tagline: service.tagline || '',
       description: service.description || '',
       detailed_description: service.detailed_description || '',
       includes: service.includes || [],
@@ -1662,6 +1675,74 @@ export default function AdminDashboard(props: Props) {
       router.delete(`/admin/services/${id}`, {
         onSuccess: () => {
           triggerNotification(`Đã xóa dịch vụ "${title}" thành công!`);
+        }
+      });
+    }
+  };
+
+  // --- SERVICE PILLARS (CATEGORIES) CRUD ---
+  const [editingPillar, setEditingPillar] = useState<ServicePillar | null>(null);
+  const [showPillarModal, setShowPillarModal] = useState(false);
+  const [pillarSearch, setPillarSearch] = useState('');
+
+  const pillarForm = useForm({
+    title: '',
+    tagline: '',
+    description: '',
+    icon_name: 'Search',
+    order: 0,
+  });
+
+  const handleOpenCreatePillar = () => {
+    setEditingPillar(null);
+    pillarForm.setData({
+      title: '',
+      tagline: '',
+      description: '',
+      icon_name: 'Search',
+      order: pillars.length,
+    });
+    setShowPillarModal(true);
+  };
+
+  const handleOpenEditPillar = (pillar: ServicePillar) => {
+    setEditingPillar(pillar);
+    pillarForm.setData({
+      title: pillar.title,
+      tagline: pillar.tagline || '',
+      description: pillar.description || '',
+      icon_name: pillar.icon_name || 'Search',
+      order: pillar.order || 0,
+    });
+    setShowPillarModal(true);
+  };
+
+  const handleSavePillar = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (editingPillar) {
+      pillarForm.put(`/admin/pillars/${editingPillar.id}`, {
+        onSuccess: () => {
+          setShowPillarModal(false);
+          setEditingPillar(null);
+          triggerNotification(`Đã cập nhật danh mục "${pillarForm.data.title}" thành công!`);
+        }
+      });
+    } else {
+      pillarForm.post('/admin/pillars', {
+        onSuccess: () => {
+          setShowPillarModal(false);
+          pillarForm.reset();
+          triggerNotification(`Đã tạo danh mục mới "${pillarForm.data.title}" thành công!`);
+        }
+      });
+    }
+  };
+
+  const handleDeletePillar = (pillar: ServicePillar) => {
+    if (confirm(`CẢNH BÁO: Xóa danh mục "${pillar.title}" sẽ xóa TOÀN BỘ các gói dịch vụ trực thuộc danh mục này! Bạn có chắc chắn muốn xóa không?`)) {
+      router.delete(`/admin/pillars/${pillar.id}`, {
+        onSuccess: () => {
+          triggerNotification(`Đã xóa danh mục "${pillar.title}" và tất cả dịch vụ đi kèm!`);
         }
       });
     }
@@ -1787,6 +1868,13 @@ export default function AdminDashboard(props: Props) {
   // Unique Pillars list
   const uniquePillars = Array.from(new Set(services.map(s => s.pillar_title)));
 
+  // Filtered Pillars for the Category list
+  const filteredPillars = pillars.filter(p => {
+    return p.title.toLowerCase().includes(pillarSearch.toLowerCase()) ||
+           (p.tagline && p.tagline.toLowerCase().includes(pillarSearch.toLowerCase())) ||
+           (p.description && p.description.toLowerCase().includes(pillarSearch.toLowerCase()));
+  });
+
   // Pagination Logic (20 items per page)
   const totalPages = Math.ceil(filteredAppointments.length / itemsPerPage) || 1;
   const startIndex = (currentPage - 1) * itemsPerPage;
@@ -1799,7 +1887,8 @@ export default function AdminDashboard(props: Props) {
     { id: 'appointments', label: 'Lịch hẹn trực tuyến', icon: CalendarIcon, badge: stats.total_appointments },
     { id: 'articles', label: 'Bài viết tin tức', icon: BookOpen, badge: null },
     { id: 'authors', label: 'Tác giả bài viết', icon: Users, badge: null },
-    { id: 'services', label: 'Danh mục dịch vụ', icon: Sparkles, badge: services.length },
+    { id: 'services', label: 'Dịch vụ', icon: Sparkles, badge: services.length },
+    { id: 'pillars', label: 'Danh mục dịch vụ', icon: Layers, badge: pillars.length },
     { id: 'reviews', label: 'Quản lý đánh giá', icon: MessageSquare, badge: null },
     { id: 'banners', label: 'Quản lý banners', icon: SlidersHorizontal, badge: null },
     { id: 'doctors', label: 'Đội ngũ bác sĩ', icon: UserCheck, badge: null },
@@ -2724,18 +2813,17 @@ export default function AdminDashboard(props: Props) {
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                       <div>
                         <label className="block text-xs font-black text-slate-700 uppercase tracking-wider mb-2">
-                          NHÓM TRỤ CỘT Y KHOA *
+                          NHÓM DANH MỤC DỊCH VỤ *
                         </label>
                         <select
-                          value={serviceForm.data.pillar_title}
-                          onChange={(e) => serviceForm.setData('pillar_title', e.target.value)}
+                          value={serviceForm.data.service_pillar_id}
+                          onChange={(e) => serviceForm.setData('service_pillar_id', parseInt(e.target.value))}
                           className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-xs font-bold text-slate-700 outline-none focus:border-[#004b87] cursor-pointer"
                         >
-                          <option value="Trụ cột I: Tầm soát & Phát hiện sớm">Trụ cột I: Tầm soát & Phát hiện sớm</option>
-                          <option value="Trụ cột II: Chẩn đoán & Điều trị liên tục">Trụ cột II: Chẩn đoán & Điều trị liên tục</option>
-                          <option value="Trụ cột III: Chăm sóc từ xa tại cộng đồng">Trụ cột III: Chăm sóc từ xa tại cộng đồng</option>
-                          {uniquePillars.filter(p => !p.includes('Trụ cột')).map((p, i) => (
-                            <option key={i} value={p}>{p}</option>
+                          {pillars.map((pillar) => (
+                            <option key={pillar.id} value={pillar.id}>
+                              {pillar.title}
+                            </option>
                           ))}
                         </select>
                       </div>
@@ -3172,7 +3260,7 @@ export default function AdminDashboard(props: Props) {
                       onClick={() => setShowServicePreviewModal({
                         id: editingService ? editingService.id : 0,
                         title: serviceForm.data.title,
-                        pillar_title: serviceForm.data.pillar_title,
+                        pillar_title: pillars.find(p => p.id === serviceForm.data.service_pillar_id)?.title || 'Chưa phân mục',
                         tagline: serviceForm.data.tagline,
                         price: serviceForm.data.price,
                         estimated_time: serviceForm.data.estimated_time,
@@ -3530,6 +3618,235 @@ export default function AdminDashboard(props: Props) {
               </div>
             </div>
           )
+        )}
+
+        {/* TAB 6B: QUẢN LÝ DANH MỤC DỊCH VỤ (SERVICE PILLARS) */}
+        {activeTab === 'pillars' && (
+          <div className="space-y-6 w-full animate-fadeIn">
+            <div className="flex items-center gap-2 text-xs font-semibold text-slate-400">
+              <Link href="/admin/dashboard" className="hover:text-[#004b87]">Tổng quan</Link>
+              <ChevronRight size={12} />
+              <span className="text-slate-700 font-bold">Danh Mục Dịch Vụ</span>
+            </div>
+
+            <div className="bg-white border border-slate-200/80 rounded-2xl p-8 shadow-sm space-y-6 w-full">
+              
+              {/* Header Toolbar */}
+              <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 pb-4 border-b border-slate-100">
+                <div>
+                  <h2 className="text-xl font-extrabold text-[#004b87]">Quản Lý Danh Mục Dịch Vụ</h2>
+                  <p className="text-xs text-slate-500 mt-1">
+                    Quản lý các danh mục (Trụ cột dịch vụ) dùng để nhóm các gói dịch vụ khám bệnh và đồng bộ với bộ lọc của khách hàng ({filteredPillars.length} danh mục)
+                  </p>
+                </div>
+
+                <div className="flex flex-wrap items-center gap-3 w-full md:w-auto">
+                  <div className="relative flex-1 md:w-64">
+                    <Search size={15} className="absolute left-3.5 top-3 text-slate-400" />
+                    <input
+                      type="text"
+                      placeholder="Tìm danh mục..."
+                      value={pillarSearch}
+                      onChange={(e) => setPillarSearch(e.target.value)}
+                      className="w-full bg-slate-50 border border-slate-200 rounded-xl pl-9 pr-4 py-2 text-xs text-slate-800 outline-none focus:border-[#004b87] focus:bg-white shadow-xs"
+                    />
+                  </div>
+
+                  <button
+                    onClick={handleOpenCreatePillar}
+                    className="flex items-center gap-1.5 bg-[#004b87] hover:bg-[#003866] text-white font-bold text-xs px-4 py-2.5 rounded-xl transition-all cursor-pointer shrink-0 shadow-sm"
+                  >
+                    <Plus size={16} /> Thêm danh mục mới
+                  </button>
+                </div>
+              </div>
+
+              {/* Table */}
+              <div className="overflow-x-auto">
+                <table className="w-full text-left text-xs text-slate-700">
+                  <thead className="bg-slate-50/80 text-slate-400 uppercase font-extrabold tracking-wider border-b border-slate-200">
+                    <tr>
+                      <th className="p-4 w-12 text-center">STT</th>
+                      <th className="p-4">TÊN DANH MỤC</th>
+                      <th className="p-4">THÔNG ĐIỆP CHÍNH</th>
+                      <th className="p-4">MÔ TẢ DANH MỤC</th>
+                      <th className="p-4 text-center">ICON</th>
+                      <th className="p-4 text-center">THỨ TỰ</th>
+                      <th className="p-4 text-center">SỐ DỊCH VỤ CON</th>
+                      <th className="p-4 text-center">THAO TÁC</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-100">
+                    {filteredPillars.length === 0 ? (
+                      <tr>
+                        <td colSpan={8} className="text-center py-12 text-slate-400 font-medium">
+                          Không tìm thấy danh mục dịch vụ nào.
+                        </td>
+                      </tr>
+                    ) : (
+                      filteredPillars.map((pillar, index) => (
+                        <tr key={pillar.id} className="hover:bg-slate-50/70 transition-colors">
+                          <td className="p-4 text-center font-bold text-slate-500 font-mono">
+                            #{index + 1}
+                          </td>
+
+                          <td className="p-4 font-bold text-[#004b87] text-sm">
+                            <span className="hover:underline cursor-pointer" onClick={() => handleOpenEditPillar(pillar)}>
+                              {pillar.title}
+                            </span>
+                          </td>
+
+                          <td className="p-4 text-slate-600 italic">
+                            {pillar.tagline || <span className="text-slate-300">Trống</span>}
+                          </td>
+
+                          <td className="p-4 text-slate-500 max-w-xs truncate">
+                            {pillar.description || <span className="text-slate-300">Trống</span>}
+                          </td>
+
+                          <td className="p-4 text-center">
+                            <span className="inline-block px-2.5 py-1 bg-slate-100 text-slate-700 font-bold rounded-lg text-xs">
+                              {pillar.icon_name || 'Search'}
+                            </span>
+                          </td>
+
+                          <td className="p-4 text-center font-bold font-mono">
+                            {pillar.order || 0}
+                          </td>
+
+                          <td className="p-4 text-center">
+                            <span className="px-2.5 py-1 bg-teal-50 text-[#00a896] font-bold border border-teal-150 rounded-lg">
+                              {(services.filter(s => s.service_pillar_id === pillar.id) || []).length} dịch vụ
+                            </span>
+                          </td>
+
+                          <td className="p-4 text-center">
+                            <div className="flex items-center justify-center gap-1.5">
+                              <button
+                                onClick={() => handleOpenEditPillar(pillar)}
+                                className="p-2 text-slate-400 hover:text-[#004b87] hover:bg-blue-50 rounded-xl transition-all cursor-pointer"
+                                title="Sửa danh mục"
+                              >
+                                <Edit size={16} />
+                              </button>
+                              <button
+                                onClick={() => handleDeletePillar(pillar)}
+                                className="p-2 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-xl transition-all cursor-pointer"
+                                title="Xóa danh mục"
+                              >
+                                <Trash2 size={16} />
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      ))
+                    )}
+                  </tbody>
+                </table>
+              </div>
+
+            </div>
+
+            {/* Modal Edit / Add Pillar */}
+            {showPillarModal && (
+              <div className="fixed inset-0 bg-black/50 backdrop-blur-xs flex items-center justify-center z-50 p-4 animate-fadeIn">
+                <div className="bg-white rounded-3xl border border-slate-200 shadow-2xl max-w-lg w-full overflow-hidden animate-scaleIn">
+                  <div className="px-6 py-4 bg-slate-50 border-b border-slate-200 flex items-center justify-between">
+                    <h3 className="text-sm font-black text-[#004b87] uppercase tracking-wider">
+                      {editingPillar ? 'Chỉnh Sửa Danh Mục Dịch Vụ' : 'Thêm Danh Mục Dịch Vụ Mới'}
+                    </h3>
+                    <button
+                      onClick={() => setShowPillarModal(false)}
+                      className="p-1.5 hover:bg-slate-200 text-slate-400 hover:text-slate-600 rounded-lg transition-colors cursor-pointer"
+                    >
+                      <X size={18} />
+                    </button>
+                  </div>
+
+                  <form onSubmit={handleSavePillar} className="p-6 space-y-4 text-xs font-semibold text-slate-700">
+                    <div>
+                      <label className="block text-slate-500 uppercase tracking-wider mb-1.5 font-bold">Tên danh mục *</label>
+                      <input
+                        type="text"
+                        required
+                        placeholder="Ví dụ: Tầm soát & Phát hiện sớm, Chẩn đoán & Điều trị..."
+                        value={pillarForm.data.title}
+                        onChange={(e) => pillarForm.setData('title', e.target.value)}
+                        className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-slate-800 outline-none focus:border-[#004b87] focus:bg-white"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-slate-500 uppercase tracking-wider mb-1.5 font-bold">Thông điệp ngắn (Tagline)</label>
+                      <input
+                        type="text"
+                        placeholder="Ví dụ: Đánh giá & phòng ngừa sớm biến chứng tim mạch"
+                        value={pillarForm.data.tagline}
+                        onChange={(e) => pillarForm.setData('tagline', e.target.value)}
+                        className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-slate-800 outline-none focus:border-[#004b87] focus:bg-white"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-slate-500 uppercase tracking-wider mb-1.5 font-bold">Mô tả danh mục</label>
+                      <textarea
+                        rows={3}
+                        placeholder="Mô tả tóm tắt vai trò hoặc các nhóm dịch vụ thuộc danh mục này..."
+                        value={pillarForm.data.description}
+                        onChange={(e) => pillarForm.setData('description', e.target.value)}
+                        className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-slate-800 outline-none focus:border-[#004b87] focus:bg-white resize-none leading-relaxed"
+                      />
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-slate-500 uppercase tracking-wider mb-1.5 font-bold">Icon hiển thị</label>
+                        <select
+                          value={pillarForm.data.icon_name}
+                          onChange={(e) => pillarForm.setData('icon_name', e.target.value)}
+                          className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-slate-700 font-bold outline-none focus:border-[#004b87] cursor-pointer"
+                        >
+                          <option value="Search">Search (Kính lúp)</option>
+                          <option value="Stethoscope">Stethoscope (Tai nghe y tế)</option>
+                          <option value="Activity">Activity (Nhịp tim)</option>
+                          <option value="Heart">Heart (Trái tim)</option>
+                          <option value="Shield">Shield (Bảo vệ)</option>
+                        </select>
+                      </div>
+
+                      <div>
+                        <label className="block text-slate-500 uppercase tracking-wider mb-1.5 font-bold">Thứ tự hiển thị</label>
+                        <input
+                          type="number"
+                          min={0}
+                          value={pillarForm.data.order}
+                          onChange={(e) => pillarForm.setData('order', parseInt(e.target.value) || 0)}
+                          className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-slate-800 font-mono outline-none focus:border-[#004b87] focus:bg-white"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="pt-4 border-t border-slate-100 flex items-center justify-end gap-2">
+                      <button
+                        type="button"
+                        onClick={() => setShowPillarModal(false)}
+                        className="px-4 py-2.5 bg-slate-150 hover:bg-slate-200 rounded-xl font-bold cursor-pointer transition-colors text-slate-600"
+                      >
+                        Hủy bỏ
+                      </button>
+                      <button
+                        type="submit"
+                        disabled={pillarForm.processing}
+                        className="px-5 py-2.5 bg-[#004b87] hover:bg-[#003866] text-white font-extrabold rounded-xl shadow-xs cursor-pointer transition-colors"
+                      >
+                        {pillarForm.processing ? 'Đang lưu...' : 'Lưu lại'}
+                      </button>
+                    </div>
+                  </form>
+                </div>
+              </div>
+            )}
+          </div>
         )}
 
         {/* TAB 4: QUẢN LÝ BÀI VIẾT TIN TỨC & TRANG CHỈNH SỬA BÀI VIẾT 2 CỘT */}
@@ -8740,15 +9057,18 @@ export default function AdminDashboard(props: Props) {
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-slate-700 font-bold mb-1.5">Nhóm Trụ Cột Y Khoa *</label>
-                  <input
-                    type="text"
-                    required
-                    placeholder="VD: Thăm khám & Chẩn đoán"
-                    value={serviceForm.data.pillar_title}
-                    onChange={(e) => serviceForm.setData('pillar_title', e.target.value)}
-                    className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-xs text-slate-800 outline-none focus:border-[#004b87] focus:bg-white"
-                  />
+                  <label className="block text-slate-700 font-bold mb-1.5">Nhóm Danh Mục Dịch Vụ *</label>
+                  <select
+                    value={serviceForm.data.service_pillar_id}
+                    onChange={(e) => serviceForm.setData('service_pillar_id', parseInt(e.target.value))}
+                    className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-xs font-bold text-slate-700 outline-none focus:border-[#004b87] cursor-pointer"
+                  >
+                    {pillars.map((pillar) => (
+                      <option key={pillar.id} value={pillar.id}>
+                        {pillar.title}
+                      </option>
+                    ))}
+                  </select>
                 </div>
                 <div>
                   <label className="block text-slate-700 font-bold mb-1.5">Giá niêm yết (VNĐ) *</label>

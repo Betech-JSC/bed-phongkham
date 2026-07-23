@@ -40,6 +40,8 @@ Route::middleware(['auth', 'verified'])->prefix('admin')->group(function () {
     Route::delete('/services/{service}', [AdminDashboardController::class, 'deleteService'])->name('admin.services.delete');
     Route::post('/services/batch-action', [AdminDashboardController::class, 'batchUpdateServices'])->name('admin.services.batch');
     Route::post('/pillars', [AdminDashboardController::class, 'storePillar'])->name('admin.pillars.store');
+    Route::put('/pillars/{pillar}', [AdminDashboardController::class, 'updatePillar'])->name('admin.pillars.update');
+    Route::delete('/pillars/{pillar}', [AdminDashboardController::class, 'deletePillar'])->name('admin.pillars.delete');
 
     // Articles Blog CMS CRUD
     Route::post('/articles', [AdminDashboardController::class, 'createArticle'])->name('admin.articles.create');
