@@ -1,6 +1,15 @@
 import React from "react";
 import { Link } from "@inertiajs/react";
-import { Award, UserCheck, ShieldCheck, HeartPulse, CheckCircle2, ArrowRight, Quote, Sparkles, Building2, Users } from "lucide-react";
+import { 
+  Award, 
+  BookOpen, 
+  Building2, 
+  Calendar, 
+  CheckCircle2, 
+  Heart, 
+  ShieldCheck, 
+  Stethoscope 
+} from "lucide-react";
 import MainLayout from "@/Layouts/MainLayout";
 
 interface Doctor {
@@ -25,180 +34,248 @@ interface Props {
 }
 
 export default function About({ settings = {}, doctors = [], faqs = [] }: Props) {
-  const eyebrow = settings.about_eyebrow || 'Về Chúng Tôi';
-  const title = settings.about_title || 'MEDIPLUS HP MEDICAL CENTRE';
-  const mainImage = settings.about_main_image || '/assets/about_banner.jpg';
-  const desc1 = settings.about_desc1 || 'Tọa lạc tại vị trí đắc địa ở Hải Phòng, MediPlus HP Medical Centre tự hào là một trong những trung tâm y khoa kỹ thuật cao hàng đầu cung cấp trọn gói các dịch vụ chăm sóc sức khỏe tim mạch, nội khoa và khám chuyên sâu...';
-  const desc2 = settings.about_desc2 || 'Với triết lý khám chữa bệnh chuẩn y khoa, tôn vinh sức khỏe và sự an tâm của từng cá nhân, đội ngũ Bác sĩ, chuyên gia đầu ngành tại MediPlus HP cam kết đồng hành cùng quý khách hàng trên hành trình khám phá và hoàn thiện bản sắc sức khỏe hoàn hảo nhất...';
+  const achievements = [
+    "Gần 20 năm kinh nghiệm thăm khám và điều trị lâm sàng chuyên khoa Nội - Tim mạch.",
+    "Nguyên Bác sĩ chuyên khoa khám chữa bệnh nội khoa tại các bệnh viện tuyến đầu.",
+    "Liên kết chuyên môn sâu rộng với Viện Tim mạch Quốc gia, BV 108, BV Tim Hà Nội.",
+    "Thành viên Hội Tim mạch học Việt Nam (VNHA).",
+    "Tiên phong ứng dụng mô hình số hóa và AI trong theo dõi huyết áp, điện tim từ xa tại Hải Phòng."
+  ];
 
-  const doctorCount = settings.about_doctor_count_type === 'auto' ? doctors.length : 5;
-  const customerBase = settings.about_customer_base || '10000';
-  const customerCrm = settings.about_customer_crm || '+1';
+  const coreStandards = [
+    { title: "Phát hiện sớm bệnh lý", desc: "Tầm soát và phát hiện các nguy cơ tim mạch ở giai đoạn khởi phát chưa biến chứng." },
+    { title: "Theo dõi & điều trị liên tục", desc: "Đảm bảo quá trình điều trị không bị gián đoạn, phục hồi sức khỏe trái tim bền vững." },
+    { title: "Quản lý chủ động ngoài bệnh viện", desc: "Theo dõi và chăm sóc chỉ số huyết áp, nhịp tim định kỳ ngay tại nhà của người bệnh." },
+    { title: "Kết nối chuyên gia tuyến trên", desc: "Liên kết trực tiếp với các chuyên gia đầu ngành từ Viện Tim mạch Quốc gia, BV 108, BV Tim Hà Nội." },
+    { title: "Ứng dụng AI & Dữ liệu số", desc: "Áp dụng trí tuệ nhân tạo và số hóa dữ liệu điện tim, huyết áp để tối ưu hóa chẩn đoán." }
+  ];
 
-  const founderTitle = settings.about_founder_title || 'Triết Lý Khám Chữa Bệnh Chuẩn Y Khoa & Vẻ Đẹp Độc Bản';
-  const founderDesc1 = settings.about_founder_desc1 || 'Tại MediPlus HP Medical Centre, chúng tôi tin rằng mỗi người đều sở hữu một vẻ đẹp và sức khỏe độc bản riêng biệt. Sự tự tin của bạn là món quà quý giá nhất, và sứ mệnh của chúng tôi là giúp bạn giữ gìn nét riêng đó...';
-  const founderDesc2 = settings.about_founder_desc2 || 'Được thành lập bởi đội ngũ bác sĩ chuyên khoa I, II, MediPlus HP đã không ngừng nâng cấp hệ thống phòng khám, chuyển giao độc quyền các công nghệ y khoa tiên tiến...';
-  const founderQuote = settings.about_founder_quote || 'Chúng tôi không thay đổi diện mạo của bạn, chúng tôi tôn vinh và khôi phục những nét đẹp độc bản';
-  const founderAuthor = settings.about_founder_author || 'BSCKII Đoàn Khôi';
-
-  const storyImg1 = settings.about_story_img1 || '/assets/screening_service.png';
-  const storyImg2 = settings.about_story_img2 || '/assets/telehealth_service.png';
-  const storyImg3 = settings.about_story_img3 || '/assets/heart_care.png';
+  const facilities = [
+    {
+      title: "Holter điện tâm đồ 24h-48h",
+      desc: "Thiết bị đeo ngực thế hệ mới nhỏ gọn, không thấm nước, ghi lại từng nhịp đập của tim suốt ngày đêm để phát hiện loạn nhịp âm thầm."
+    },
+    {
+      title: "Siêu âm tim Doppler màu chuyên sâu",
+      desc: "Hệ thống siêu âm hiện đại giúp dựng hình ảnh cấu trúc van tim, đánh giá chính xác lực bóp và vận động vùng của cơ tim."
+    },
+    {
+      title: "Đo huyết áp tự động chuẩn hóa",
+      desc: "Thiết bị đo đạt chứng nhận lâm sàng quốc tế kết hợp lưu trữ chỉ số điện tử giúp đánh giá mức độ dao động huyết áp chuẩn y khoa."
+    },
+    {
+      title: "Hệ thống số hóa dữ liệu bệnh án",
+      desc: "Số hóa toàn bộ hồ sơ điện tim, huyết áp giúp liên kết nhanh với các chuyên gia tuyến Trung ương khi có ca bệnh khó."
+    }
+  ];
 
   return (
     <MainLayout>
-      <div className="bg-neutral-bg min-h-screen pt-24 pb-20 space-y-16">
+      <div className="bg-neutral-bg min-h-screen pt-24 pb-20">
         
-        {/* Top Banner Section */}
+        {/* Page Header */}
         <section className="relative text-white py-20 md:py-28 overflow-hidden bg-slate-900">
           <img
-            src={mainImage}
-            alt={title}
-            className="absolute inset-0 w-full h-full object-cover opacity-50"
+            src={settings.about_main_image || "/assets/about_banner.jpg"}
+            alt="Giới thiệu banner"
+            className="absolute inset-0 w-full h-full object-cover opacity-60"
           />
-          <div className="absolute inset-0 bg-gradient-to-r from-slate-950/80 via-primary/50 to-slate-950/80 pointer-events-none" />
+          <div className="absolute inset-0 bg-gradient-to-r from-primary/20 to-slate-950/40 pointer-events-none" />
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center relative z-10 flex flex-col items-center gap-4">
-            <span className="px-4 py-1.5 bg-amber-500/20 text-amber-300 border border-amber-500/30 rounded-full text-xs font-bold uppercase tracking-widest">
-              {eyebrow}
-            </span>
-            <h1 className="text-3xl sm:text-4xl md:text-5xl font-black tracking-tight uppercase leading-tight max-w-4xl">
-              {title}
+            <h1 className="text-3xl sm:text-4xl md:text-5xl font-extrabold tracking-tight">
+              GIỚI THIỆU
             </h1>
-            <div className="w-20 h-1 bg-amber-500 rounded-full my-1" />
+            <div className="w-20 h-1 bg-secondary rounded-full" />
           </div>
         </section>
 
-        {/* 1. KHỐI GIỚI THIỆU CHÍNH & TRIẾT LÝ */}
-        <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
+        {/* Doctor Bio Section */}
+        <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 md:gap-16 items-start">
             
-            {/* Left Column: Text & Descriptions */}
-            <div className="lg:col-span-7 space-y-6">
-              <div className="space-y-2">
-                <span className="text-xs font-extrabold text-[#b89a67] uppercase tracking-widest block">{eyebrow}</span>
-                <h2 className="text-2xl sm:text-3xl font-extrabold text-primary leading-snug">{title}</h2>
-                <div className="w-16 h-1 bg-[#b89a67] rounded-full" />
-              </div>
-
-              <p className="text-sm text-slate-700 leading-relaxed font-medium">
-                {desc1}
-              </p>
-
-              <p className="text-sm text-slate-600 leading-relaxed">
-                {desc2}
-              </p>
-
-              {/* Stats Box */}
-              <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 pt-4">
-                <div className="p-4 bg-white rounded-2xl border border-slate-200/80 shadow-xs text-center space-y-1">
-                  <span className="text-2xl font-black text-primary block">{doctorCount}+</span>
-                  <span className="text-xs font-bold text-slate-500 block">Bác sĩ chuyên khoa</span>
-                </div>
-                <div className="p-4 bg-white rounded-2xl border border-slate-200/80 shadow-xs text-center space-y-1">
-                  <span className="text-2xl font-black text-[#b89a67] block">{customerBase}+</span>
-                  <span className="text-xs font-bold text-slate-500 block">Bệnh nhân tin tưởng</span>
-                </div>
-                <div className="p-4 bg-white rounded-2xl border border-slate-200/80 shadow-xs text-center space-y-1 col-span-2 sm:col-span-1">
-                  <span className="text-2xl font-black text-emerald-600 block">100%</span>
-                  <span className="text-xs font-bold text-slate-500 block">Chuẩn Y Khoa</span>
-                </div>
-              </div>
-            </div>
-
-            {/* Right Column: Main Showcase Image */}
-            <div className="lg:col-span-5 flex justify-center">
-              <div className="relative w-full max-w-md aspect-[4/5] rounded-3xl overflow-hidden shadow-2xl border-4 border-white bg-slate-900 group">
-                <img 
-                  src={mainImage} 
-                  alt={title} 
-                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+            {/* Left Column: Image */}
+            <div className="lg:col-span-5 flex flex-col gap-4">
+              <div className="relative w-full aspect-[4/5] rounded-card overflow-hidden shadow-2xl border-4 border-white bg-slate-100">
+                <img
+                  src="/assets/doctor_khoi.png"
+                  alt="BSCKII Đoàn Khôi"
+                  className="w-full h-full object-cover"
                 />
-                <div className="absolute inset-0 bg-gradient-to-t from-slate-950/80 via-transparent to-transparent p-6 flex flex-col justify-end text-white">
-                  <span className="text-xs font-extrabold text-amber-400 uppercase tracking-widest">{eyebrow}</span>
-                  <h3 className="text-lg font-bold mt-1">{title}</h3>
+              </div>
+              <div className="bg-white p-6 rounded-card shadow-sm text-center">
+                <h3 className="font-bold text-primary text-base">BSCKII Đoàn Khôi</h3>
+                <p className="text-xs text-text-light mt-1">Chuyên gia cố vấn chuyên môn & Trực tiếp thăm khám</p>
+                <div className="flex justify-center gap-1.5 mt-3 text-secondary">
+                  <Award size={16} />
+                  <span className="text-xs font-semibold">Hội viên Hội Tim mạch học Việt Nam</span>
                 </div>
               </div>
             </div>
 
-          </div>
-        </section>
-
-        {/* 2. CÂU CHUYỆN NHÀ SÁNG LẬP (FOUNDER STORY) */}
-        <section className="bg-white py-16 border-y border-slate-200/80">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-12">
-            
-            <div className="text-center max-w-3xl mx-auto space-y-3">
-              <span className="text-xs font-extrabold text-[#b89a67] uppercase tracking-widest">FOUNDER STORY</span>
-              <h2 className="text-2xl sm:text-3xl font-extrabold text-primary">{founderTitle}</h2>
-              <div className="w-16 h-1 bg-[#b89a67] rounded-full mx-auto" />
-            </div>
-
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 text-sm text-slate-600 leading-relaxed">
-              <div className="p-6 bg-slate-50 rounded-2xl border border-slate-200/60">
-                <p>{founderDesc1}</p>
-              </div>
-              <div className="p-6 bg-slate-50 rounded-2xl border border-slate-200/60">
-                <p>{founderDesc2}</p>
-              </div>
-            </div>
-
-            {/* Founder Quote */}
-            {founderQuote && (
-              <div className="p-8 bg-[#004b87] text-white rounded-3xl shadow-xl relative overflow-hidden flex flex-col items-center text-center gap-4 border border-blue-800">
-                <Quote size={40} className="text-amber-400 opacity-80" />
-                <p className="text-base sm:text-lg font-extrabold italic max-w-3xl leading-relaxed">
-                  "{founderQuote}"
+            {/* Right Column: Detailed info */}
+            <div className="lg:col-span-7 flex flex-col gap-6">
+              <div className="flex flex-col gap-2">
+                <span className="text-xs font-bold uppercase tracking-wider text-secondary">Người sáng lập & Chuyên môn</span>
+                <h2 className="text-2xl sm:text-3xl font-bold text-primary tracking-tight">
+                  BSCKII ĐOÀN KHÔI
+                </h2>
+                <p className="text-base font-medium italic text-text-light">
+                  &ldquo;Trái tim khỏe mạnh là nền tảng của cuộc sống bình an. Chúng tôi cống hiến hết mình để bảo vệ nhịp đập trái tim bạn.&rdquo;
                 </p>
-                <span className="text-xs font-bold text-amber-300 uppercase tracking-wider">— {founderAuthor}</span>
               </div>
-            )}
+              
+              <div className="h-px bg-slate-200 w-full my-2"></div>
+              
+              <p className="text-sm text-text-light leading-relaxed">
+                Với gần 20 năm làm việc trong lĩnh vực nội khoa tim mạch, <strong>Bác sĩ chuyên khoa II Đoàn Khôi</strong> là một trong những chuyên gia uy tín hàng đầu tại Hải Phòng. Bác sĩ Khôi đã trực tiếp điều trị thành công hàng ngàn ca bệnh lý tim mạch phức tạp, từ tăng huyết áp mãn tính, suy cơ tim tiến triển, đến chẩn đoán sớm và xử trí các cơn loạn nhịp tim nguy hiểm.
+              </p>
 
-            {/* Trio Story Images */}
-            <div className="space-y-4 pt-4">
-              <h4 className="text-xs font-black text-slate-400 uppercase tracking-widest text-center">BỘ BA HÌNH ẢNH HOẠT ĐỘNG & THÀNH TỰU</h4>
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
-                <div className="h-56 rounded-2xl overflow-hidden border border-slate-200 shadow-sm group bg-slate-900">
-                  <img src={storyImg1} alt="Hội thảo" className="w-full h-full object-cover group-hover:scale-105 transition-transform" />
-                </div>
-                <div className="h-56 rounded-2xl overflow-hidden border border-slate-200 shadow-sm group bg-slate-900">
-                  <img src={storyImg2} alt="Chứng nhận" className="w-full h-full object-cover group-hover:scale-105 transition-transform" />
-                </div>
-                <div className="h-56 rounded-2xl overflow-hidden border border-slate-200 shadow-sm group bg-slate-900">
-                  <img src={storyImg3} alt="Toàn cảnh" className="w-full h-full object-cover group-hover:scale-105 transition-transform" />
-                </div>
+              <div className="flex flex-col gap-4 mt-2">
+                <h3 className="text-sm font-bold text-primary uppercase tracking-wider flex items-center gap-2">
+                  <BookOpen size={18} className="text-secondary" />
+                  Quá trình công tác & Điểm nhấn chuyên môn:
+                </h3>
+                <ul className="flex flex-col gap-3">
+                  {achievements.map((item, idx) => (
+                    <li key={idx} className="flex items-start gap-3 text-xs leading-relaxed text-text-primary">
+                      <CheckCircle2 size={16} className="text-secondary shrink-0 mt-0.5" />
+                      <span>{item}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+
+              <div className="mt-4">
+                <Link
+                  href="/lien-he"
+                  className="inline-flex items-center gap-2 bg-secondary hover:bg-secondary-dark text-white text-sm font-bold px-6 py-3 rounded-btn shadow-md transition-all hover:scale-105 cursor-pointer"
+                >
+                  <Calendar size={16} />
+                  Đặt lịch khám với Bác sĩ
+                </Link>
               </div>
             </div>
 
           </div>
         </section>
 
-        {/* 3. ĐỘI NGŨ BÁC SĨ CHUYÊN KHOA */}
-        {doctors.length > 0 && (
-          <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8">
-            <div className="text-center space-y-2">
-              <span className="text-xs font-extrabold text-[#b89a67] uppercase tracking-widest">ĐỘI NGŨ Y BÁC SĨ</span>
-              <h2 className="text-2xl sm:text-3xl font-extrabold text-primary">Bác Sĩ Chuyên Khoa Giàu Kinh Nghiệm</h2>
-              <div className="w-16 h-1 bg-[#b89a67] rounded-full mx-auto" />
+        {/* Vision & Mission Section */}
+        <section className="bg-slate-900 text-white py-20">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
+              
+              {/* Vision card */}
+              <div className="bg-slate-800/40 p-8 rounded-card flex flex-col gap-4">
+                <div className="w-10 h-10 bg-secondary/10 text-secondary rounded-full flex items-center justify-center">
+                  <Heart size={20} />
+                </div>
+                <h3 className="text-lg font-bold text-white uppercase tracking-wider">Tầm nhìn chiến lược</h3>
+                <p className="text-xs text-slate-400 leading-relaxed">
+                  Trở thành phòng khám chuyên khoa nội tim mạch số mẫu mực hàng đầu tại Hải Phòng. Tiên phong thiết lập mạng lưới quản lý bệnh tim mạch mãn tính từ xa, giúp bệnh nhân được bác sĩ chuyên khoa bảo vệ liên tục ngay cả khi ở nhà, giảm tỷ lệ biến chứng đột tử hoặc đột quỵ.
+                </p>
+              </div>
+
+              {/* Mission card */}
+              <div className="bg-slate-800/40 p-8 rounded-card flex flex-col gap-4">
+                <div className="w-10 h-10 bg-primary/20 text-primary rounded-full flex items-center justify-center">
+                  <ShieldCheck size={20} />
+                </div>
+                <h3 className="text-lg font-bold text-white uppercase tracking-wider">Sứ mệnh y khoa</h3>
+                <p className="text-xs text-slate-400 leading-relaxed">
+                  Đem đến dịch vụ y tế an toàn, chuyên nghiệp, chuẩn mực y khoa cao nhất nhưng vô cùng gần gũi với người dân địa phương. Kết nối nhanh chóng với các bệnh viện chuyên khoa lớn nhất cả nước, tạo ra điểm tựa y tế vững chắc và đáng tin cậy cho mọi gia đình.
+                </p>
+              </div>
+
+            </div>
+          </div>
+        </section>
+
+        {/* 5 Core Standards Section (Migrated from Homepage) */}
+        <section className="py-20 bg-white">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            
+            <div className="text-center max-w-3xl mx-auto mb-16 flex flex-col gap-3">
+              <span className="text-xs font-bold uppercase tracking-wider text-secondary">Mô hình & Mục tiêu</span>
+              <h2 className="text-2xl sm:text-3xl font-bold text-primary tracking-tight">
+                MÔ HÌNH CHĂM SÓC SỨC KHỎE TIM MẠCH TOÀN DIỆN
+              </h2>
+              <div className="w-16 h-1 bg-secondary mx-auto rounded-full" />
+              <p className="text-base text-text-light mt-2">
+                Chúng tôi xây dựng giải pháp chăm sóc tim mạch khép kín, tối ưu hóa công nghệ số và kết nối chuyên gia đầu ngành để bảo vệ sự bình an của trái tim bạn.
+              </p>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-              {doctors.map(doc => (
-                <div key={doc.id} className="bg-white rounded-3xl border border-slate-200 p-6 shadow-xs hover:shadow-md transition-all text-center space-y-4">
-                  <div className="w-24 h-24 rounded-full overflow-hidden border-2 border-primary/20 shadow-md mx-auto">
-                    <img src={doc.avatar || '/assets/doctor_khoi.png'} alt={doc.name} className="w-full h-full object-cover" />
-                  </div>
-                  <div>
-                    <h3 className="font-extrabold text-primary text-base">{doc.name}</h3>
-                    <p className="text-xs font-bold text-emerald-700 mt-0.5">{doc.specialty}</p>
-                    <span className="inline-block px-3 py-1 bg-slate-100 text-slate-700 text-[11px] font-bold rounded-full mt-2">
-                      {doc.experience}
-                    </span>
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
+              
+              {/* Left side: Doctor Quick Profile */}
+              <div className="lg:col-span-5 flex flex-col gap-6">
+                <div className="relative w-full h-[450px] sm:h-[500px] lg:h-[450px] xl:h-[500px] rounded-card overflow-hidden shadow-lg bg-slate-50">
+                  <img 
+                    src="/assets/doctor_khoi.png" 
+                    alt="BSCKII Đoàn Khôi" 
+                    className="w-full h-full object-cover"
+                  />
+                  <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-slate-950 via-slate-900/80 to-transparent p-6 text-white">
+                    <h3 className="text-xl font-bold">BSCKII Đoàn Khôi</h3>
+                    <p className="text-sm text-secondary font-medium">Chuyên khoa Nội - Tim mạch</p>
+                    <p className="text-xs text-slate-300 mt-1">Gần 20 năm kinh nghiệm chuyên sâu thăm khám và điều trị nội - tim mạch</p>
                   </div>
                 </div>
-              ))}
+              </div>
+
+              {/* Right side: 5 standards */}
+              <div className="lg:col-span-7 flex flex-col gap-6">
+                <h3 className="text-lg font-bold text-primary uppercase tracking-wide mb-2 flex items-center gap-2">
+                  <CheckCircle2 size={20} className="text-secondary" />
+                  5 Tiêu chuẩn chăm sóc cốt lõi:
+                </h3>
+                
+                <div className="flex flex-col gap-4">
+                  {coreStandards.map((std, idx) => (
+                    <div key={idx} className="flex gap-4 p-4 rounded-xl hover:bg-slate-50 transition-colors">
+                      <div className="w-8 h-8 rounded-full bg-secondary/10 flex items-center justify-center font-bold text-secondary text-sm shrink-0">
+                        {idx + 1}
+                      </div>
+                      <div>
+                        <h4 className="text-base font-bold text-primary">{std.title}</h4>
+                        <p className="text-sm text-text-light mt-1 leading-relaxed">{std.desc}</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
             </div>
-          </section>
-        )}
+          </div>
+        </section>
+
+        {/* Facilities & Equipment Section */}
+        <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
+          <div className="text-center max-w-3xl mx-auto mb-16 flex flex-col gap-3">
+            <span className="text-xs font-bold uppercase tracking-wider text-secondary">Trang thiết bị y tế</span>
+            <h2 className="text-2xl sm:text-3xl font-bold text-primary tracking-tight">
+              CƠ SỞ VẬT CHẤT & THIẾT BỊ HIỆN ĐẠI
+            </h2>
+            <div className="w-16 h-1 bg-secondary mx-auto rounded-full" />
+            <p className="text-sm text-text-light mt-2">
+              Phòng khám được đầu tư bài bản, trang bị các thiết bị chuyên sâu chuẩn y khoa hỗ trợ chẩn đoán chính xác tuyệt đối các bệnh lý tim mạch.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+            {facilities.map((item, idx) => (
+              <div key={idx} className="bg-white p-6 rounded-card shadow-sm flex flex-col gap-4 hover:shadow-md transition-shadow">
+                <div className="w-10 h-10 bg-primary/5 rounded-xl flex items-center justify-center text-primary shrink-0">
+                  <Building2 size={20} />
+                </div>
+                <div>
+                  <h3 className="font-bold text-primary text-sm mb-2">{item.title}</h3>
+                  <p className="text-xs text-text-light leading-relaxed">{item.desc}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
 
       </div>
     </MainLayout>

@@ -111,6 +111,9 @@ export default function Home({ servicePillars, latestNews, banners = [], reviews
   ];
 
   const currentBanner = activeBanners[currentSlideIndex % activeBanners.length];
+  const isDefaultBanner = currentBanner.image_url === '/assets/heart_care.png' || 
+                          currentBanner.desktop_image === '/assets/heart_care.png' ||
+                          currentBanner.image_url?.endsWith('heart_care.png');
 
   const commitments = [
     { title: "Phát hiện sớm bệnh tim mạch", desc: "Khám chuyên khoa, xét nghiệm Holter, ECG, siêu âm kết hợp phân tích AI giúp phát hiện nguy cơ sớm nhất." },
@@ -155,52 +158,54 @@ export default function Home({ servicePillars, latestNews, banners = [], reviews
             )}
 
             {/* Content Overlay */}
-            <div className="absolute inset-0 bg-gradient-to-r from-slate-950/80 via-slate-900/40 to-transparent flex items-center p-6 md:p-12 lg:p-16">
-              <div className="max-w-xl text-white space-y-3 animate-fade-in">
-                {currentBanner.eyebrow && (
-                  <span className="inline-block px-3 py-1 bg-secondary/90 backdrop-blur-xs text-white text-xs font-black uppercase tracking-wider rounded-full shadow-sm">
-                    {currentBanner.eyebrow}
-                  </span>
-                )}
-                
-                <h1 className="text-xl sm:text-3xl lg:text-4xl font-black text-white leading-tight drop-shadow-md">
-                  {currentBanner.title}
-                </h1>
+            {!isDefaultBanner && (
+              <div className="absolute inset-0 bg-gradient-to-r from-slate-950/80 via-slate-900/40 to-transparent flex items-center p-6 md:p-12 lg:p-16">
+                <div className="max-w-xl text-white space-y-3 animate-fade-in">
+                  {currentBanner.eyebrow && (
+                    <span className="inline-block px-3 py-1 bg-secondary/90 backdrop-blur-xs text-white text-xs font-black uppercase tracking-wider rounded-full shadow-sm">
+                      {currentBanner.eyebrow}
+                    </span>
+                  )}
+                  
+                  <h1 className="text-xl sm:text-3xl lg:text-4xl font-black text-white leading-tight drop-shadow-md">
+                    {currentBanner.title}
+                  </h1>
 
-                {currentBanner.subtitle && (
-                  <p className="text-xs sm:text-base font-bold text-teal-200">
-                    {currentBanner.subtitle}
-                  </p>
-                )}
-
-                {currentBanner.subheading && (
-                  <p className="text-xs sm:text-sm text-slate-200 leading-relaxed line-clamp-2 hidden sm:block">
-                    {currentBanner.subheading}
-                  </p>
-                )}
-
-                <div className="flex flex-wrap items-center gap-3 pt-3">
-                  {(currentBanner.primary_button_text || currentBanner.link) && (
-                    <Link
-                      href={currentBanner.primary_button_link || currentBanner.link || '/lien-he'}
-                      className="bg-secondary hover:bg-secondary-dark text-white font-bold text-xs sm:text-sm px-6 py-2.5 sm:py-3 rounded-full shadow-md transition-all hover:scale-105 inline-flex items-center gap-2"
-                    >
-                      {currentBanner.primary_button_text || 'Đặt Lịch Khám Ngay'}
-                      <ArrowRight size={16} />
-                    </Link>
+                  {currentBanner.subtitle && (
+                    <p className="text-xs sm:text-base font-bold text-teal-200">
+                      {currentBanner.subtitle}
+                    </p>
                   )}
 
-                  {currentBanner.secondary_button_text && (
-                    <Link
-                      href={currentBanner.secondary_button_link || '#services'}
-                      className="bg-white/20 hover:bg-white/30 text-white font-bold text-xs sm:text-sm px-6 py-2.5 sm:py-3 rounded-full backdrop-blur-xs transition-all hover:scale-105 border border-white/30"
-                    >
-                      {currentBanner.secondary_button_text}
-                    </Link>
+                  {currentBanner.subheading && (
+                    <p className="text-xs sm:text-sm text-slate-200 leading-relaxed line-clamp-2 hidden sm:block">
+                      {currentBanner.subheading}
+                    </p>
                   )}
+
+                  <div className="flex flex-wrap items-center gap-3 pt-3">
+                    {(currentBanner.primary_button_text || currentBanner.link) && (
+                      <Link
+                        href={currentBanner.primary_button_link || currentBanner.link || '/lien-he'}
+                        className="bg-secondary hover:bg-secondary-dark text-white font-bold text-xs sm:text-sm px-6 py-2.5 sm:py-3 rounded-full shadow-md transition-all hover:scale-105 inline-flex items-center gap-2"
+                      >
+                        {currentBanner.primary_button_text || 'Đặt Lịch Khám Ngay'}
+                        <ArrowRight size={16} />
+                      </Link>
+                    )}
+
+                    {currentBanner.secondary_button_text && (
+                      <Link
+                        href={currentBanner.secondary_button_link || '#services'}
+                        className="bg-white/20 hover:bg-white/30 text-white font-bold text-xs sm:text-sm px-6 py-2.5 sm:py-3 rounded-full backdrop-blur-xs transition-all hover:scale-105 border border-white/30"
+                      >
+                        {currentBanner.secondary_button_text}
+                      </Link>
+                    )}
+                  </div>
                 </div>
               </div>
-            </div>
+            )}
 
             {/* Slider Dots Navigation (if > 1 banner) */}
             {activeBanners.length > 1 && (
@@ -619,16 +624,27 @@ export default function Home({ servicePillars, latestNews, banners = [], reviews
         </section>
       )}
 
-      {/* 8. CALL TO ACTION BANNER */}
+      {/* 8. CALL TO ACTION BANNER (FULL WIDTH YOUMED STYLE) */}
       <section className="w-full bg-gradient-to-r from-primary to-[#0072c6] py-16 md:py-20 relative overflow-hidden text-white border-t border-b border-primary/10">
+        <div className="absolute top-0 right-0 w-96 h-96 bg-white/5 rounded-full blur-3xl -z-0" />
+        
+        <svg className="absolute w-0 h-0" width="0" height="0">
+          <defs>
+            <clipPath id="heart-clip" clipPathUnits="objectBoundingBox">
+              <path d="M0.5,0.18 C0.32,0.02 0.08,0.08 0.02,0.28 C-0.08,0.55 0.15,0.8 0.5,0.98 C0.85,0.8 1.08,0.55 0.98,0.28 C0.92,0.08 0.68,0.02 0.5,0.18 Z" />
+            </clipPath>
+          </defs>
+        </svg>
+
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
+            {/* Left Column: Text & Buttons */}
             <div className="lg:col-span-7 flex flex-col gap-4 text-center lg:text-left">
               <h3 className="text-2xl md:text-3xl lg:text-4xl font-extrabold text-white leading-tight">
                 Bảo vệ trái tim của bạn cùng BSCKII Đoàn Khôi
               </h3>
               <p className="text-sm md:text-base text-white/85 leading-relaxed max-w-xl">
-                Đặt lịch hẹn tư vấn và tầm soát sớm nhất để hạn chế tối đa nguy cơ đột quỵ, nhồi máu cơ tim thầm lặng.
+                Đặt lịch hẹn tư vấn và tầm soát sớm nhất để hạn chế tối đa nguy cơ đột quỵ, nhồi máu cơ tim thầm lặng. Chúng tôi liên hệ lại để xác nhận lịch ngay.
               </p>
               <div className="flex flex-col sm:flex-row gap-4 mt-6 justify-center lg:justify-start items-center w-full sm:w-auto">
                 <Link 
@@ -648,9 +664,18 @@ export default function Home({ servicePillars, latestNews, banners = [], reviews
               </div>
             </div>
 
+            {/* Right Column: Heart-shaped image container with rings */}
             <div className="lg:col-span-5 flex justify-center">
               <div className="relative w-56 h-56 md:w-64 md:h-64 flex items-center justify-center">
-                <div className="relative w-full h-full bg-white/10 rounded-full overflow-hidden border-2 border-white/20 shadow-xl transition-transform duration-500 hover:scale-105">
+                {/* Decorative concentric rings in background */}
+                <div className="absolute inset-0 border border-white/20 rounded-full scale-[1.12]" />
+                <div className="absolute inset-0 border border-white/10 rounded-full scale-[1.24]" />
+                
+                {/* Heart container */}
+                <div 
+                  className="relative w-full h-full bg-white/10 overflow-hidden border-2 border-white/20 shadow-xl transition-transform duration-500 hover:scale-105"
+                  style={{ clipPath: "url(#heart-clip)" }}
+                >
                   <img
                     src="/assets/family.png"
                     alt="Gia đình hạnh phúc"

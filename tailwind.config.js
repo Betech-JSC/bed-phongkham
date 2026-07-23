@@ -34,6 +34,10 @@ export default {
                 btn: '30px',
                 card: '16px',
             },
+            scale: {
+                '102': '1.02',
+                '103': '1.03',
+            },
             animation: {
                 'fade-in': 'fadeIn 0.6s ease-out forwards',
                 'slide-up': 'slideUp 0.7s cubic-bezier(0.16, 1, 0.3, 1) forwards',

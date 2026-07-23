@@ -21,7 +21,7 @@ interface Props {
   prefillService?: string;
 }
 
-export default function Contact({ allServices, settings, prefillService }: Props) {
+export default function Contact({ allServices = [], settings = {}, prefillService }: Props) {
   const { flash } = usePage().props as any;
 
   const defaultNotes = prefillService 
@@ -58,7 +58,7 @@ export default function Contact({ allServices, settings, prefillService }: Props
           <div className="absolute inset-0 bg-gradient-to-r from-primary/20 to-slate-950/40 pointer-events-none" />
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center relative z-10 flex flex-col items-center gap-4">
             <h1 className="text-3xl sm:text-4xl md:text-5xl font-extrabold tracking-tight">
-              LIÊN HỆ & ĐẶT LỊCH HẸN
+              LIÊN HỆ
             </h1>
             <div className="w-20 h-1 bg-secondary rounded-full" />
           </div>
@@ -182,33 +182,14 @@ export default function Contact({ allServices, settings, prefillService }: Props
                       {errors.phone && <span className="text-xs text-accent">{errors.phone}</span>}
                     </div>
 
-                    {/* Service Selection */}
-                    <div className="flex flex-col gap-1.5">
-                      <label className="text-xs font-bold text-text-primary uppercase tracking-wide">
-                        Chọn gói dịch vụ khám
-                      </label>
-                      <select
-                        value={data.service_slug}
-                        onChange={(e) => setData('service_slug', e.target.value)}
-                        className="border border-slate-200 focus:border-secondary focus:ring-1 focus:ring-secondary rounded-xl px-4 py-3 text-sm outline-none bg-slate-50 focus:bg-white transition-all text-text-primary font-medium"
-                      >
-                        <option value="">-- Chọn dịch vụ cần tư vấn (Tùy chọn) --</option>
-                        {allServices.map((srv) => (
-                          <option key={srv.id} value={srv.slug}>
-                            {srv.title}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-
                     {/* Notes / Symptoms */}
                     <div className="flex flex-col gap-1.5">
                       <label className="text-xs font-bold text-text-primary uppercase tracking-wide">
-                        Yêu cầu khám chi tiết / Triệu chứng
+                        Yêu cầu khám chi tiết
                       </label>
                       <textarea
-                        rows={4}
-                        placeholder="Gợi ý: Ngày giờ mong muốn khám, triệu chứng hồi hộp, đau ngực hoặc ghi chú khác..."
+                        rows={5}
+                        placeholder="Gợi ý nhập: Dịch vụ cần khám gì, ngày giờ mong muốn ra sao, các triệu chứng hoặc ghi chú chi tiết khác..."
                         value={data.notes}
                         onChange={(e) => setData('notes', e.target.value)}
                         className="border border-slate-200 focus:border-secondary focus:ring-1 focus:ring-secondary rounded-xl px-4 py-3 text-sm outline-none bg-slate-50 focus:bg-white transition-all text-text-primary font-medium resize-none"

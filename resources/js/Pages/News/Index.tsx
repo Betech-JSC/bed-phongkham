@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { Link } from "@inertiajs/react";
-import { ArrowRight, User, Calendar, Clock } from "lucide-react";
+import { ArrowRight, Calendar, Clock } from "lucide-react";
 import MainLayout from "@/Layouts/MainLayout";
 
 interface Article {
@@ -20,7 +20,7 @@ interface Props {
   newsList: Article[];
 }
 
-export default function NewsIndex({ newsList }: Props) {
+export default function NewsIndex({ newsList = [] }: Props) {
   const [selectedCategory, setSelectedCategory] = useState<string>("Tất cả");
 
   const categories = [
@@ -36,7 +36,7 @@ export default function NewsIndex({ newsList }: Props) {
     <MainLayout>
       <div className="bg-neutral-bg min-h-screen pt-24 pb-20">
         
-        {/* Banner */}
+        {/* Page Header */}
         <section className="relative text-white py-20 md:py-28 overflow-hidden bg-slate-900">
           <img
             src="/assets/news_banner.jpg"
@@ -52,17 +52,19 @@ export default function NewsIndex({ newsList }: Props) {
           </div>
         </section>
 
-        {/* Category Filters */}
-        <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-12">
-          <div className="flex flex-wrap justify-center gap-3 mb-10">
+        {/* Category Filters Container */}
+        <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 flex flex-col gap-10">
+          
+          {/* Category Filter Pills */}
+          <div className="flex flex-wrap gap-2.5 justify-center">
             {categories.map((cat) => (
               <button
                 key={cat}
                 onClick={() => setSelectedCategory(cat)}
-                className={`px-5 py-2 rounded-full text-xs font-bold transition-all cursor-pointer ${
+                className={`px-5 py-2.5 rounded-full text-xs sm:text-sm font-semibold transition-all cursor-pointer border ${
                   selectedCategory === cat
-                    ? "bg-primary text-white shadow-md"
-                    : "bg-white text-text-primary hover:bg-slate-100 border border-slate-200"
+                    ? "bg-secondary text-white border-secondary shadow-sm scale-102"
+                    : "bg-white text-text-primary border-slate-200 hover:border-secondary hover:text-secondary"
                 }`}
               >
                 {cat}
@@ -70,26 +72,35 @@ export default function NewsIndex({ newsList }: Props) {
             ))}
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+          {/* Filter Status Count */}
+          <div className="text-center text-xs text-text-light font-medium -mt-4">
+            Hiển thị {filteredNews.length} bài viết trong chuyên mục <span className="text-secondary font-bold">"{selectedCategory}"</span>
+          </div>
+
+          {/* News Grid */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             {filteredNews.map((news) => (
               <article 
                 key={news.id}
-                className="bg-white rounded-card overflow-hidden border border-slate-100 shadow-sm hover:shadow-lg transition-all duration-300 flex flex-col justify-between"
+                className="bg-white rounded-card overflow-hidden shadow-sm hover:shadow-lg transition-all duration-300 flex flex-col justify-between border border-slate-100"
               >
                 <div>
                   <div className="relative w-full aspect-[16/10] bg-slate-100 overflow-hidden">
                     <img 
                       src={news.image} 
                       alt={news.title} 
-                      className="w-full h-full object-cover hover:scale-105 transition-transform duration-500"
+                      className="w-full h-full object-cover hover:scale-103 transition-transform duration-550"
                     />
                   </div>
                   <div className="p-6">
-                    <div className="flex items-center gap-3 text-xs text-text-light mb-3">
-                      <span className="px-2.5 py-1 bg-slate-100 text-slate-700 rounded-full font-semibold">
+                    <div className="flex items-center gap-3 text-[11px] text-text-light mb-3 font-semibold">
+                      <span className="px-2.5 py-1 bg-slate-100 text-slate-700 rounded-full">
                         {news.category}
                       </span>
-                      <span>{news.read_time}</span>
+                      <span className="flex items-center gap-1">
+                        <Clock size={12} className="text-secondary" />
+                        {news.read_time}
+                      </span>
                     </div>
                     <h3 className="text-base font-bold text-primary mb-3 hover:text-secondary transition-colors leading-snug line-clamp-2">
                       <Link href={`/tin-tuc/${news.slug}`}>{news.title}</Link>
@@ -101,18 +112,22 @@ export default function NewsIndex({ newsList }: Props) {
                 </div>
                 
                 <div className="p-6 pt-0 border-t border-slate-50 flex justify-between items-center text-xs text-text-light">
-                  <span>Bởi {news.author}</span>
+                  <span className="flex items-center gap-1">
+                    <Calendar size={12} className="text-secondary" />
+                    {news.date}
+                  </span>
                   <Link 
                     href={`/tin-tuc/${news.slug}`}
                     className="text-secondary font-bold hover:underline inline-flex items-center gap-1 group"
                   >
-                    Đọc tiếp
+                    Đọc bài viết
                     <ArrowRight size={12} className="group-hover:translate-x-0.5 transition-transform" />
                   </Link>
                 </div>
               </article>
             ))}
           </div>
+
         </section>
 
       </div>
