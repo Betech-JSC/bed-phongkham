@@ -92,10 +92,8 @@ export default function Contact({ allServices = [], settings = {}, prefillServic
                     <div>
                       <h4 className="font-bold text-text-primary">Số điện thoại Hotline:</h4>
                       <p className="text-text-light mt-0.5">
-                        <a href={`tel:${settings.hotline_1_clean || '0384326785'}`} className="hover:underline font-semibold text-text-primary">
-                          {settings.hotline_1 || '038 432 6785'}
-                        </a> - <a href={`tel:${settings.hotline_2_clean || '0328699799'}`} className="hover:underline">
-                          {settings.hotline_2 || '0328 699 799'}
+                        <a href={`tel:${settings.hotline_1_clean || '0585013013'}`} className="hover:underline font-extrabold text-primary text-base">
+                          {settings.hotline_1 || '0585 013 013'}
                         </a>
                       </p>
                     </div>
@@ -110,8 +108,10 @@ export default function Contact({ allServices = [], settings = {}, prefillServic
                   <li className="flex items-start gap-3">
                     <Clock className="text-secondary shrink-0 mt-0.5" size={20} />
                     <div>
-                      <h4 className="font-bold text-text-primary">Giờ làm việc (Thứ 2 - Chủ Nhật):</h4>
-                      <p className="text-text-light mt-0.5">{settings.working_hours || 'Sáng: 07:30 – 11:30 | Chiều: 13:30 – 18:30'}</p>
+                      <h4 className="font-bold text-text-primary">Giờ làm việc:</h4>
+                      <p className="text-text-light mt-0.5 font-medium">Thứ 2 – Thứ 6: 17h15 – 20h00</p>
+                      <p className="text-text-light mt-0.5 font-medium">Thứ 7, CN: Sáng 7h15 – 11h15 | Chiều 13h30 – 20h30</p>
+                      <p className="text-xs text-slate-500 italic mt-1">* Tư vấn cấp cứu & điều trị toàn thời gian các ngày trong tuần</p>
                     </div>
                   </li>
                 </ul>

@@ -10,16 +10,12 @@ export default function FAB() {
 
   const hotlines = [
     { 
-      label: `Hotline 1: ${settings.hotline_1 || "038 432 6785"}`, 
-      value: settings.hotline_1_clean || "0384326785" 
-    },
-    { 
-      label: `Hotline 2: ${settings.hotline_2 || "0328 699 799"}`, 
-      value: settings.hotline_2_clean || "0328699799" 
+      label: `Hotline: ${settings.hotline_1 || "0585 013 013"}`, 
+      value: settings.hotline_1_clean || "0585013013" 
     },
   ];
 
-  const zaloLink = settings.zalo_link || "https://zalo.me/0384326785";
+  const zaloLink = settings.zalo_link || "https://zalo.me/0585013013";
 
   return (
     <div className="fixed bottom-6 right-6 z-50 flex flex-col items-end gap-3 font-sans">

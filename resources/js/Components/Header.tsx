@@ -8,8 +8,8 @@ export default function Header() {
   const [isScrolled, setIsScrolled] = useState(false);
   const { url, props } = usePage();
   const settings = (props as any).settings || {};
-  const hotline1 = settings.hotline_1 || '038 432 6785';
-  const hotline1Clean = settings.hotline_1_clean || '0384326785';
+  const hotline1 = settings.hotline_1 || '0585 013 013';
+  const hotline1Clean = settings.hotline_1_clean || '0585013013';
 
   useEffect(() => {
     const handleScroll = () => {
@@ -63,11 +63,11 @@ export default function Header() {
                 />
               </div>
               <div className="flex flex-col">
-                <span className="text-base font-extrabold text-primary tracking-tight leading-none uppercase">
-                  Phòng Khám Nội
+                <span className="text-sm sm:text-base font-extrabold text-primary tracking-tight leading-tight uppercase">
+                  Phòng Khám Chuyên Khoa Nội
                 </span>
-                <span className="text-[10px] text-text-light font-bold uppercase tracking-wider mt-1">
-                  BSCKII Đoàn Khôi
+                <span className="text-xs text-secondary font-bold uppercase tracking-wider mt-0.5">
+                  BSCK. II Đoàn Khôi
                 </span>
               </div>
             </Link>

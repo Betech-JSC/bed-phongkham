@@ -26,14 +26,14 @@ class MediPlusSeeder extends Seeder
         // 1. Site Settings
         $settings = [
             'clinic_name' => 'Phòng Khám Chuyên Khoa Nội - BSCKII Đoàn Khôi',
-            'hotline_1' => '038 432 6785',
-            'hotline_1_clean' => '0384326785',
+            'hotline_1' => '0585 013 013',
+            'hotline_1_clean' => '0585013013',
             'hotline_2' => '0328 699 799',
             'hotline_2_clean' => '0328699799',
-            'zalo_link' => 'https://zalo.me/0384326785',
+            'zalo_link' => 'https://zalo.me/0585013013',
             'email' => 'doankhoiclinic@gmail.com',
             'address' => '348 Nguyễn Lương Bằng, Lê Thanh Nghị, Hải Phòng',
-            'working_hours' => 'Sáng: 07:30 – 11:30 | Chiều: 13:30 – 18:30 (Thứ 2 - Chủ Nhật)',
+            'working_hours' => 'Thứ 2 - Thứ 6: 17h15 - 20h00 | Thứ 7, CN: Sáng 7h15 - 11h15, Chiều 13h30 - 20h30',
             'hero_banner' => '/assets/heart_care.png',
             'tagline' => 'Trái tim bình an – Muôn vàn hạnh phúc',
         ];

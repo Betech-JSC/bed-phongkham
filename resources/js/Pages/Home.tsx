@@ -232,12 +232,11 @@ export default function Home({ servicePillars, latestNews, banners = [], reviews
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           
           <div className="text-center max-w-3xl mx-auto mb-16 flex flex-col gap-3">
-            <span className="text-xs text-secondary font-bold uppercase tracking-wider">TẦM SOÁT & ĐIỀU TRỊ</span>
             <h2 className="text-2xl sm:text-3xl font-extrabold text-primary tracking-tight">
-              Dịch Vụ Y Tế Nổi Bật
+              DỊCH VỤ Y TẾ NỔI BẬT
             </h2>
             <div className="w-16 h-1 bg-secondary mx-auto rounded-full" />
-            <p className="text-sm text-text-light mt-2 leading-relaxed">
+            <p className="text-sm sm:text-base text-text-light mt-2 leading-relaxed">
               Phòng khám cung cấp giải pháp khám và tầm soát tim mạch chất lượng cao với trang thiết bị y khoa hiện đại và đội ngũ chuyên gia tận tâm.
             </p>
           </div>
@@ -386,12 +385,11 @@ export default function Home({ servicePillars, latestNews, banners = [], reviews
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
           
           <div className="text-center max-w-3xl mx-auto mb-16 flex flex-col gap-3">
-            <span className="text-sm font-bold uppercase tracking-wider text-secondary">Dịch vụ chuyên sâu</span>
-            <h2 className="text-2xl sm:text-3xl font-bold text-primary tracking-tight">
+            <h2 className="text-2xl sm:text-3xl font-extrabold text-primary tracking-tight">
               3 TRỤ CỘT BẢO VỆ TRÁI TIM BỀN VỮNG
             </h2>
             <div className="w-16 h-1 bg-secondary mx-auto rounded-full" />
-            <p className="text-sm text-text-light mt-2 leading-relaxed">
+            <p className="text-sm sm:text-base text-text-light mt-2 leading-relaxed">
               Chúng tôi cung cấp dải dịch vụ hoàn chỉnh từ tầm soát phát hiện sớm đến điều trị dài hạn và theo dõi sức khỏe chủ động từ xa.
             </p>
           </div>
@@ -406,8 +404,7 @@ export default function Home({ servicePillars, latestNews, banners = [], reviews
                   <div className="w-12 h-12 bg-primary/10 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300">
                     {getIcon(pillar.icon_name)}
                   </div>
-                  <span className="text-sm text-secondary font-bold uppercase tracking-wider">{pillar.tagline}</span>
-                  <h3 className="text-lg font-bold text-primary mt-2 mb-4 group-hover:text-primary-dark transition-colors">{pillar.title}</h3>
+                  <h3 className="text-lg sm:text-xl font-extrabold text-primary mb-3 group-hover:text-primary-dark transition-colors">{pillar.title}</h3>
                   <p className="text-sm text-text-light leading-relaxed mb-6">{pillar.description}</p>
                   
                   <ul className="flex flex-col gap-2.5 mb-8">
@@ -485,10 +482,9 @@ export default function Home({ servicePillars, latestNews, banners = [], reviews
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           
           <div className="flex flex-col md:flex-row justify-between items-center mb-16 gap-6">
-            <div className="max-w-xl text-center md:text-left flex flex-col gap-2">
-              <span className="text-xs font-bold uppercase tracking-wider text-secondary">Tin tức & Y học</span>
-              <h2 className="text-2xl sm:text-3xl font-bold text-primary tracking-tight">
-                CẬP NHẬT KIẾN THỨC SỨC KHỎE TIM MẠCH
+            <div className="max-w-2xl text-center md:text-left flex flex-col gap-2">
+              <h2 className="text-2xl sm:text-3xl font-extrabold text-primary tracking-tight sm:whitespace-nowrap">
+                KIẾN THỨC SỨC KHỎE TIM MẠCH
               </h2>
               <div className="w-16 h-1 bg-secondary rounded-full md:mr-auto md:ml-0 mx-auto" />
             </div>
@@ -551,9 +547,8 @@ export default function Home({ servicePillars, latestNews, banners = [], reviews
       <section className="py-20 bg-slate-50 border-t border-slate-100 relative overflow-hidden">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center max-w-3xl mx-auto mb-16 flex flex-col gap-3">
-            <span className="text-xs font-bold uppercase tracking-wider text-secondary">Cam kết chất lượng</span>
             <h2 className="text-2xl sm:text-3xl font-extrabold text-primary tracking-tight">
-              SỰ AN TÂM CỦA BỆNH NHÂN LÀ SỨ MỆNH CỦA CHÚNG TÔI
+              CAM KẾT DỊCH VỤ Y KHOA
             </h2>
             <div className="w-16 h-1 bg-secondary mx-auto rounded-full" />
           </div>
@@ -565,7 +560,7 @@ export default function Home({ servicePillars, latestNews, banners = [], reviews
                   <Award size={22} />
                 </div>
                 <h3 className="text-sm font-bold text-primary uppercase tracking-wide">{cmt.title}</h3>
-                <p className="text-xs text-text-light leading-relaxed">{cmt.desc}</p>
+                <p className="text-sm text-text-light leading-relaxed">{cmt.desc}</p>
               </div>
             ))}
           </div>
@@ -577,12 +572,11 @@ export default function Home({ servicePillars, latestNews, banners = [], reviews
         <section className="py-20 bg-white border-t border-slate-100">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="text-center max-w-3xl mx-auto mb-16 flex flex-col gap-3">
-              <span className="text-xs font-bold uppercase tracking-wider text-secondary">Đánh giá & Cảm nhận</span>
               <h2 className="text-2xl sm:text-3xl font-extrabold text-primary tracking-tight">
                 GHI NHẬN TỪ BỆNH NHÂN THĂM KHÁM
               </h2>
               <div className="w-16 h-1 bg-secondary mx-auto rounded-full" />
-              <p className="text-xs text-text-light mt-1">
+              <p className="text-sm text-text-light mt-1">
                 Những chia sẻ chân thực từ người bệnh đã trải nghiệm dịch vụ khám và điều trị chuẩn y khoa
               </p>
             </div>
@@ -596,26 +590,23 @@ export default function Home({ servicePillars, latestNews, banners = [], reviews
                   <div className="space-y-3">
                     <div className="flex items-center gap-1 text-amber-400">
                       {Array.from({ length: rev.rating || 5 }).map((_, i) => (
-                        <span key={i} className="text-sm">★</span>
+                        <span key={i} className="text-base">★</span>
                       ))}
                     </div>
-                    <p className="text-xs text-slate-700 italic leading-relaxed">
+                    <p className="text-sm text-slate-700 italic leading-relaxed">
                       "{rev.comment}"
                     </p>
                   </div>
 
                   <div className="pt-4 mt-4 border-t border-slate-200/60 flex items-center justify-between">
                     <div>
-                      <h4 className="text-xs font-extrabold text-primary">{rev.patient_name}</h4>
-                      {rev.service_name && (
-                        <span className="text-[11px] text-secondary font-medium block">
+                      <h4 className="text-sm font-extrabold text-primary">{rev.patient_name}</h4>
+                      {rev.service_name && rev.service_name !== "Tầm soát tăng huyết áp & Holter 24h" && (
+                        <span className="text-sm text-secondary font-medium block">
                           {rev.service_name}
                         </span>
                       )}
                     </div>
-                    <span className="text-[10px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200">
-                      ✓ Đã xác thực
-                    </span>
                   </div>
                 </div>
               ))}
@@ -641,7 +632,7 @@ export default function Home({ servicePillars, latestNews, banners = [], reviews
             {/* Left Column: Text & Buttons */}
             <div className="lg:col-span-7 flex flex-col gap-6 text-center lg:text-left">
               <h3 className="text-2xl md:text-3xl lg:text-4xl font-extrabold text-white leading-tight">
-                Bảo vệ trái tim của bạn cùng BSCKII Đoàn Khôi
+                Bảo vệ trái tim của bạn
               </h3>
               <p className="text-sm md:text-base text-white/85 leading-relaxed max-w-xl">
                 Đặt lịch hẹn tư vấn và tầm soát sớm nhất để hạn chế tối đa nguy cơ đột quỵ, nhồi máu cơ tim thầm lặng. Chúng tôi liên hệ lại để xác nhận lịch ngay.
@@ -655,11 +646,11 @@ export default function Home({ servicePillars, latestNews, banners = [], reviews
                   Đặt lịch hẹn trực tuyến
                 </Link>
                 <a 
-                  href="tel:0384326785" 
+                  href="tel:0585013013" 
                   className="flex items-center justify-center gap-2 border border-white/30 hover:border-white bg-transparent hover:bg-white/10 text-white text-sm font-bold px-8 py-3.5 rounded-full transition-all text-center cursor-pointer whitespace-nowrap"
                 >
                   <Phone size={18} className="text-secondary" />
-                  Gọi trực tiếp: 038 432 6785
+                  Gọi trực tiếp: 0585 013 013
                 </a>
               </div>
             </div>

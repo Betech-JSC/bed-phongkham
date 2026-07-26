@@ -7,8 +7,8 @@ export default function Footer() {
   
   const clinicName = settings.clinic_name || 'Phòng Khám Chuyên Khoa Nội - BSCKII Đoàn Khôi';
   const address = settings.address || '348 Nguyễn Lương Bằng, Lê Thanh Nghị, Hải Phòng';
-  const hotline1 = settings.hotline_1 || '038 432 6785';
-  const hotline1Clean = settings.hotline_1_clean || '0384326785';
+  const hotline1 = settings.hotline_1 || '0585 013 013';
+  const hotline1Clean = settings.hotline_1_clean || '0585013013';
   const hotline2 = settings.hotline_2 || '0328 699 799';
   const hotline2Clean = settings.hotline_2_clean || '0328699799';
   const email = settings.email || 'doankhoiclinic@gmail.com';
@@ -32,72 +32,49 @@ export default function Footer() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-10 mb-12">
           
-          {/* Column 1: Info & Intro */}
+          {/* Column 1: Logo, Title & Social Icons (XẾP DỌC TRÊN DƯỚI) */}
           <div className="flex flex-col gap-4">
-            <Link href="/" className="flex items-center gap-3 group">
-              <div className="relative w-12 h-12 flex items-center justify-center shrink-0">
+            <Link href="/" className="flex flex-col items-start gap-3 group">
+              <div className="relative w-20 h-20 flex items-center justify-center shrink-0">
                 <img
-                  src={settings.logo_dark || "/assets/logo.png"}
+                  src="/assets/logo.png"
                   alt="Phòng khám BSCKII Đoàn Khôi Logo"
-                  className="w-11 h-11 object-contain"
+                  className="w-full h-full object-contain group-hover:scale-105 transition-transform"
                 />
               </div>
               <div className="flex flex-col">
-                <span className="text-base font-extrabold text-primary tracking-tight leading-none uppercase">
-                  Phòng Khám Nội
-                </span>
-                <span className="text-[10px] text-slate-500 font-bold uppercase tracking-wider mt-1">
-                  BSCKII Đoàn Khôi
+                <h3 className="text-base font-extrabold text-primary tracking-tight leading-snug uppercase">
+                  PHÒNG KHÁM CHUYÊN KHOA NỘI
+                </h3>
+                <span className="text-sm font-bold text-secondary uppercase tracking-wider mt-0.5">
+                  BSCK. II ĐOÀN KHÔI
                 </span>
               </div>
             </Link>
-            <p className="text-sm text-text-light leading-relaxed mt-2">
-              Trung tâm quản lý tim mạch cộng đồng hàng đầu tại Hải Phòng. Tận tâm - Chuyên sâu - An toàn - Số hóa kết nối chuyên gia đầu ngành.
-            </p>
-            <div className="flex items-center gap-2 mt-2 text-xs text-text-light">
-              <ShieldCheck size={16} className="text-secondary" />
-              <span>Đạt tiêu chuẩn chất lượng Sở Y tế Hải Phòng</span>
-            </div>
 
-            {/* Social Media Links */}
-            <div className="flex items-center gap-2.5 mt-4">
-              {settings.social_facebook && (
-                <a
-                  href={settings.social_facebook}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="w-9 h-9 rounded-full bg-slate-100 hover:bg-[#1877f2] text-slate-500 hover:text-white flex items-center justify-center transition-all shadow-xs border border-slate-200/50 hover:scale-105"
-                  aria-label="Facebook"
-                >
-                  <svg className="w-4 h-4 fill-current" viewBox="0 0 24 24">
-                    <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
-                  </svg>
-                </a>
-              )}
-              {settings.zalo_link && (
-                <a
-                  href={settings.zalo_link}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="w-9 h-9 rounded-full bg-slate-100 hover:bg-[#0068ff] text-slate-500 hover:text-white flex items-center justify-center transition-all shadow-xs border border-slate-200/50 hover:scale-105"
-                  aria-label="Zalo"
-                >
-                  <span className="text-[10px] font-black uppercase tracking-tighter">Zalo</span>
-                </a>
-              )}
-              {settings.social_youtube && (
-                <a
-                  href={settings.social_youtube}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="w-9 h-9 rounded-full bg-slate-100 hover:bg-[#ff0000] text-slate-500 hover:text-white flex items-center justify-center transition-all shadow-xs border border-slate-200/50 hover:scale-105"
-                  aria-label="Youtube"
-                >
-                  <svg className="w-4 h-4 fill-current" viewBox="0 0 24 24">
-                    <path d="M23.498 6.163a3.003 3.003 0 0 0-2.11-2.11C19.518 3.545 12 3.545 12 3.545s-7.518 0-9.388.507a3.003 3.003 0 0 0-2.11 2.11C0 8.033 0 12 0 12s0 3.967.502 5.837a3.003 3.003 0 0 0 2.11 2.11c1.87.508 9.388.508 9.388.508s7.518 0 9.388-.508a3.003 3.003 0 0 0 2.11-2.11C24 15.967 24 12 24 12s0-3.967-.502-5.837zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/>
-                  </svg>
-                </a>
-              )}
+            {/* Social Media Links (Facebook & Zalo) */}
+            <div className="flex items-center gap-3 mt-2">
+              <a
+                href={settings.social_facebook || "https://facebook.com"}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="w-9 h-9 rounded-full bg-slate-100 hover:bg-[#1877f2] text-slate-600 hover:text-white flex items-center justify-center transition-all shadow-2xs border border-slate-200/60 hover:scale-105"
+                aria-label="Facebook"
+              >
+                <svg className="w-4 h-4 fill-current" viewBox="0 0 24 24">
+                  <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
+                </svg>
+              </a>
+
+              <a
+                href={settings.zalo_link || "https://zalo.me/0585013013"}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="w-9 h-9 rounded-full bg-slate-100 hover:bg-[#0068ff] text-slate-600 hover:text-white flex items-center justify-center transition-all shadow-2xs border border-slate-200/60 hover:scale-105"
+                aria-label="Zalo"
+              >
+                <span className="text-[11px] font-black uppercase tracking-tighter">Zalo</span>
+              </a>
             </div>
           </div>
 
@@ -130,21 +107,21 @@ export default function Footer() {
             <h4 className="text-sm font-bold text-primary uppercase tracking-wider mb-6 relative after:content-[''] after:absolute after:bottom-[-8px] after:left-0 after:w-10 after:h-0.5 after:bg-secondary">
               Thời gian khám bệnh
             </h4>
-            <div className="flex flex-col gap-4 text-sm">
-              <div className="flex items-start gap-3">
-                <Clock className="text-secondary shrink-0 mt-0.5" size={18} />
+            <div className="flex flex-col gap-3.5 text-sm">
+              <div className="flex flex-col gap-2.5">
                 <div>
-                  <p className="font-bold text-primary">Thứ Hai - Chủ Nhật</p>
-                  <p className="text-xs text-text-light mt-0.5">Sáng: 07:30 – 11:30</p>
-                  <p className="text-xs text-text-light mt-0.5">Chiều: 13:30 – 18:30</p>
+                  <p className="font-bold text-primary">Từ thứ 2 đến thứ 6:</p>
+                  <p className="text-sm text-text-light mt-0.5">17h15 - 20h00</p>
+                </div>
+                <div>
+                  <p className="font-bold text-primary">Thứ 7, CN:</p>
+                  <p className="text-sm text-text-light mt-0.5">Sáng: 7h15 - 11h15</p>
+                  <p className="text-sm text-text-light mt-0.5">Chiều: 13h30 - 20h30</p>
                 </div>
               </div>
-              <div className="flex items-start gap-3 border-t border-slate-200 pt-3">
-                <HeartPulse className="text-accent shrink-0 mt-0.5" size={18} />
-                <p className="text-xs text-text-light">
-                  Khám trực tiếp với Bác sĩ Đoàn Khôi. Đăng ký trước để hạn chế thời gian chờ đợi.
-                </p>
-              </div>
+              <p className="text-sm text-slate-600 font-medium leading-relaxed pt-1">
+                * Tư vấn về cấp cứu, dự phòng, điều trị bệnh toàn thời gian các ngày trong tuần.
+              </p>
             </div>
           </div>
 
@@ -162,14 +139,9 @@ export default function Footer() {
               </li>
               <li className="flex items-center gap-3">
                 <Phone className="text-secondary shrink-0" size={18} />
-                <div>
-                  <a href={`tel:${hotline1Clean}`} className="hover:text-primary block font-bold text-primary">
-                    {hotline1}
-                  </a>
-                  <a href={`tel:${hotline2Clean}`} className="hover:text-primary block text-xs text-text-light">
-                    {hotline2}
-                  </a>
-                </div>
+                <a href={`tel:${hotline1Clean}`} className="hover:text-primary font-extrabold text-primary text-base">
+                  {hotline1}
+                </a>
               </li>
               <li className="flex items-center gap-3">
                 <Mail className="text-secondary shrink-0" size={18} />

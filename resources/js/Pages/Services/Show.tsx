@@ -121,22 +121,17 @@ export default function ServiceShow({ service }: Props) {
               
               <div className="bg-white p-8 rounded-card shadow-sm flex flex-col gap-6">
                 <div>
-                  <span className="text-sm text-text-light font-bold uppercase tracking-wider">Chi phí niêm yết</span>
-                  <div className="text-2xl font-black text-primary mt-1">{service.price.split("(")[0].trim()}</div>
-                  <div className="text-sm text-text-light italic mt-1 leading-snug">
-                    {service.price.includes("(") ? `(${service.price.split("(")[1]}` : "Chi phí trọn gói"}
-                  </div>
+                  <h3 className="text-xl font-extrabold text-primary">Đăng ký tư vấn dịch vụ</h3>
+                  <p className="text-sm text-text-light mt-1 leading-relaxed">
+                    Liên hệ ngay với phòng khám để được bác sĩ tư vấn chi tiết về gói khám.
+                  </p>
                 </div>
 
                 <hr className="border-slate-100" />
 
                 <div className="flex flex-col gap-4 text-sm text-text-primary">
                   <div className="flex items-center gap-3">
-                    <Clock size={18} className="text-secondary" />
-                    <span className="text-text-light">Thời gian khám: <strong className="text-text-primary">{service.estimated_time}</strong></span>
-                  </div>
-                  <div className="flex items-center gap-3">
-                    <UserCheck size={18} className="text-secondary" />
+                    <UserCheck size={18} className="text-secondary shrink-0" />
                     <span className="text-text-light">Bác sĩ phụ trách: <strong className="text-text-primary">BSCKII Đoàn Khôi</strong></span>
                   </div>
                 </div>
@@ -156,11 +151,11 @@ export default function ServiceShow({ service }: Props) {
                   Nếu bạn cần trao đổi trực tiếp hoặc giải đáp các thắc mắc về gói dịch vụ, hãy liên hệ Hotline phòng khám.
                 </p>
                 <a
-                  href="tel:0384326785"
+                  href="tel:0585013013"
                   className="flex items-center justify-center gap-2 border border-primary hover:bg-primary hover:text-white text-primary text-sm font-bold py-3 rounded-btn transition-all text-center"
                 >
                   <Phone size={18} className="shrink-0 animate-pulse" />
-                  Hotline: 038 432 6785
+                  Hotline: 0585 013 013
                 </a>
               </div>
 

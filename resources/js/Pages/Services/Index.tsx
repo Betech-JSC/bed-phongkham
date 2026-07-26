@@ -118,40 +118,31 @@ export default function ServicesIndex({ pillars = [], allServices = [] }: Props)
               {activePillar.services.map((srv) => (
                 <div
                   key={srv.slug}
-                  className="bg-white p-8 rounded-card shadow-sm hover:shadow-lg transition-all flex flex-col justify-between border-none"
+                  className="bg-white p-8 rounded-card shadow-sm hover:shadow-md transition-all flex flex-col justify-between border border-slate-100"
                 >
                   <div>
-                    <div className="flex justify-between items-start gap-4 mb-4">
-                      <span className="text-xs font-bold uppercase tracking-wider text-secondary px-2.5 py-1 bg-secondary/10 rounded-full">
-                        {srv.tagline}
-                      </span>
-                      <div className="flex items-center gap-1 text-xs text-text-light font-medium bg-slate-50 px-2 py-1 rounded">
-                        <Clock size={12} className="text-secondary" />
-                        <span>{srv.estimated_time}</span>
-                      </div>
-                    </div>
-                    <h4 className="text-lg font-bold text-primary mb-3 leading-snug">
+                    <h4 className="text-xl font-extrabold text-primary mb-3 leading-snug">
                       {srv.title}
                     </h4>
-                    <p className="text-xs text-text-light leading-relaxed mb-6">
+                    <p className="text-sm text-slate-600 leading-relaxed mb-6">
                       {srv.description}
                     </p>
 
                     {/* Sublist */}
                     {srv.includes && srv.includes.length > 0 && (
                       <>
-                        <h5 className="text-[11px] font-bold text-primary uppercase tracking-wider mb-2">
+                        <h5 className="text-sm font-bold text-primary uppercase tracking-wider mb-3">
                           Hạng mục khám bao gồm:
                         </h5>
-                        <ul className="flex flex-col gap-2 mb-6">
+                        <ul className="flex flex-col gap-2.5 mb-6">
                           {srv.includes.slice(0, 3).map((inc, iIdx) => (
-                            <li key={iIdx} className="flex items-start gap-2 text-xs text-text-primary">
-                              <CheckCircle2 size={14} className="text-secondary shrink-0 mt-0.5" />
+                            <li key={iIdx} className="flex items-start gap-2.5 text-sm text-text-primary">
+                              <CheckCircle2 size={16} className="text-secondary shrink-0 mt-0.5" />
                               <span>{inc}</span>
                             </li>
                           ))}
                           {srv.includes.length > 3 && (
-                            <li className="text-[11px] text-text-light italic font-medium pl-6">
+                            <li className="text-sm text-text-light italic font-medium pl-6">
                               + Xem tiếp trong chi tiết dịch vụ...
                             </li>
                           )}
@@ -161,21 +152,13 @@ export default function ServicesIndex({ pillars = [], allServices = [] }: Props)
                   </div>
 
                   {/* Bottom detail */}
-                  <div className="border-t border-slate-100 pt-6 mt-4 flex items-center justify-between gap-4">
-                    <div className="flex flex-col">
-                      <span className="text-[10px] text-text-light font-semibold uppercase tracking-wider">
-                        Chi phí khám
-                      </span>
-                      <span className="text-sm font-bold text-accent">
-                        {srv.price.split("(")[0].trim()}
-                      </span>
-                    </div>
+                  <div className="border-t border-slate-100 pt-6 mt-4 flex items-center justify-end">
                     <Link
                       href={`/dich-vu/${srv.slug}`}
-                      className="flex items-center gap-2 bg-primary hover:bg-primary-dark text-white text-xs font-bold px-5 py-2.5 rounded-btn shadow-sm transition-all hover:scale-103"
+                      className="flex items-center gap-2 bg-primary hover:bg-primary-dark text-white text-sm font-bold px-6 py-3 rounded-btn shadow-sm transition-all hover:scale-103"
                     >
                       Chi tiết
-                      <ArrowRight size={14} />
+                      <ArrowRight size={16} />
                     </Link>
                   </div>
                 </div>
