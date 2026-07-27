@@ -67,6 +67,7 @@ interface Banner {
   secondary_button_link?: string;
   order: number;
   is_active: boolean;
+  show_overlay?: boolean;
 }
 
 interface Review {
@@ -141,26 +142,32 @@ export default function Home({ servicePillars, latestNews, banners = [], reviews
       <section className="relative pt-[88px] pb-4 bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="relative w-full aspect-[4/3] sm:aspect-[16/10] md:aspect-[16/9] lg:aspect-[2.2/1] rounded-card overflow-hidden shadow-[0_4px_20px_rgba(0,0,0,0.05)] border border-slate-100 group">
-            {/* Desktop Image */}
-            <img 
-              src={currentBanner.desktop_image || currentBanner.image_url || '/assets/heart_care.png'} 
-              alt={currentBanner.title} 
-              className={`w-full h-full object-cover transition-transform duration-700 ${currentBanner.mobile_image ? 'hidden md:block' : 'block'}`}
-            />
-
-            {/* Mobile Image (if specified) */}
-            {currentBanner.mobile_image && (
+            {/* Banner Image with Link */}
+            <Link 
+              href={currentBanner.primary_button_link || currentBanner.link || '/lien-he'} 
+              className="block w-full h-full"
+            >
+              {/* Desktop Image */}
               <img 
-                src={currentBanner.mobile_image} 
+                src={currentBanner.desktop_image || currentBanner.image_url || '/assets/heart_care.png'} 
                 alt={currentBanner.title} 
-                className="w-full h-full object-cover md:hidden block"
+                className={`w-full h-full object-cover transition-transform duration-700 ${currentBanner.mobile_image ? 'hidden md:block' : 'block'}`}
               />
-            )}
 
-            {/* Content Overlay */}
-            {!isDefaultBanner && (
-              <div className="absolute inset-0 bg-gradient-to-r from-slate-950/80 via-slate-900/40 to-transparent flex items-center p-6 md:p-12 lg:p-16">
-                <div className="max-w-xl text-white space-y-3 animate-fade-in">
+              {/* Mobile Image (if specified) */}
+              {currentBanner.mobile_image && (
+                <img 
+                  src={currentBanner.mobile_image} 
+                  alt={currentBanner.title} 
+                  className="w-full h-full object-cover md:hidden block"
+                />
+              )}
+            </Link>
+
+            {/* Content Overlay - Only show if show_overlay is explicitly true */}
+            {Boolean(currentBanner.show_overlay) && (
+              <div className="absolute inset-0 bg-gradient-to-r from-slate-950/80 via-slate-900/40 to-transparent flex items-center p-6 md:p-12 lg:p-16 pointer-events-none">
+                <div className="max-w-xl text-white space-y-3 animate-fade-in pointer-events-auto">
                   {currentBanner.eyebrow && (
                     <span className="inline-block px-3 py-1 bg-secondary/90 backdrop-blur-xs text-white text-xs font-black uppercase tracking-wider rounded-full shadow-sm">
                       {currentBanner.eyebrow}

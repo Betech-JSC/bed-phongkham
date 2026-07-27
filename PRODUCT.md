@@ -19,7 +19,7 @@ Trung tâm tim mạch số và quản lý tim mạch cộng đồng hàng đầu
 
 ## Conversion & proof
 - Primary CTA: Nút "Đặt lịch khám" (Mở form đăng ký lịch hẹn trực tuyến rõ ràng).
-- Secondary CTA: Nút FAB (Floating Action Button) nổi bật ở góc màn hình gồm 2 tùy chọn nhanh: Gọi điện trực tiếp đến Hotline (`038 432 6785` - `0328 699 799`) và Chat tư vấn trực tiếp qua Zalo.
+- Secondary CTA: Nút FAB (Floating Action Button) nổi bật ở góc màn hình gồm 2 tùy chọn nhanh: Gọi điện trực tiếp đến Hotline (`0585 013 013` - `0328 699 799`) và Chat tư vấn trực tiếp qua Zalo.
 - The line a visitor remembers after 10 seconds: "Trái tim bình an – Muôn vàn hạnh phúc. Khám và điều trị tim mạch chuyên sâu cùng BSCKII Đoàn Khôi ngay tại Hải Phòng."
 - Belief ladder:
   1. **Bác sĩ là chuyên gia đầu ngành**: BSCKII Đoàn Khôi có gần 20 năm kinh nghiệm, học vị cao, từng giữ chức vụ lớn trong ngành y tế tỉnh Hải Dương.

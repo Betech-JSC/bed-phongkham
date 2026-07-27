@@ -174,7 +174,7 @@ export default function Contact({ allServices = [], settings = {}, prefillServic
                       <input
                         type="tel"
                         required
-                        placeholder="Ví dụ: 0384326785"
+                        placeholder="Ví dụ: 0585013013"
                         value={data.phone}
                         onChange={(e) => setData('phone', e.target.value)}
                         className="border border-slate-200 focus:border-secondary focus:ring-1 focus:ring-secondary rounded-xl px-4 py-3 text-sm outline-none bg-slate-50 focus:bg-white transition-all text-text-primary font-medium"

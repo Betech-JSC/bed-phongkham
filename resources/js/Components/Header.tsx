@@ -117,7 +117,7 @@ export default function Header() {
             {/* Mobile menu button */}
             <div className="md:hidden flex items-center gap-2">
               <a
-                href="tel:0384326785"
+                href={`tel:${hotline1Clean}`}
                 className="p-2 text-text-primary hover:text-primary transition-colors"
                 aria-label="Call clinic"
               >
@@ -161,11 +161,11 @@ export default function Header() {
               ))}
               <div className="flex flex-col gap-3 mt-4">
                 <a
-                  href="tel:0384326785"
+                  href={`tel:${hotline1Clean}`}
                   className="flex items-center justify-center gap-2 text-sm font-bold text-text-primary border border-slate-200 py-3 rounded-btn hover:bg-slate-50 transition-all"
                 >
                   <Phone size={16} className="text-secondary" />
-                  Gọi Hotline: 038 432 6785
+                  Gọi Hotline: {hotline1}
                 </a>
                 <Link
                   href="/lien-he"

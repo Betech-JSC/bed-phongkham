@@ -1273,8 +1273,8 @@ export default function AdminDashboard(props: Props) {
     about_story_img3: settings.about_story_img3 || '/assets/heart_care.png',
 
     clinic_name: settings.clinic_name || 'Phòng Khám Chuyên Khoa Nội - BSCKII Đoàn Khôi',
-    hotline_1: settings.hotline_1 || '038 432 6785',
-    hotline_1_clean: settings.hotline_1_clean || '0384326785',
+    hotline_1: settings.hotline_1 || '0585 013 013',
+    hotline_1_clean: settings.hotline_1_clean || '0585013013',
     hotline_2: settings.hotline_2 || '0328 699 799',
     hotline_2_clean: settings.hotline_2_clean || '0328699799',
     email: settings.email || 'doankhoiclinic@gmail.com',
@@ -1284,7 +1284,7 @@ export default function AdminDashboard(props: Props) {
     logo_light: settings.logo_light || '',
     logo_favicon: settings.logo_favicon || '',
     logo_favicon_light: settings.logo_favicon_light || '',
-    zalo_link: settings.zalo_link || 'https://zalo.me/0384326785',
+    zalo_link: settings.zalo_link || 'https://zalo.me/0585013013',
     social_facebook: settings.social_facebook || 'https://facebook.com/theq.vn',
     social_youtube: settings.social_youtube || 'https://youtube.com',
   });
@@ -9797,7 +9797,7 @@ export default function AdminDashboard(props: Props) {
                 <p className="text-xs text-blue-100">Bảo vệ sức khỏe tim mạch cho bạn và gia đình ngay hôm nay</p>
                 <div className="pt-2">
                   <span className="px-6 py-2.5 bg-white text-[#004b87] font-black rounded-xl text-xs shadow-md inline-block">
-                    📞 HOTLINE ĐẶT LỊCH: 038 432 6785
+                    📞 HOTLINE ĐẶT LỊCH: {settingsData.hotline_1 || '0585 013 013'}
                   </span>
                 </div>
               </div>
@@ -10305,7 +10305,7 @@ export default function AdminDashboard(props: Props) {
                 <p className="text-xs text-blue-100">Được trực tiếp BSCKII Đoàn Khôi thăm khám và tư vấn</p>
                 <div className="pt-2">
                   <span className="px-6 py-2.5 bg-white text-[#004b87] font-black rounded-xl text-xs shadow-md inline-block">
-                    Đặt Lịch Ngay Qua Hotline: 038 432 6785
+                    Đặt Lịch Ngay Qua Hotline: {settingsData.hotline_1 || '0585 013 013'}
                   </span>
                 </div>
               </div>

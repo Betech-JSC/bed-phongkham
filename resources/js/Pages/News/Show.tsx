@@ -1,5 +1,5 @@
 import React from "react";
-import { Link } from "@inertiajs/react";
+import { Link, usePage } from "@inertiajs/react";
 import { 
   ArrowLeft, 
   Calendar, 
@@ -37,6 +37,10 @@ interface Props {
 }
 
 export default function NewsShow({ news, relatedNews, authorDetails }: Props) {
+  const { settings } = usePage<{ settings?: Record<string, string> }>().props;
+  const hotline1 = settings?.hotline_1 || '0585 013 013';
+  const hotline1Clean = settings?.hotline_1_clean || '0585013013';
+
   return (
     <MainLayout>
       <div className="bg-neutral-bg min-h-screen pt-24 pb-20">
@@ -184,10 +188,10 @@ export default function NewsShow({ news, relatedNews, authorDetails }: Props) {
                   Đặt lịch khám ngay
                 </Link>
                 <a 
-                  href="tel:0384326785" 
+                  href={`tel:${hotline1Clean}`} 
                   className="text-sm text-slate-350 hover:text-white underline font-semibold"
                 >
-                  Hotline tư vấn: 038 432 6785
+                  Hotline tư vấn: {hotline1}
                 </a>
               </div>
 

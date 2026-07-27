@@ -458,7 +458,7 @@ class MediPlusSeeder extends Seeder
         Faq::firstOrCreate(
             ['question' => 'Phòng khám có nhận đặt lịch hẹn trước không?'],
             [
-                'answer' => 'Có, bệnh nhân có thể đặt lịch hẹn trực tuyến qua website hoặc gọi hotline 038 432 6785 để không phải chờ đợi.',
+                'answer' => 'Có, bệnh nhân có thể đặt lịch hẹn trực tuyến qua website hoặc gọi hotline 0585 013 013 để không phải chờ đợi.',
                 'category' => 'Đặt lịch khám',
                 'order' => 1
             ]
