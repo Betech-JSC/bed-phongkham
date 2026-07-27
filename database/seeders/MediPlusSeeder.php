@@ -36,6 +36,8 @@ class MediPlusSeeder extends Seeder
             'working_hours' => 'Thứ 2 - Thứ 6: 17h15 - 20h00 | Thứ 7, CN: Sáng 7h15 - 11h15, Chiều 13h30 - 20h30',
             'hero_banner' => '/assets/heart_care.png',
             'tagline' => 'Trái tim bình an – Muôn vàn hạnh phúc',
+            'logo_dark' => '/assets/logo.png',
+            'logo_favicon' => '/assets/logo.png',
         ];
 
         foreach ($settings as $key => $val) {

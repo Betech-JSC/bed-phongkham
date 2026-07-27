@@ -6,7 +6,13 @@
 
         <title inertia>Phòng Khám Chuyên Khoa Nội - BSCKII Đoàn Khôi</title>
 
-        <link rel="icon" type="image/x-icon" href="{{ \App\Models\SiteSetting::where('key', 'logo_favicon')->value('value') ?: '/favicon.ico' }}">
+        @php
+            $favicon = \App\Models\SiteSetting::where('key', 'logo_favicon')->value('value')
+                ?: (\App\Models\SiteSetting::where('key', 'logo_dark')->value('value') ?: '/assets/logo.png');
+        @endphp
+        <link rel="icon" type="image/png" href="{{ $favicon }}">
+        <link rel="shortcut icon" type="image/png" href="{{ $favicon }}">
+        <link rel="apple-touch-icon" href="{{ $favicon }}">
 
         <!-- Google Fonts: Inter -->
         <link rel="preconnect" href="https://fonts.googleapis.com">
