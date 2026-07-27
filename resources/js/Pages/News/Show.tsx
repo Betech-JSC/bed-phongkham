@@ -1,5 +1,5 @@
 import React from "react";
-import { Link, usePage } from "@inertiajs/react";
+import { Link, usePage, Head } from "@inertiajs/react";
 import { 
   ArrowLeft, 
   Calendar, 
@@ -44,6 +44,7 @@ export default function NewsShow({ news, relatedNews, authorDetails }: Props) {
 
   return (
     <MainLayout>
+      <Head title={news?.title ? news.title : "Bài Viết Cẩm Nang"} />
       <div className="bg-neutral-bg min-h-screen pt-24 pb-20">
         
         {/* Breadcrumbs */}

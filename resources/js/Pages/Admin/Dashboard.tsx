@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from "react";
-import { Link, useForm, router } from "@inertiajs/react";
+import { Link, useForm, router, Head } from "@inertiajs/react";
 import { 
   LayoutDashboard, 
   PhoneCall, 
@@ -1994,6 +1994,7 @@ export default function AdminDashboard(props: Props) {
 
   return (
     <div className="min-h-screen bg-[#f4f7fb] text-slate-800 font-sans flex antialiased">
+      <Head title="Quản Trị Hệ Thống - Admin" />
       
       {/* Toast Notification */}
       {notificationMsg && (

@@ -1,5 +1,5 @@
 import React from "react";
-import { Link } from "@inertiajs/react";
+import { Link, Head } from "@inertiajs/react";
 import { 
   Heart, 
   Activity, 
@@ -138,6 +138,7 @@ export default function Home({ servicePillars, latestNews, banners = [], reviews
 
   return (
     <MainLayout>
+      <Head title="Trang chủ" />
       {/* 1. HERO BANNER SLIDER */}
       <section className="relative pt-[88px] pb-4 bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">

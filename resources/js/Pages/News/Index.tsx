@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Link } from "@inertiajs/react";
+import { Link, Head } from "@inertiajs/react";
 import { ArrowRight, Calendar, Clock } from "lucide-react";
 import MainLayout from "@/Layouts/MainLayout";
 
@@ -34,6 +34,7 @@ export default function NewsIndex({ newsList = [] }: Props) {
 
   return (
     <MainLayout>
+      <Head title="Cẩm Nang Y Khoa & Tin Tức Sức Khỏe" />
       <div className="bg-neutral-bg min-h-screen pt-24 pb-20">
         
         {/* Page Header */}

@@ -1,5 +1,5 @@
 import React from "react";
-import { Link } from "@inertiajs/react";
+import { Link, Head } from "@inertiajs/react";
 import { 
   Award, 
   BookOpen, 
@@ -111,6 +111,7 @@ export default function About({ settings = {}, doctors = [], faqs = [] }: Props)
 
   return (
     <MainLayout>
+      <Head title="Giới thiệu về Bác sĩ & Phòng Khám" />
       <div className="bg-neutral-bg min-h-screen pt-24 pb-20">
         
         {/* Page Header */}

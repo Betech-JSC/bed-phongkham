@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Link } from "@inertiajs/react";
+import { Link, Head } from "@inertiajs/react";
 import { 
   Heart, 
   Activity, 
@@ -59,6 +59,7 @@ export default function ServicesIndex({ pillars = [], allServices = [] }: Props)
 
   return (
     <MainLayout>
+      <Head title="Dịch Vụ Y Tế & Gói Khám Tim Mạch" />
       <div className="bg-neutral-bg min-h-screen pt-24 pb-20">
         
         {/* Page Header */}

@@ -1,5 +1,5 @@
 import React from "react";
-import { Link } from "@inertiajs/react";
+import { Link, Head } from "@inertiajs/react";
 import { 
   CheckCircle2, 
   Calendar, 
@@ -33,6 +33,7 @@ interface Props {
 export default function ServiceShow({ service }: Props) {
   return (
     <MainLayout>
+      <Head title={service?.title ? service.title : "Chi Tiết Dịch Vụ"} />
       <div className="bg-neutral-bg min-h-screen pt-24 pb-20">
         
         {/* Breadcrumbs */}

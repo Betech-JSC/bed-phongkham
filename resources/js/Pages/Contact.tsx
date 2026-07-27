@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { useForm, usePage } from "@inertiajs/react";
+import { useForm, usePage, Head } from "@inertiajs/react";
 import { 
   MapPin, 
   Phone, 
@@ -46,6 +46,7 @@ export default function Contact({ allServices = [], settings = {}, prefillServic
 
   return (
     <MainLayout>
+      <Head title="Đặt Lịch Khám & Liên Hệ" />
       <div className="bg-neutral-bg min-h-screen pt-24 pb-8">
         
         {/* Banner Header */}
