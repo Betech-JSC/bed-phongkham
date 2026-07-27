@@ -37,9 +37,10 @@ interface Props {
 }
 
 export default function NewsShow({ news, relatedNews, authorDetails }: Props) {
-  const { settings } = usePage<{ settings?: Record<string, string> }>().props;
-  const hotline1 = settings?.hotline_1 || '0585 013 013';
-  const hotline1Clean = settings?.hotline_1_clean || '0585013013';
+  const { props } = usePage();
+  const settings = (props.settings || {}) as Record<string, string>;
+  const hotline1 = settings.hotline_1 || '0585 013 013';
+  const hotline1Clean = settings.hotline_1_clean || '0585013013';
 
   return (
     <MainLayout>
