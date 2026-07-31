@@ -60,9 +60,11 @@ export default function ServiceShow({ service }: Props) {
                 <h1 className="text-2xl sm:text-3xl font-extrabold text-primary leading-tight">
                   {service.title}
                 </h1>
-                <p className="text-sm italic font-medium text-text-light mt-2">
-                  &ldquo;{service.tagline}&rdquo;
-                </p>
+                {service.tagline && (
+                  <p className="text-sm italic font-medium text-text-light mt-2">
+                    &ldquo;{service.tagline}&rdquo;
+                  </p>
+                )}
               </div>
 
               <hr className="border-slate-100" />

@@ -60,6 +60,9 @@ export default function Header() {
                   width={44}
                   height={44}
                   className="object-contain group-hover:scale-105 transition-transform duration-300"
+                  onError={(e) => {
+                    (e.target as HTMLImageElement).src = "/assets/logo.png";
+                  }}
                 />
               </div>
               <div className="flex flex-col">

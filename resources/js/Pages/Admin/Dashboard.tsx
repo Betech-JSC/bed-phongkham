@@ -278,6 +278,40 @@ export default function AdminDashboard(props: Props) {
     }
   };
 
+  const [openGroups, setOpenGroups] = useState<Record<string, boolean>>(() => {
+    const saved = typeof window !== 'undefined' ? localStorage.getItem('admin_active_tab') : null;
+    const tab = saved || 'overview';
+    const activeGroup = ['overview', 'settings', 'configs'].includes(tab) ? 'system' :
+                        ['appointments', 'consultations'].includes(tab) ? 'crm' :
+                        ['services', 'pillars', 'doctors', 'schedules'].includes(tab) ? 'medical' :
+                        ['articles', 'articleCategories', 'authors'].includes(tab) ? 'news' : 'content';
+    return {
+      system: activeGroup === 'system',
+      crm: activeGroup === 'crm',
+      medical: activeGroup === 'medical',
+      news: activeGroup === 'news',
+      content: activeGroup === 'content',
+    };
+  });
+
+  const toggleGroup = (groupId: string) => {
+    setOpenGroups(prev => ({
+      ...prev,
+      [groupId]: !prev[groupId]
+    }));
+  };
+
+  useEffect(() => {
+    const activeGroup = ['overview', 'settings', 'configs'].includes(activeTab) ? 'system' :
+                        ['appointments', 'consultations'].includes(activeTab) ? 'crm' :
+                        ['services', 'pillars', 'doctors', 'schedules'].includes(activeTab) ? 'medical' :
+                        ['articles', 'articleCategories', 'authors'].includes(activeTab) ? 'news' : 'content';
+    setOpenGroups(prev => ({
+      ...prev,
+      [activeGroup]: true
+    }));
+  }, [activeTab]);
+
   const [showWalkinModal, setShowWalkinModal] = useState(false);
   const [selectedPatient, setSelectedPatient] = useState<Appointment | null>(null);
 
@@ -1440,10 +1474,18 @@ export default function AdminDashboard(props: Props) {
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 20;
 
+  const getTodayString = () => {
+    const d = new Date();
+    const y = d.getFullYear();
+    const m = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    return `${y}-${m}-${day}`;
+  };
+
   // Calendar Scheduler States & Use Cases
-  const [calMonth, setCalMonth] = useState(7); // July
-  const [calYear, setCalYear] = useState(2026);
-  const [selectedDay, setSelectedDay] = useState<number>(21); // Default selected 21/07/2026
+  const [calMonth, setCalMonth] = useState(new Date().getMonth() + 1);
+  const [calYear, setCalYear] = useState(new Date().getFullYear());
+  const [selectedDay, setSelectedDay] = useState<number>(new Date().getDate());
   
   // Use Case 1: Filter Schedule by Doctor & Shift
   const [selectedDoctorFilter, setSelectedDoctorFilter] = useState('all');
@@ -1451,7 +1493,7 @@ export default function AdminDashboard(props: Props) {
 
   // Use Case 2: Reschedule Appointment Modal
   const [reschedulingAppointment, setReschedulingAppointment] = useState<Appointment | null>(null);
-  const [newRescheduleDate, setNewRescheduleDate] = useState('2026-07-25');
+  const [newRescheduleDate, setNewRescheduleDate] = useState(getTodayString());
   const [newRescheduleTime, setNewRescheduleTime] = useState('09:00');
 
   // Use Case 5: Print Ticket Modal
@@ -1502,19 +1544,26 @@ export default function AdminDashboard(props: Props) {
     facility: 'MediPlus HP Medical Centre - Hải Phòng',
     service_slug: 'Gói Khám Tim Mạch Tổng Quát',
     doctor_name: 'BSCKII Đoàn Khôi',
-    appointment_date: '2026-07-21',
+    appointment_date: getTodayString(),
     time_slot: '09:00 - 10:00',
     notes: '',
     status: 'confirmed',
   });
 
-  const updateAppointmentStatus = (id: number, status: string, notes?: string) => {
+  const updateAppointmentStatus = (id: number, status: string, notes?: string, createdAt?: string) => {
     router.patch(`/admin/appointments/${id}/status`, { 
       status,
-      doctor_notes: notes !== undefined ? notes : (selectedPatient ? selectedPatient.doctor_notes : undefined)
+      doctor_notes: notes !== undefined ? notes : (selectedPatient ? selectedPatient.doctor_notes : undefined),
+      ...(createdAt ? { created_at: createdAt } : {})
     }, {
       preserveState: true,
       preserveScroll: true,
+      onSuccess: () => {
+        if (selectedPatient && selectedPatient.id === id) {
+          setSelectedPatient(prev => prev ? { ...prev, status: status as any, ...(createdAt ? { created_at: createdAt } : {}) } : null);
+        }
+        triggerNotification('Đã cập nhật trạng thái hồ sơ bệnh nhân!');
+      }
     });
   };
 
@@ -1553,7 +1602,8 @@ export default function AdminDashboard(props: Props) {
   const handleConfirmReschedule = (e: React.FormEvent) => {
     e.preventDefault();
     if (!reschedulingAppointment) return;
-    updateAppointmentStatus(reschedulingAppointment.id, 'confirmed', `Đã dời lịch sang ${newRescheduleTime} ngày ${newRescheduleDate}`);
+    const newDateTime = `${newRescheduleDate} ${newRescheduleTime}:00`;
+    updateAppointmentStatus(reschedulingAppointment.id, 'confirmed', `Đã dời lịch sang ${newRescheduleTime} ngày ${newRescheduleDate}`, newDateTime);
     setReschedulingAppointment(null);
     triggerNotification(`Đã đổi lịch cho bệnh nhân ${reschedulingAppointment.patient_name} sang ${newRescheduleDate} (${newRescheduleTime}) và tự động gửi tin nhắn Zalo OA thông báo!`);
   };
@@ -1569,7 +1619,7 @@ export default function AdminDashboard(props: Props) {
     detailed_description: '',
     includes: [] as string[],
     candidates: [] as string[],
-    image: '/assets/screening_service.png',
+    image: '/assets/logo_pk.png',
     is_featured: true,
     meta_title: '',
     meta_description: '',
@@ -1630,7 +1680,7 @@ export default function AdminDashboard(props: Props) {
       detailed_description: '',
       includes: ['Khám chuyên khoa Tim mạch', 'Đo ECG 12 đầu cần', 'Siêu âm tim Doppler màu', 'Xét nghiệm mỡ máu'],
       candidates: ['Người từ 35 tuổi trở lên', 'Người có nguy cơ mắc bệnh tim mạch', 'Người chưa khám tim mạch bao giờ'],
-      image: '/assets/screening_service.png',
+      image: '/assets/logo_pk.png',
       is_featured: true,
       meta_title: '',
       meta_description: '',
@@ -1653,7 +1703,7 @@ export default function AdminDashboard(props: Props) {
       detailed_description: service.detailed_description || '',
       includes: service.includes || [],
       candidates: service.candidates || [],
-      image: service.image || '/assets/screening_service.png',
+      image: service.image || '/assets/logo_pk.png',
       is_featured: service.is_featured,
       meta_title: service.meta_title || '',
       meta_description: service.meta_description || '',
@@ -1933,13 +1983,12 @@ export default function AdminDashboard(props: Props) {
     if (serviceStatusTab === 'standard') matchesStatus = !s.is_featured;
 
     let matchesPillar = true;
-    if (selectedPillarFilter !== 'all') matchesPillar = s.pillar_title === selectedPillarFilter;
+    if (selectedPillarFilter !== 'all') {
+      matchesPillar = s.service_pillar_id === parseInt(selectedPillarFilter);
+    }
 
     return matchesSearch && matchesStatus && matchesPillar;
   });
-
-  // Unique Pillars list
-  const uniquePillars = Array.from(new Set(services.map(s => s.pillar_title)));
 
   // Filtered Article Categories
   const filteredArticleCategories = articleCategories.filter(cat => {
@@ -1958,27 +2007,59 @@ export default function AdminDashboard(props: Props) {
   const startIndex = (currentPage - 1) * itemsPerPage;
   const paginatedAppointments = filteredAppointments.slice(startIndex, startIndex + itemsPerPage);
 
-  // 17 Sidebar Navigation Items
-  const sidebarItems = [
-    { id: 'overview', label: 'Tổng quan hệ thống', icon: LayoutDashboard, badge: null },
-    { id: 'consultations', label: 'Đăng ký tư vấn', icon: PhoneCall, badge: stats.pending_consultations },
-    { id: 'appointments', label: 'Lịch hẹn trực tuyến', icon: CalendarIcon, badge: stats.total_appointments },
-    { id: 'articles', label: 'Bài viết', icon: BookOpen, badge: null },
-    { id: 'articleCategories', label: 'Danh mục bài viết', icon: Tags, badge: articleCategories.length },
-    { id: 'authors', label: 'Tác giả bài viết', icon: Users, badge: null },
-    { id: 'services', label: 'Dịch vụ', icon: Sparkles, badge: services.length },
-    { id: 'pillars', label: 'Danh mục dịch vụ', icon: Layers, badge: pillars.length },
-    { id: 'reviews', label: 'Quản lý đánh giá', icon: MessageSquare, badge: null },
-    { id: 'banners', label: 'Quản lý banners', icon: SlidersHorizontal, badge: null },
-    { id: 'doctors', label: 'Đội ngũ bác sĩ', icon: UserCheck, badge: null },
-    { id: 'schedules', label: 'Lịch trực bác sĩ', icon: CalendarDays, badge: null },
-    { id: 'faqs', label: 'Hỏi đáp FAQ', icon: HelpCircle, badge: null },
-    { id: 'results', label: 'Kết quả thực tế', icon: CheckCircle2, badge: null },
-    { id: 'about', label: 'Quản lý giới thiệu', icon: Info, badge: null },
-    { id: 'policies', label: 'Quản lý chính sách', icon: FileText, badge: null },
-    { id: 'settings', label: 'Cấu hình hệ thống', icon: Settings, badge: null },
-    { id: 'media', label: 'Quản lý Tệp', icon: FolderOpen, badge: null },
-    { id: 'configs', label: 'Configs', icon: Wrench, badge: null },
+  // Grouped Sidebar Navigation Items
+  const sidebarGroups = [
+    {
+      id: 'crm',
+      title: 'Hồ sơ & Lịch hẹn',
+      icon: CalendarIcon,
+      items: [
+        { id: 'appointments', label: 'Lịch hẹn trực tuyến', icon: CalendarIcon, badge: stats.total_appointments },
+        { id: 'consultations', label: 'Đăng ký tư vấn', icon: PhoneCall, badge: stats.pending_consultations },
+      ]
+    },
+    {
+      id: 'medical',
+      title: 'Chuyên môn & Dịch vụ',
+      icon: Sparkles,
+      items: [
+        { id: 'services', label: 'Dịch vụ y khoa', icon: Sparkles, badge: services.length },
+        { id: 'pillars', label: 'Danh mục dịch vụ', icon: Layers, badge: pillars.length },
+        { id: 'doctors', label: 'Đội ngũ bác sĩ', icon: UserCheck, badge: null },
+      ]
+    },
+    {
+      id: 'news',
+      title: 'Tin tức & Truyền thông',
+      icon: BookOpen,
+      items: [
+        { id: 'articles', label: 'Bài viết', icon: BookOpen, badge: null },
+        { id: 'articleCategories', label: 'Danh mục bài viết', icon: Tags, badge: articleCategories.length },
+        { id: 'authors', label: 'Tác giả bài viết', icon: Users, badge: null },
+      ]
+    },
+    {
+      id: 'content',
+      title: 'Quản lý Nội dung',
+      icon: FileText,
+      items: [
+        { id: 'banners', label: 'Quản lý banners', icon: SlidersHorizontal, badge: null },
+        { id: 'reviews', label: 'Quản lý đánh giá', icon: MessageSquare, badge: null },
+        { id: 'about', label: 'Quản lý giới thiệu', icon: Info, badge: null },
+        { id: 'policies', label: 'Quản lý chính sách', icon: FileText, badge: null },
+        { id: 'media', label: 'Quản lý Tệp', icon: FolderOpen, badge: null },
+      ]
+    },
+    {
+      id: 'system',
+      title: 'Hệ thống & Cấu hình',
+      icon: Settings,
+      items: [
+        { id: 'overview', label: 'Tổng quan hệ thống', icon: LayoutDashboard, badge: null },
+        { id: 'settings', label: 'Cấu hình hệ thống', icon: Settings, badge: null },
+        { id: 'configs', label: 'Configs', icon: Wrench, badge: null },
+      ]
+    }
   ];
 
   // 7-day trend chart
@@ -1998,7 +2079,7 @@ export default function AdminDashboard(props: Props) {
       
       {/* Toast Notification */}
       {notificationMsg && (
-        <div className="fixed top-6 right-6 bg-emerald-600 text-white font-bold text-xs px-5 py-3 rounded-2xl shadow-xl z-50 flex items-center gap-2 animate-bounce">
+        <div className="fixed top-6 right-6 bg-emerald-600 text-white font-bold text-sm px-5 py-3 rounded-2xl shadow-xl z-50 flex items-center gap-2 animate-bounce">
           <CheckCircle2 size={18} />
           <span>{notificationMsg}</span>
         </div>
@@ -2036,35 +2117,73 @@ export default function AdminDashboard(props: Props) {
         </div>
 
         {/* Navigation items */}
-        <nav className="flex-1 p-4 overflow-y-auto space-y-1.5 text-sm font-semibold">
-          {sidebarItems.map((item) => {
-            const Icon = item.icon;
-            const isActive = activeTab === item.id;
+        <nav className="flex-1 p-4 overflow-y-auto space-y-2 text-sm font-semibold">
+          {sidebarGroups.map((group) => {
+            const GroupIcon = group.icon;
+            const isOpen = openGroups[group.id];
+            
+            // Check if any child item is active
+            const hasActiveChild = group.items.some(item => activeTab === item.id);
+
             return (
-              <button
-                key={item.id}
-                onClick={() => {
-                  changeTab(item.id);
-                  setCurrentPage(1);
-                }}
-                className={`w-full flex items-center justify-between px-4 py-3 rounded-2xl transition-all cursor-pointer ${
-                  isActive 
-                    ? 'bg-[#004b87] text-white font-bold shadow-md shadow-blue-900/10' 
-                    : 'text-slate-600 hover:text-[#004b87] hover:bg-slate-100/70'
-                }`}
-              >
-                <div className="flex items-center gap-3.5">
-                  <Icon size={19} className={isActive ? 'text-white' : 'text-slate-400'} />
-                  <span>{item.label}</span>
-                </div>
-                {item.badge !== null && item.badge > 0 && (
-                  <span className={`px-2.5 py-0.5 rounded-full text-xs font-bold ${
-                    isActive ? 'bg-white text-[#004b87]' : 'bg-amber-100 text-amber-800'
-                  }`}>
-                    {item.badge}
-                  </span>
+              <div key={group.id} className="space-y-1">
+                {/* Group Toggle Header */}
+                <button
+                  type="button"
+                  onClick={() => toggleGroup(group.id)}
+                  className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl transition-all cursor-pointer ${
+                    hasActiveChild 
+                      ? 'text-[#004b87] font-bold bg-[#004b87]/5' 
+                      : 'text-slate-700 hover:text-[#004b87] hover:bg-slate-50'
+                  }`}
+                >
+                  <div className="flex items-center gap-2.5">
+                    <GroupIcon size={16} className={hasActiveChild ? 'text-[#004b87]' : 'text-slate-400'} />
+                    <span>{group.title}</span>
+                  </div>
+                  {isOpen ? (
+                    <ChevronDown size={14} className="text-slate-400 shrink-0" />
+                  ) : (
+                    <ChevronRight size={14} className="text-slate-400 shrink-0" />
+                  )}
+                </button>
+
+                {/* Sub Menu Items list */}
+                {isOpen && (
+                  <div className="border-l border-slate-150 pl-3 ml-4.5 space-y-1 mt-1">
+                    {group.items.map((item) => {
+                      const Icon = item.icon;
+                      const isActive = activeTab === item.id;
+                      return (
+                        <button
+                          key={item.id}
+                          onClick={() => {
+                            changeTab(item.id);
+                            setCurrentPage(1);
+                          }}
+                          className={`w-full flex items-center justify-between px-3.5 py-2 rounded-xl transition-all cursor-pointer ${
+                            isActive 
+                              ? 'bg-[#004b87] text-white font-bold shadow-md shadow-blue-900/10' 
+                              : 'text-slate-500 hover:text-[#004b87] hover:bg-slate-100/50'
+                          }`}
+                        >
+                          <div className="flex items-center gap-2.5">
+                            <Icon size={15} className={isActive ? 'text-white' : 'text-slate-400'} />
+                            <span className="text-[13px]">{item.label}</span>
+                          </div>
+                          {item.badge !== null && item.badge > 0 && (
+                            <span className={`px-2 py-0.5 rounded-full text-xs font-bold ${
+                              isActive ? 'bg-white text-[#004b87]' : 'bg-amber-100 text-amber-850'
+                            }`}>
+                              {item.badge}
+                            </span>
+                          )}
+                        </button>
+                      );
+                    })}
+                  </div>
                 )}
-              </button>
+              </div>
             );
           })}
         </nav>
@@ -2076,7 +2195,7 @@ export default function AdminDashboard(props: Props) {
               BS
             </div>
             <div>
-              <p className="text-xs font-bold text-slate-800 leading-tight">{auth.user.name}</p>
+              <p className="text-sm font-bold text-slate-800 leading-tight">{auth.user.name}</p>
               <p className="text-[11px] text-slate-500">Quản trị viên</p>
             </div>
           </div>
@@ -2110,7 +2229,7 @@ export default function AdminDashboard(props: Props) {
                   <UserPlus size={18} />
                   Tạo nhanh lịch hẹn tại quầy
                 </button>
-                <div className="inline-flex items-center gap-2.5 px-4 py-2.5 rounded-2xl bg-emerald-50 text-emerald-700 border border-emerald-200/60 text-xs font-bold shadow-xs">
+                <div className="inline-flex items-center gap-2.5 px-4 py-2.5 rounded-2xl bg-emerald-50 text-emerald-700 border border-emerald-200/60 text-sm font-bold shadow-xs">
                   <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse" />
                   Hệ thống trực tuyến (Live)
                 </div>
@@ -2121,9 +2240,9 @@ export default function AdminDashboard(props: Props) {
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
               <div className="bg-white p-6 rounded-2xl border border-slate-200/80 shadow-sm flex items-center justify-between">
                 <div>
-                  <span className="text-xs font-bold text-slate-400 uppercase tracking-wider block mb-1.5">YÊU CẦU TƯ VẤN MỚI</span>
+                  <span className="text-sm font-bold text-slate-400 uppercase tracking-wider block mb-1.5">YÊU CẦU TƯ VẤN MỚI</span>
                   <div className="text-3xl font-black text-amber-600">{stats.pending_consultations}</div>
-                  <span className="text-xs text-slate-500 mt-1 block">Đang chờ phản hồi</span>
+                  <span className="text-sm text-slate-500 mt-1 block">Đang chờ phản hồi</span>
                 </div>
                 <div className="w-14 h-14 rounded-2xl bg-amber-50 text-amber-600 flex items-center justify-center shrink-0">
                   <PhoneCall size={24} />
@@ -2132,9 +2251,9 @@ export default function AdminDashboard(props: Props) {
 
               <div className="bg-white p-6 rounded-2xl border border-slate-200/80 shadow-sm flex items-center justify-between">
                 <div>
-                  <span className="text-xs font-bold text-slate-400 uppercase tracking-wider block mb-1.5">LƯỢT ĐĂNG KÝ HÔM NAY</span>
+                  <span className="text-sm font-bold text-slate-400 uppercase tracking-wider block mb-1.5">LƯỢT ĐĂNG KÝ HÔM NAY</span>
                   <div className="text-3xl font-black text-[#004b87]">{appointments.length}</div>
-                  <span className="text-xs text-slate-500 mt-1 block">Khách hàng trong ngày</span>
+                  <span className="text-sm text-slate-500 mt-1 block">Khách hàng trong ngày</span>
                 </div>
                 <div className="w-14 h-14 rounded-2xl bg-blue-50 text-[#004b87] flex items-center justify-center shrink-0">
                   <CalendarIcon size={24} />
@@ -2143,9 +2262,9 @@ export default function AdminDashboard(props: Props) {
 
               <div className="bg-white p-6 rounded-2xl border border-slate-200/80 shadow-sm flex items-center justify-between">
                 <div>
-                  <span className="text-xs font-bold text-slate-400 uppercase tracking-wider block mb-1.5">BÀI VIẾT TIN TỨC</span>
+                  <span className="text-sm font-bold text-slate-400 uppercase tracking-wider block mb-1.5">BÀI VIẾT TIN TỨC</span>
                   <div className="text-3xl font-black text-[#00a896]">{articles.length}</div>
-                  <span className="text-xs text-slate-500 mt-1 block">Tin tức & chuyên môn</span>
+                  <span className="text-sm text-slate-500 mt-1 block">Tin tức & chuyên môn</span>
                 </div>
                 <div className="w-14 h-14 rounded-2xl bg-emerald-50 text-[#00a896] flex items-center justify-center shrink-0">
                   <BookOpen size={24} />
@@ -2154,9 +2273,9 @@ export default function AdminDashboard(props: Props) {
 
               <div className="bg-white p-6 rounded-2xl border border-slate-200/80 shadow-sm flex items-center justify-between">
                 <div>
-                  <span className="text-xs font-bold text-slate-400 uppercase tracking-wider block mb-1.5">DỊCH VỤ HOẠT ĐỘNG</span>
+                  <span className="text-sm font-bold text-slate-400 uppercase tracking-wider block mb-1.5">DỊCH VỤ HOẠT ĐỘNG</span>
                   <div className="text-3xl font-black text-purple-600">{services.length}</div>
-                  <span className="text-xs text-slate-500 mt-1 block">Gồm các dịch vụ nổi bật</span>
+                  <span className="text-sm text-slate-500 mt-1 block">Gồm các dịch vụ nổi bật</span>
                 </div>
                 <div className="w-14 h-14 rounded-2xl bg-purple-50 text-purple-600 flex items-center justify-center shrink-0">
                   <Sparkles size={24} />
@@ -2172,12 +2291,12 @@ export default function AdminDashboard(props: Props) {
                     <span className="w-2.5 h-2.5 rounded-full bg-[#00a896]" />
                     Biểu Đồ Xu Hướng Đăng Ký Khám (7 ngày qua)
                   </h3>
-                  <p className="text-xs text-slate-500 mt-1">Tổng cộng có {appointments.length} lượt đăng ký tư vấn và khám bệnh</p>
+                  <p className="text-sm text-slate-500 mt-1">Tổng cộng có {appointments.length} lượt đăng ký tư vấn và khám bệnh</p>
                 </div>
 
                 <button
                   onClick={handleExportCSV}
-                  className="flex items-center gap-2 bg-blue-50 hover:bg-blue-100 text-[#004b87] border border-blue-200 font-bold text-xs px-5 py-2.5 rounded-xl transition-all cursor-pointer shadow-xs"
+                  className="flex items-center gap-2 bg-blue-50 hover:bg-blue-100 text-[#004b87] border border-blue-200 font-bold text-sm px-5 py-2.5 rounded-xl transition-all cursor-pointer shadow-xs"
                 >
                   <Download size={16} />
                   Xuất dữ liệu Excel (CSV)
@@ -2189,7 +2308,7 @@ export default function AdminDashboard(props: Props) {
                   <div key={index} className="flex flex-col items-center gap-3 flex-1">
                     {d.count > 0 ? (
                       <div className="relative flex flex-col items-center">
-                        <span className="bg-[#004b87] text-white text-xs font-bold px-3 py-1 rounded-lg shadow-md mb-2">
+                        <span className="bg-[#004b87] text-white text-sm font-bold px-3 py-1 rounded-lg shadow-md mb-2">
                           {d.count}
                         </span>
                         <div className="w-16 bg-[#00a896] rounded-xl h-32 shadow-sm transition-all hover:brightness-110" />
@@ -2197,7 +2316,7 @@ export default function AdminDashboard(props: Props) {
                     ) : (
                       <div className="w-16 bg-slate-100 rounded-xl h-16" />
                     )}
-                    <span className="text-xs font-bold text-slate-500 mt-2">{d.date}</span>
+                    <span className="text-sm font-bold text-slate-500 mt-2">{d.date}</span>
                   </div>
                 ))}
               </div>
@@ -2256,7 +2375,7 @@ export default function AdminDashboard(props: Props) {
         {/* TAB 2: ĐĂNG KÝ TƯ VẤN (CRM) */}
         {activeTab === 'consultations' && (
           <div className="space-y-6 w-full">
-            <div className="flex items-center gap-2 text-xs font-semibold text-slate-400">
+            <div className="flex items-center gap-2 text-sm font-semibold text-slate-400">
               <Link href="/admin/dashboard" className="hover:text-[#004b87]">Tổng quan</Link>
               <ChevronRight size={12} />
               <span className="text-slate-700">Danh Sách Đăng Ký Tư Vấn & CRM Khách Hàng</span>
@@ -2318,7 +2437,7 @@ export default function AdminDashboard(props: Props) {
               <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 pb-4 border-b border-slate-100">
                 <div>
                   <h2 className="text-xl font-extrabold text-[#004b87]">Danh Sách Đăng Ký Tư Vấn & Đặt Lịch (CRM)</h2>
-                  <p className="text-xs text-slate-500 mt-1">
+                  <p className="text-sm text-slate-500 mt-1">
                     Quản lý và lưu trữ thông tin khách hàng • Hiển thị 20 khách hàng/trang (Tổng {filteredAppointments.length} hồ sơ)
                   </p>
                 </div>
@@ -2326,7 +2445,7 @@ export default function AdminDashboard(props: Props) {
                 <div className="flex flex-wrap items-center gap-3 w-full md:w-auto">
                   <button
                     onClick={handleExportCSV}
-                    className="flex items-center gap-1.5 bg-blue-50 hover:bg-blue-100 text-[#004b87] border border-blue-200 font-bold text-xs px-3.5 py-2 rounded-xl transition-all cursor-pointer"
+                    className="flex items-center gap-1.5 bg-blue-50 hover:bg-blue-100 text-[#004b87] border border-blue-200 font-bold text-sm px-3.5 py-2 rounded-xl transition-all cursor-pointer"
                   >
                     <Download size={14} /> Xuất CSV Excel
                   </button>
@@ -2341,13 +2460,13 @@ export default function AdminDashboard(props: Props) {
                         setCrmSearch(e.target.value);
                         setCurrentPage(1);
                       }}
-                      className="w-full bg-slate-50 border border-slate-200 rounded-xl pl-9 pr-4 py-2 text-xs text-slate-800 outline-none focus:border-[#004b87] focus:bg-white shadow-xs"
+                      className="w-full bg-slate-50 border border-slate-200 rounded-xl pl-9 pr-4 py-2 text-sm text-slate-800 outline-none focus:border-[#004b87] focus:bg-white shadow-xs"
                     />
                   </div>
 
                   <button
                     onClick={() => setShowWalkinModal(true)}
-                    className="flex items-center gap-1.5 bg-[#004b87] hover:bg-[#003866] text-white font-bold text-xs px-4 py-2 rounded-xl transition-all cursor-pointer shrink-0 shadow-sm"
+                    className="flex items-center gap-1.5 bg-[#004b87] hover:bg-[#003866] text-white font-bold text-sm px-4 py-2 rounded-xl transition-all cursor-pointer shrink-0 shadow-sm"
                   >
                     <Plus size={15} /> Thêm khách hàng
                   </button>
@@ -2355,7 +2474,7 @@ export default function AdminDashboard(props: Props) {
               </div>
 
               <div className="overflow-x-auto">
-                <table className="w-full text-left text-xs text-slate-700">
+                <table className="w-full text-left text-sm text-slate-700">
                   <thead className="bg-slate-50/80 text-slate-400 uppercase font-extrabold tracking-wider border-b border-slate-200">
                     <tr>
                       <th className="p-4 w-16 text-center">STT / ID</th>
@@ -2379,7 +2498,7 @@ export default function AdminDashboard(props: Props) {
                         const sttNumber = startIndex + idx + 1;
                         return (
                           <tr key={app.id} className="hover:bg-slate-50/70 transition-colors">
-                            <td className="p-4 text-center font-bold text-slate-500 text-xs">
+                            <td className="p-4 text-center font-bold text-slate-500 text-sm">
                               <span className="inline-block px-2.5 py-1 bg-slate-100 rounded-lg text-slate-700 font-mono">
                                 #{sttNumber}
                               </span>
@@ -2387,7 +2506,7 @@ export default function AdminDashboard(props: Props) {
 
                             <td className="p-4 font-bold text-[#004b87] text-sm">
                               <div className="flex items-center gap-3">
-                                <div className="w-9 h-9 rounded-full bg-[#004b87]/10 text-[#004b87] font-bold flex items-center justify-center text-xs shrink-0">
+                                <div className="w-9 h-9 rounded-full bg-[#004b87]/10 text-[#004b87] font-bold flex items-center justify-center text-sm shrink-0">
                                   {app.patient_name[0] || 'K'}
                                 </div>
                                 <div>
@@ -2421,13 +2540,13 @@ export default function AdminDashboard(props: Props) {
                               </div>
                             </td>
 
-                            <td className="p-4 text-slate-500 font-medium text-xs">
+                            <td className="p-4 text-slate-500 font-medium text-sm">
                               {formatDate(app.created_at)}
                             </td>
 
                             <td className="p-4 text-slate-600 max-w-xs">
                               {app.doctor_notes ? (
-                                <span className="text-xs bg-amber-50 text-amber-900 border border-amber-200/60 p-1.5 rounded-lg block line-clamp-2">
+                                <span className="text-sm bg-amber-50 text-amber-900 border border-amber-200/60 p-1.5 rounded-lg block line-clamp-2">
                                   {app.doctor_notes}
                                 </span>
                               ) : (
@@ -2439,7 +2558,7 @@ export default function AdminDashboard(props: Props) {
                               <select
                                 value={app.status}
                                 onChange={(e) => updateAppointmentStatus(app.id, e.target.value)}
-                                className={`px-3 py-1.5 rounded-xl text-xs font-bold border outline-none cursor-pointer shadow-xs transition-all ${
+                                className={`px-3 py-1.5 rounded-xl text-sm font-bold border outline-none cursor-pointer shadow-xs transition-all ${
                                   app.status === 'confirmed'
                                     ? 'bg-emerald-50 text-emerald-700 border-emerald-300'
                                     : app.status === 'pending'
@@ -2486,7 +2605,7 @@ export default function AdminDashboard(props: Props) {
               </div>
 
               {filteredAppointments.length > 0 && (
-                <div className="flex flex-col sm:flex-row justify-between items-center gap-4 pt-4 border-t border-slate-100 text-xs">
+                <div className="flex flex-col sm:flex-row justify-between items-center gap-4 pt-4 border-t border-slate-100 text-sm">
                   <div className="text-slate-500 font-medium">
                     Hiển thị từ <strong className="text-slate-800">{startIndex + 1}</strong> đến <strong className="text-slate-800">{Math.min(startIndex + itemsPerPage, filteredAppointments.length)}</strong> trên tổng số <strong className="text-[#004b87]">{filteredAppointments.length}</strong> khách hàng
                   </div>
@@ -2539,14 +2658,14 @@ export default function AdminDashboard(props: Props) {
             
             {/* Top Breadcrumbs & Useful Clinic Actions Bar */}
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
-              <div className="flex items-center gap-2 text-xs font-semibold text-slate-400">
+              <div className="flex items-center gap-2 text-sm font-semibold text-slate-400">
                 <Link href="/admin/dashboard" className="hover:text-[#004b87]">Tổng quan</Link>
                 <ChevronRight size={12} />
                 <span className="text-slate-700">Lịch Hẹn Trực Tuyến & Phân Phối Ca Khám</span>
               </div>
 
               {/* USE CASE 3: CLINIC CAPACITY & PEAK HOURS INDICATOR */}
-              <div className="flex items-center gap-3 bg-white px-4 py-2 rounded-2xl border border-slate-200/80 shadow-xs text-xs font-bold">
+              <div className="flex items-center gap-3 bg-white px-4 py-2 rounded-2xl border border-slate-200/80 shadow-xs text-sm font-bold">
                 <Activity size={16} className="text-[#00a896]" />
                 <span className="text-slate-600">Công suất ngày {formattedSelectedDate}:</span>
                 <span className="text-[#004b87] font-extrabold">{selectedDayCount} / {dailyCapacityLimit} suất</span>
@@ -2559,7 +2678,7 @@ export default function AdminDashboard(props: Props) {
             </div>
 
             {/* USE CASE 1 & 4: ADVANCED FILTERS BAR (DOCTOR & SHIFT FILTERS) */}
-            <div className="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-xs flex flex-wrap justify-between items-center gap-4 text-xs">
+            <div className="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-xs flex flex-wrap justify-between items-center gap-4 text-sm">
               <div className="flex items-center gap-3 flex-wrap">
                 <span className="font-extrabold text-[#004b87] flex items-center gap-1.5">
                   <Filter size={15} /> Bộ Lọc Ca Khám & Bác Sĩ:
@@ -2569,7 +2688,7 @@ export default function AdminDashboard(props: Props) {
                 <select
                   value={selectedDoctorFilter}
                   onChange={(e) => setSelectedDoctorFilter(e.target.value)}
-                  className="bg-slate-50 border border-slate-200 rounded-xl px-3 py-1.5 text-xs font-bold text-slate-700 outline-none cursor-pointer"
+                  className="bg-slate-50 border border-slate-200 rounded-xl px-3 py-1.5 text-sm font-bold text-slate-700 outline-none cursor-pointer"
                 >
                   <option value="all">Tất cả Bác sĩ (BSCKII Đoàn Khôi + Khác)</option>
                   <option value="1">BSCKII Đoàn Khôi (Chuyên khoa Nội Tim Mạch)</option>
@@ -2579,7 +2698,7 @@ export default function AdminDashboard(props: Props) {
                 <select
                   value={selectedShiftFilter}
                   onChange={(e) => setSelectedShiftFilter(e.target.value)}
-                  className="bg-slate-50 border border-slate-200 rounded-xl px-3 py-1.5 text-xs font-bold text-slate-700 outline-none cursor-pointer"
+                  className="bg-slate-50 border border-slate-200 rounded-xl px-3 py-1.5 text-sm font-bold text-slate-700 outline-none cursor-pointer"
                 >
                   <option value="all">Tất cả Ca khám (Sáng & Chiều)</option>
                   <option value="morning">Ca Sáng (07:30 – 11:30)</option>
@@ -2590,7 +2709,7 @@ export default function AdminDashboard(props: Props) {
               <div className="flex items-center gap-2">
                 <button
                   onClick={() => setShowWalkinModal(true)}
-                  className="flex items-center gap-1.5 bg-[#004b87] hover:bg-[#003866] text-white font-bold px-4 py-2 rounded-xl text-xs shadow-xs transition-all cursor-pointer"
+                  className="flex items-center gap-1.5 bg-[#004b87] hover:bg-[#003866] text-white font-bold px-4 py-2 rounded-xl text-sm shadow-xs transition-all cursor-pointer"
                 >
                   <Plus size={15} /> Tạo mới ca hẹn
                 </button>
@@ -2610,12 +2729,12 @@ export default function AdminDashboard(props: Props) {
                       <h2 className="text-xl font-extrabold text-[#004b87]">Lịch Hẹn Trực Tuyến</h2>
                       <button
                         onClick={() => setShowWalkinModal(true)}
-                        className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-[#004b87]/10 hover:bg-[#004b87]/20 text-[#004b87] font-bold rounded-xl text-xs transition-all cursor-pointer"
+                        className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-[#004b87]/10 hover:bg-[#004b87]/20 text-[#004b87] font-bold rounded-xl text-sm transition-all cursor-pointer"
                       >
                         <Plus size={14} /> Tạo lịch hẹn
                       </button>
                     </div>
-                    <p className="text-xs text-slate-500 mt-1">Quản lý và điều phối lịch trình chăm sóc & thăm khám tim mạch</p>
+                    <p className="text-sm text-slate-500 mt-1">Quản lý và điều phối lịch trình chăm sóc & thăm khám tim mạch</p>
                   </div>
 
                   {/* Month Switcher Controls */}
@@ -2623,7 +2742,7 @@ export default function AdminDashboard(props: Props) {
                     <button onClick={handlePrevMonth} className="p-1 text-slate-500 hover:text-slate-900 cursor-pointer">
                       <ChevronLeft size={16} />
                     </button>
-                    <span className="text-xs font-extrabold text-slate-800 font-mono tracking-wider">
+                    <span className="text-sm font-extrabold text-slate-800 font-mono tracking-wider">
                       THÁNG {calMonth} / {calYear}
                     </span>
                     <button onClick={handleNextMonth} className="p-1 text-slate-500 hover:text-slate-900 cursor-pointer">
@@ -2634,7 +2753,7 @@ export default function AdminDashboard(props: Props) {
 
                 {/* Calendar Days Table Grid */}
                 <div>
-                  <div className="grid grid-cols-7 text-center text-xs font-extrabold text-slate-500 mb-3">
+                  <div className="grid grid-cols-7 text-center text-sm font-extrabold text-slate-500 mb-3">
                     <div>T2</div>
                     <div>T3</div>
                     <div>T4</div>
@@ -2663,7 +2782,7 @@ export default function AdminDashboard(props: Props) {
                               : 'bg-white border-slate-200/80 hover:border-slate-300 hover:bg-slate-50/80'
                           }`}
                         >
-                          <span className={`text-xs font-extrabold ${isSelected ? 'text-[#004b87]' : 'text-slate-700'}`}>
+                          <span className={`text-sm font-extrabold ${isSelected ? 'text-[#004b87]' : 'text-slate-700'}`}>
                             {dayNum}
                           </span>
 
@@ -2686,14 +2805,14 @@ export default function AdminDashboard(props: Props) {
                 <div>
                   <div className="flex justify-between items-center pb-4 border-b border-slate-100 mb-6">
                     <div>
-                      <h3 className="text-xs font-extrabold text-slate-400 uppercase tracking-wider">BẢNG PHÂN PHỐI LỊCH HẸN</h3>
+                      <h3 className="text-sm font-extrabold text-slate-400 uppercase tracking-wider">BẢNG PHÂN PHỐI LỊCH HẸN</h3>
                       <div className="flex items-center gap-2 mt-1">
                         <CalendarCheck size={16} className="text-[#004b87]" />
                         <span className="text-base font-black text-[#004b87]">{formattedSelectedDate}</span>
                       </div>
                     </div>
 
-                    <span className="px-3 py-1 bg-slate-100 text-slate-700 font-extrabold rounded-full text-xs">
+                    <span className="px-3 py-1 bg-slate-100 text-slate-700 font-extrabold rounded-full text-sm">
                       {dayAppointments.length} LỊCH
                     </span>
                   </div>
@@ -2705,7 +2824,7 @@ export default function AdminDashboard(props: Props) {
                       </div>
                       <div>
                         <h4 className="text-sm font-bold text-slate-700">Không có lịch hẹn nào</h4>
-                        <p className="text-xs text-slate-400 mt-1 max-w-xs">
+                        <p className="text-sm text-slate-400 mt-1 max-w-xs">
                           Không tìm thấy yêu cầu đặt lịch hẹn nào trong ngày {formattedSelectedDate}.
                         </p>
                       </div>
@@ -2716,22 +2835,28 @@ export default function AdminDashboard(props: Props) {
                         <div key={app.id} className="p-4 bg-slate-50 rounded-2xl border border-slate-200/70 space-y-3">
                           <div className="flex justify-between items-start">
                             <div className="flex items-center gap-3">
-                              <div className="w-9 h-9 rounded-full bg-[#004b87]/10 text-[#004b87] font-bold flex items-center justify-center text-xs">
+                              <div className="w-9 h-9 rounded-full bg-[#004b87]/10 text-[#004b87] font-bold flex items-center justify-center text-sm">
                                 {app.patient_name[0]}
                               </div>
                               <div>
                                 <h4 className="text-sm font-bold text-slate-900">{app.patient_name}</h4>
-                                <span className="text-xs text-[#00a896] font-semibold">{app.phone}</span>
+                                <span className="text-sm text-[#00a896] font-semibold">{app.phone}</span>
                               </div>
                             </div>
-                            <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold ${
-                              app.status === 'confirmed' ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800'
+                            <span className={`px-2.5 py-0.5 rounded-full text-sm font-bold border ${
+                              app.status === 'confirmed' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' :
+                              app.status === 'completed' ? 'bg-purple-50 text-purple-700 border-purple-200' :
+                              app.status === 'cancelled' ? 'bg-rose-50 text-rose-700 border-rose-200' :
+                              'bg-amber-50 text-amber-700 border-amber-200'
                             }`}>
-                              {app.status === 'confirmed' ? 'Đã xác nhận' : 'Mới tiếp nhận'}
+                              {app.status === 'confirmed' ? 'Đã xác nhận' :
+                               app.status === 'completed' ? 'Đã khám xong' :
+                               app.status === 'cancelled' ? 'Đã hủy' :
+                               'Mới tiếp nhận'}
                             </span>
                           </div>
 
-                          <div className="text-xs text-slate-600 space-y-1 pt-1 border-t border-slate-200/50">
+                          <div className="text-sm text-slate-600 space-y-1 pt-1 border-t border-slate-200/50">
                             <p>Gói dịch vụ: <strong>{app.service_slug || 'Khám tim mạch tổng quát'}</strong></p>
                             <p>Bác sĩ phụ trách: <strong>BSCKII Đoàn Khôi (Phòng 101)</strong></p>
                             {app.notes && <p className="italic text-slate-500">"{app.notes}"</p>}
@@ -2753,7 +2878,7 @@ export default function AdminDashboard(props: Props) {
                                     status: app.status,
                                   });
                                 }}
-                                className="inline-flex items-center gap-1 px-2.5 py-1 bg-blue-50 text-[#004b87] hover:bg-blue-100 rounded-lg text-xs font-bold transition-all cursor-pointer border border-blue-100"
+                                className="inline-flex items-center gap-1 px-2.5 py-1 bg-blue-50 text-[#004b87] hover:bg-blue-100 rounded-lg text-sm font-bold transition-all cursor-pointer border border-blue-100"
                                 title="Chỉnh sửa thông tin hồ sơ bệnh nhân"
                               >
                                 <Edit size={12} /> Sửa
@@ -2761,8 +2886,19 @@ export default function AdminDashboard(props: Props) {
 
                               {/* USE CASE 2: RESCHEDULE BUTTON */}
                               <button
-                                onClick={() => setReschedulingAppointment(app)}
-                                className="inline-flex items-center gap-1 px-2.5 py-1 bg-amber-50 text-amber-800 hover:bg-amber-100 rounded-lg text-xs font-bold transition-all cursor-pointer"
+                                onClick={() => {
+                                  setReschedulingAppointment(app);
+                                  try {
+                                    const d = new Date(app.created_at);
+                                    const y = d.getFullYear();
+                                    const m = String(d.getMonth() + 1).padStart(2, '0');
+                                    const day = String(d.getDate()).padStart(2, '0');
+                                    setNewRescheduleDate(`${y}-${m}-${day}`);
+                                  } catch (e) {
+                                    setNewRescheduleDate(getTodayString());
+                                  }
+                                }}
+                                className="inline-flex items-center gap-1 px-2.5 py-1 bg-amber-50 text-amber-800 hover:bg-amber-100 rounded-lg text-sm font-bold transition-all cursor-pointer"
                                 title="Đổi / Dời lịch hẹn sang ngày mới"
                               >
                                 <CalendarRange size={12} /> Dời lịch
@@ -2771,22 +2907,51 @@ export default function AdminDashboard(props: Props) {
                               {/* USE CASE 5: PRINT RECEPTION TICKET */}
                               <button
                                 onClick={() => setPrintingAppointment(app)}
-                                className="inline-flex items-center gap-1 px-2.5 py-1 bg-slate-100 text-slate-700 hover:bg-slate-200 rounded-lg text-xs font-bold transition-all cursor-pointer"
+                                className="inline-flex items-center gap-1 px-2.5 py-1 bg-slate-100 text-slate-700 hover:bg-slate-200 rounded-lg text-sm font-bold transition-all cursor-pointer"
                                 title="In phiếu tiếp nhận khám bệnh"
                               >
                                 <Printer size={12} /> In phiếu
                               </button>
                             </div>
 
-                            <button
-                              onClick={() => {
-                                updateAppointmentStatus(app.id, 'confirmed');
-                                triggerNotification(`Đã xác nhận lịch hẹn cho ${app.patient_name}`);
-                              }}
-                              className="px-3 py-1 bg-[#00a896] hover:bg-[#009081] text-white rounded-lg text-xs font-bold transition-all cursor-pointer"
-                            >
-                              Xác nhận ➔
-                            </button>
+                            {app.status === 'pending' && (
+                              <div className="flex items-center gap-1.5">
+                                <button
+                                  onClick={() => {
+                                    if (confirm(`Bạn có chắc chắn muốn hủy lịch hẹn của ${app.patient_name}?`)) {
+                                      updateAppointmentStatus(app.id, 'cancelled');
+                                      triggerNotification(`Đã hủy lịch hẹn của ${app.patient_name}`);
+                                    }
+                                  }}
+                                  className="px-2.5 py-1 bg-red-50 hover:bg-red-100 text-red-600 border border-red-200 rounded-lg text-sm font-bold transition-all cursor-pointer"
+                                >
+                                  Hủy ✕
+                                </button>
+                                <button
+                                  onClick={() => {
+                                    updateAppointmentStatus(app.id, 'confirmed');
+                                    triggerNotification(`Đã xác nhận lịch hẹn cho ${app.patient_name}`);
+                                  }}
+                                  className="px-3 py-1 bg-[#00a896] hover:bg-[#009081] text-white rounded-lg text-sm font-bold transition-all cursor-pointer"
+                                >
+                                  Xác nhận ➔
+                                </button>
+                              </div>
+                            )}
+
+                            {app.status === 'confirmed' && (
+                              <button
+                                onClick={() => {
+                                  if (confirm(`Bạn có chắc chắn muốn hủy lịch hẹn của ${app.patient_name}?`)) {
+                                    updateAppointmentStatus(app.id, 'cancelled');
+                                    triggerNotification(`Đã hủy lịch hẹn của ${app.patient_name}`);
+                                  }
+                                }}
+                                className="px-3 py-1 bg-red-600 hover:bg-red-700 text-white rounded-lg text-sm font-bold transition-all cursor-pointer"
+                              >
+                                Hủy lịch ✕
+                              </button>
+                            )}
                           </div>
                         </div>
                       ))}
@@ -2794,7 +2959,7 @@ export default function AdminDashboard(props: Props) {
                   )}
                 </div>
 
-                <div className="pt-6 border-t border-slate-100 text-center text-xs text-slate-400">
+                <div className="pt-6 border-t border-slate-100 text-center text-sm text-slate-400">
                   Nhấp vào bất kỳ ngày nào trên lịch để xem phân phối lịch hẹn
                 </div>
 
@@ -2813,7 +2978,7 @@ export default function AdminDashboard(props: Props) {
               
               {/* Top Breadcrumbs */}
               <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2 text-xs font-semibold text-slate-400">
+                <div className="flex items-center gap-2 text-sm font-semibold text-slate-400">
                   <button
                     type="button"
                     onClick={() => setIsEditingServicePage(false)}
@@ -2828,7 +2993,7 @@ export default function AdminDashboard(props: Props) {
                 <button
                   type="button"
                   onClick={() => setIsEditingServicePage(false)}
-                  className="text-xs text-slate-500 hover:text-slate-800 font-bold flex items-center gap-1 cursor-pointer bg-white px-3 py-1.5 rounded-xl border border-slate-200 shadow-xs"
+                  className="text-sm text-slate-500 hover:text-slate-800 font-bold flex items-center gap-1 cursor-pointer bg-white px-3 py-1.5 rounded-xl border border-slate-200 shadow-xs"
                 >
                   <ArrowLeft size={14} /> Quay lại danh sách dịch vụ
                 </button>
@@ -2836,7 +3001,7 @@ export default function AdminDashboard(props: Props) {
 
               {/* Language Tab Badge */}
               <div className="flex items-center gap-2 border-b border-slate-200/80 pb-3">
-                <span className="px-4 py-1.5 bg-[#004b87] text-white font-extrabold text-xs rounded-xl shadow-xs tracking-wider">
+                <span className="px-4 py-1.5 bg-[#004b87] text-white font-extrabold text-sm rounded-xl shadow-xs tracking-wider">
                   VN Tiếng Việt
                 </span>
               </div>
@@ -2850,7 +3015,7 @@ export default function AdminDashboard(props: Props) {
                   {/* 1. TÊN GÓI DỊCH VỤ & CUSTOM SLUG URL */}
                   <div className="bg-white p-6 rounded-2xl border border-slate-200/80 shadow-xs space-y-3">
                     <div className="flex justify-between items-center">
-                      <label className="text-xs font-black text-slate-700 uppercase tracking-wider">
+                      <label className="text-sm font-black text-slate-700 uppercase tracking-wider">
                         TÊN GÓI DỊCH VỤ Y KHOA *
                       </label>
                       <span className="text-[11px] text-slate-400 font-mono font-medium">
@@ -2905,72 +3070,30 @@ export default function AdminDashboard(props: Props) {
                     </div>
                   </div>
 
-                  {/* 2. NHÓM TRỤ CỘT Y KHOA & GIÁ NIÊM YẾT & THỜI GIAN KHÁM */}
+                  {/* 2. NHÓM TRỤ CỘT Y KHOA */}
                   <div className="bg-white p-6 rounded-2xl border border-slate-200/80 shadow-xs space-y-4">
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                      <div>
-                        <label className="block text-xs font-black text-slate-700 uppercase tracking-wider mb-2">
-                          NHÓM DANH MỤC DỊCH VỤ *
-                        </label>
-                        <select
-                          value={serviceForm.data.service_pillar_id}
-                          onChange={(e) => serviceForm.setData('service_pillar_id', parseInt(e.target.value))}
-                          className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-xs font-bold text-slate-700 outline-none focus:border-[#004b87] cursor-pointer"
-                        >
-                          {pillars.map((pillar) => (
-                            <option key={pillar.id} value={pillar.id}>
-                              {pillar.title}
-                            </option>
-                          ))}
-                        </select>
-                      </div>
-
-                      <div>
-                        <label className="block text-xs font-black text-slate-700 uppercase tracking-wider mb-2">
-                          GIÁ NIÊM YẾT *
-                        </label>
-                        <input
-                          type="text"
-                          required
-                          placeholder="Ví dụ: 500.000 VNĐ - 1.200.000 VNĐ"
-                          value={serviceForm.data.price}
-                          onChange={(e) => serviceForm.setData('price', e.target.value)}
-                          className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-xs font-mono font-bold text-slate-800 outline-none focus:border-[#004b87] focus:bg-white"
-                        />
-                      </div>
-
-                      <div>
-                        <label className="block text-xs font-black text-slate-700 uppercase tracking-wider mb-2">
-                          THỜI GIAN THỰC HIỆN *
-                        </label>
-                        <input
-                          type="text"
-                          placeholder="Ví dụ: 60 - 90 phút"
-                          value={serviceForm.data.estimated_time}
-                          onChange={(e) => serviceForm.setData('estimated_time', e.target.value)}
-                          className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-xs font-bold text-slate-800 outline-none focus:border-[#004b87] focus:bg-white"
-                        />
-                      </div>
+                    <div>
+                      <label className="block text-sm font-black text-slate-700 uppercase tracking-wider mb-2">
+                        NHÓM DANH MỤC DỊCH VỤ *
+                      </label>
+                      <select
+                        value={serviceForm.data.service_pillar_id}
+                        onChange={(e) => serviceForm.setData('service_pillar_id', parseInt(e.target.value))}
+                        className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-sm font-bold text-slate-700 outline-none focus:border-[#004b87] cursor-pointer"
+                      >
+                        {pillars.map((pillar) => (
+                          <option key={pillar.id} value={pillar.id}>
+                            {pillar.title}
+                          </option>
+                        ))}
+                      </select>
                     </div>
                   </div>
 
                   {/* 3. TAGLINE NGẮN & MÔ TẢ TÓM TẮT DỊCH VỤ */}
                   <div className="bg-white p-6 rounded-2xl border border-slate-200/80 shadow-xs space-y-4">
                     <div>
-                      <label className="block text-xs font-black text-slate-700 uppercase tracking-wider mb-2">
-                        TAGLINE / THÔNG ĐIỆP NGẮN *
-                      </label>
-                      <input
-                        type="text"
-                        placeholder="Ví dụ: Đánh giá sức khỏe trái tim toàn diện & phát hiện sớm biến chứng"
-                        value={serviceForm.data.tagline}
-                        onChange={(e) => serviceForm.setData('tagline', e.target.value)}
-                        className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-xs font-bold text-slate-800 outline-none focus:border-[#004b87] focus:bg-white"
-                      />
-                    </div>
-
-                    <div>
-                      <label className="block text-xs font-black text-slate-700 uppercase tracking-wider mb-2">
+                      <label className="block text-sm font-black text-slate-700 uppercase tracking-wider mb-2">
                         MÔ TẢ TÓM TẮT GÓI DỊCH VỤ *
                       </label>
                       <textarea
@@ -2979,7 +3102,7 @@ export default function AdminDashboard(props: Props) {
                         placeholder="Khám lâm sàng toàn diện kết hợp đo đạc các chỉ số sinh hóa cơ bản và hình ảnh học tim mạch chuẩn chuyên khoa..."
                         value={serviceForm.data.description}
                         onChange={(e) => serviceForm.setData('description', e.target.value)}
-                        className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3.5 text-xs text-slate-800 outline-none focus:border-[#004b87] focus:bg-white leading-relaxed resize-none"
+                        className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3.5 text-sm text-slate-800 outline-none focus:border-[#004b87] focus:bg-white leading-relaxed resize-none"
                       />
                     </div>
                   </div>
@@ -2987,7 +3110,7 @@ export default function AdminDashboard(props: Props) {
                   {/* 4. NỘI DUNG CHI TIẾT GÓI KHÁM (WYSIWYG RICH TEXT EDITOR) */}
                   <div className="space-y-2">
                     <div className="flex items-center justify-between">
-                      <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider">
+                      <label className="block text-sm font-bold text-slate-500 uppercase tracking-wider">
                         NỘI DUNG CHI TIẾT QUY TRÌNH & PHÁC ĐỒ *
                       </label>
 
@@ -2999,7 +3122,7 @@ export default function AdminDashboard(props: Props) {
                     <div className="bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-2xs">
                       {/* Attached Clean Minimal Toolbar matching article editor */}
                       {serviceEditorMode === 'wysiwyg' && (
-                        <div className="px-4 py-2.5 bg-slate-50/80 border-b border-slate-200/80 flex flex-wrap items-center justify-between gap-2 text-xs font-semibold text-slate-600">
+                        <div className="px-4 py-2.5 bg-slate-50/80 border-b border-slate-200/80 flex flex-wrap items-center justify-between gap-2 text-sm font-semibold text-slate-600">
                           <div className="flex flex-wrap items-center gap-1">
                             {/* Formatting B I U S */}
                             <button
@@ -3084,7 +3207,7 @@ export default function AdminDashboard(props: Props) {
                             <button
                               type="button"
                               onClick={() => execServiceEditorCmd('formatBlock', '<h4>')}
-                              className={`px-2 py-1 rounded-md font-bold cursor-pointer transition-all text-xs ${
+                              className={`px-2 py-1 rounded-md font-bold cursor-pointer transition-all text-sm ${
                                 activeFormats.h2 ? 'bg-[#004b87] text-white shadow-xs scale-105' : 'hover:bg-slate-200/80 text-slate-700'
                               }`}
                               title="Tiêu đề H2"
@@ -3094,7 +3217,7 @@ export default function AdminDashboard(props: Props) {
                             <button
                               type="button"
                               onClick={() => execServiceEditorCmd('formatBlock', '<h5>')}
-                              className={`px-2 py-1 rounded-md font-bold cursor-pointer transition-all text-xs ${
+                              className={`px-2 py-1 rounded-md font-bold cursor-pointer transition-all text-sm ${
                                 activeFormats.h3 ? 'bg-[#004b87] text-white shadow-xs scale-105' : 'hover:bg-slate-200/80 text-slate-700'
                               }`}
                               title="Tiêu đề H3"
@@ -3104,7 +3227,7 @@ export default function AdminDashboard(props: Props) {
                             <button
                               type="button"
                               onClick={() => execServiceEditorCmd('formatBlock', '<p>')}
-                              className={`px-2 py-1 rounded-md font-bold cursor-pointer transition-all text-xs ${
+                              className={`px-2 py-1 rounded-md font-bold cursor-pointer transition-all text-sm ${
                                 activeFormats.p ? 'bg-[#004b87] text-white shadow-xs scale-105' : 'hover:bg-slate-200/80 text-slate-700'
                               }`}
                               title="Đoạn văn"
@@ -3227,7 +3350,7 @@ export default function AdminDashboard(props: Props) {
                               serviceEditorRef.current.innerHTML = e.target.value;
                             }
                           }}
-                          className="w-full min-h-[300px] bg-slate-900 p-6 text-xs font-mono text-emerald-400 outline-none leading-relaxed resize-y border-none"
+                          className="w-full min-h-[300px] bg-slate-900 p-6 text-sm font-mono text-emerald-400 outline-none leading-relaxed resize-y border-none"
                         />
                       )}
                     </div>
@@ -3235,7 +3358,7 @@ export default function AdminDashboard(props: Props) {
 
                   {/* 5. HẠNG MỤC BAO GỒM TRONG GÓI KHÁM (INCLUDES LIST MANAGER) */}
                   <div className="bg-white p-6 rounded-2xl border border-slate-200/80 shadow-xs space-y-4">
-                    <label className="block text-xs font-black text-slate-700 uppercase tracking-wider">
+                    <label className="block text-sm font-black text-slate-700 uppercase tracking-wider">
                       HẠNG MỤC KHÁM BAO GỒM (INCLUDES LIST)
                     </label>
 
@@ -3246,12 +3369,12 @@ export default function AdminDashboard(props: Props) {
                         value={newIncludeInput}
                         onChange={(e) => setNewIncludeInput(e.target.value)}
                         onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); handleAddInclude(); } }}
-                        className="flex-1 bg-slate-50 border border-slate-200 rounded-xl p-3 text-xs font-semibold text-slate-800 outline-none focus:border-[#004b87]"
+                        className="flex-1 bg-slate-50 border border-slate-200 rounded-xl p-3 text-sm font-semibold text-slate-800 outline-none focus:border-[#004b87]"
                       />
                       <button
                         type="button"
                         onClick={handleAddInclude}
-                        className="px-4 py-2 bg-[#004b87] hover:bg-[#003866] text-white font-bold text-xs rounded-xl cursor-pointer transition-all"
+                        className="px-4 py-2 bg-[#004b87] hover:bg-[#003866] text-white font-bold text-sm rounded-xl cursor-pointer transition-all"
                       >
                         <Plus size={16} /> Thêm
                       </button>
@@ -3259,7 +3382,7 @@ export default function AdminDashboard(props: Props) {
 
                     <div className="flex flex-wrap gap-2 pt-2">
                       {(serviceForm.data.includes || []).map((item, idx) => (
-                        <span key={idx} className="inline-flex items-center gap-2 px-3 py-1.5 bg-blue-50 text-[#004b87] border border-blue-200/70 font-bold rounded-xl text-xs">
+                        <span key={idx} className="inline-flex items-center gap-2 px-3 py-1.5 bg-blue-50 text-[#004b87] border border-blue-200/70 font-bold rounded-xl text-sm">
                           <CheckCircle2 size={13} className="text-[#00a896]" />
                           <span>{item}</span>
                           <button
@@ -3276,7 +3399,7 @@ export default function AdminDashboard(props: Props) {
 
                   {/* 6. ĐỐI TƯỢNG CHỈ ĐỊNH KHÁM (CANDIDATES LIST MANAGER) */}
                   <div className="bg-white p-6 rounded-2xl border border-slate-200/80 shadow-xs space-y-4">
-                    <label className="block text-xs font-black text-slate-700 uppercase tracking-wider">
+                    <label className="block text-sm font-black text-slate-700 uppercase tracking-wider">
                       ĐỐI TƯỢNG CHỈ ĐỊNH KHÁM (TARGET AUDIENCE)
                     </label>
 
@@ -3287,12 +3410,12 @@ export default function AdminDashboard(props: Props) {
                         value={newCandidateInput}
                         onChange={(e) => setNewCandidateInput(e.target.value)}
                         onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); handleAddCandidate(); } }}
-                        className="flex-1 bg-slate-50 border border-slate-200 rounded-xl p-3 text-xs font-semibold text-slate-800 outline-none focus:border-[#004b87]"
+                        className="flex-1 bg-slate-50 border border-slate-200 rounded-xl p-3 text-sm font-semibold text-slate-800 outline-none focus:border-[#004b87]"
                       />
                       <button
                         type="button"
                         onClick={handleAddCandidate}
-                        className="px-4 py-2 bg-[#00a896] hover:bg-[#009081] text-white font-bold text-xs rounded-xl cursor-pointer transition-all"
+                        className="px-4 py-2 bg-[#00a896] hover:bg-[#009081] text-white font-bold text-sm rounded-xl cursor-pointer transition-all"
                       >
                         <Plus size={16} /> Thêm
                       </button>
@@ -3300,7 +3423,7 @@ export default function AdminDashboard(props: Props) {
 
                     <div className="flex flex-wrap gap-2 pt-2">
                       {(serviceForm.data.candidates || []).map((item, idx) => (
-                        <span key={idx} className="inline-flex items-center gap-2 px-3 py-1.5 bg-amber-50 text-amber-900 border border-amber-200/70 font-bold rounded-xl text-xs">
+                        <span key={idx} className="inline-flex items-center gap-2 px-3 py-1.5 bg-amber-50 text-amber-900 border border-amber-200/70 font-bold rounded-xl text-sm">
                           <User size={13} className="text-amber-600" />
                           <span>{item}</span>
                           <button
@@ -3322,14 +3445,14 @@ export default function AdminDashboard(props: Props) {
                   
                   {/* 1. HÀNH ĐỘNG & TRẠNG THÁI (ACTION CARD) */}
                   <div className="bg-white p-6 rounded-2xl border border-slate-200/80 shadow-xs space-y-4">
-                    <h3 className="text-xs font-black text-slate-700 uppercase tracking-wider border-b border-slate-100 pb-3">
+                    <h3 className="text-sm font-black text-slate-700 uppercase tracking-wider border-b border-slate-100 pb-3">
                       HÀNH ĐỘNG & TRẠNG THÁI
                     </h3>
 
                     {/* Publish / Save Button */}
                     <button
                       type="submit"
-                      className="w-full py-3.5 bg-[#004b87] hover:bg-[#003866] text-white font-extrabold text-xs uppercase tracking-wider rounded-xl shadow-md transition-all cursor-pointer flex items-center justify-center gap-2"
+                      className="w-full py-3.5 bg-[#004b87] hover:bg-[#003866] text-white font-extrabold text-sm uppercase tracking-wider rounded-xl shadow-md transition-all cursor-pointer flex items-center justify-center gap-2"
                     >
                       <Save size={16} /> {editingService ? 'LƯU & CẬP NHẬT DỊCH VỤ' : 'XUẤT BẢN GÓI DỊCH VỤ'}
                     </button>
@@ -3337,7 +3460,7 @@ export default function AdminDashboard(props: Props) {
                     {/* Featured Status Toggle Switch */}
                     <div className="flex items-center justify-between py-2 border-t border-b border-slate-100">
                       <div>
-                        <span className="text-xs font-bold text-slate-800 block">Dịch vụ nổi bật</span>
+                        <span className="text-sm font-bold text-slate-800 block">Dịch vụ nổi bật</span>
                         <span className="text-[11px] text-slate-400 block">Hiển thị ưu tiên tại trang chủ</span>
                       </div>
                       <label className="relative inline-flex items-center cursor-pointer">
@@ -3368,7 +3491,7 @@ export default function AdminDashboard(props: Props) {
                         image: serviceForm.data.image,
                         is_featured: serviceForm.data.is_featured,
                       })}
-                      className="w-full py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs rounded-xl transition-all cursor-pointer flex items-center justify-center gap-2"
+                      className="w-full py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-sm rounded-xl transition-all cursor-pointer flex items-center justify-center gap-2"
                     >
                       <Eye size={15} /> XEM TRƯỚC GÓI DỊCH VỤ
                     </button>
@@ -3378,7 +3501,7 @@ export default function AdminDashboard(props: Props) {
                       <button
                         type="button"
                         onClick={() => handleDeleteService(editingService.id, editingService.title)}
-                        className="w-full py-2 text-rose-600 hover:text-rose-800 font-bold text-xs transition-colors cursor-pointer text-center"
+                        className="w-full py-2 text-rose-600 hover:text-rose-800 font-bold text-sm transition-colors cursor-pointer text-center"
                       >
                         Xóa gói dịch vụ này
                       </button>
@@ -3386,7 +3509,7 @@ export default function AdminDashboard(props: Props) {
                   </div>
 
                   {/* 2. ẢNH ĐẠI DIỆN GÓI DỊCH VỤ (FEATURED IMAGE PICKER) */}
-                  <div className="bg-white p-6 rounded-3xl border border-slate-200/80 shadow-xs space-y-4 text-xs">
+                  <div className="bg-white p-6 rounded-3xl border border-slate-200/80 shadow-xs space-y-4 text-sm">
                     <label className="block font-black text-slate-700 uppercase tracking-wider border-b border-slate-100 pb-2">
                       ẢNH ĐẠI DIỆN DỊCH VỤ
                     </label>
@@ -3405,7 +3528,7 @@ export default function AdminDashboard(props: Props) {
                           <button
                             type="button"
                             onClick={() => handleOpenMediaPicker('service_featured')}
-                            className="px-5 py-2.5 bg-black/85 hover:bg-black text-white font-extrabold rounded-2xl text-xs shadow-lg cursor-pointer transition-all flex items-center gap-1.5 backdrop-blur-xs hover:scale-105"
+                            className="px-5 py-2.5 bg-black/85 hover:bg-black text-white font-extrabold rounded-2xl text-sm shadow-lg cursor-pointer transition-all flex items-center gap-1.5 backdrop-blur-xs hover:scale-105"
                           >
                             Thay đổi ảnh
                           </button>
@@ -3429,7 +3552,7 @@ export default function AdminDashboard(props: Props) {
                         <div className="w-12 h-12 rounded-2xl bg-white text-[#004b87] shadow-xs flex items-center justify-center mb-2 group-hover:scale-110 transition-transform">
                           <FolderOpen size={24} />
                         </div>
-                        <p className="font-extrabold text-[#004b87] text-xs">Bấm Để Chọn Ảnh Đại Diện</p>
+                        <p className="font-extrabold text-[#004b87] text-sm">Bấm Để Chọn Ảnh Đại Diện</p>
                         <p className="text-[11px] text-slate-400 mt-0.5">Tải tệp từ máy tính (Kéo & thả) hoặc từ Quản lý tệp</p>
                       </div>
                     )}
@@ -3437,7 +3560,7 @@ export default function AdminDashboard(props: Props) {
 
                   {/* 3. CẤU HÌNH SEO META */}
                   <div className="bg-white p-6 rounded-2xl border border-slate-200/80 shadow-xs space-y-4">
-                    <h3 className="text-xs font-black text-slate-700 uppercase tracking-wider border-b border-slate-100 pb-3">
+                    <h3 className="text-sm font-black text-slate-700 uppercase tracking-wider border-b border-slate-100 pb-3">
                       CẤU HÌNH SEO META
                     </h3>
 
@@ -3448,7 +3571,7 @@ export default function AdminDashboard(props: Props) {
                         placeholder="Tiêu đề hiển thị trên Google..."
                         value={serviceForm.data.meta_title}
                         onChange={(e) => serviceForm.setData('meta_title', e.target.value)}
-                        className="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 text-xs text-slate-800 outline-none focus:border-[#004b87]"
+                        className="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 text-sm text-slate-800 outline-none focus:border-[#004b87]"
                       />
                     </div>
 
@@ -3459,7 +3582,7 @@ export default function AdminDashboard(props: Props) {
                         placeholder="Mô tả tóm tắt kết quả tìm kiếm Google..."
                         value={serviceForm.data.meta_description}
                         onChange={(e) => serviceForm.setData('meta_description', e.target.value)}
-                        className="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 text-xs text-slate-800 outline-none focus:border-[#004b87] resize-none"
+                        className="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 text-sm text-slate-800 outline-none focus:border-[#004b87] resize-none"
                       />
                     </div>
                   </div>
@@ -3472,7 +3595,7 @@ export default function AdminDashboard(props: Props) {
           ) : (
             /* SERVICES LIST VIEW WITH BATCH ACTIONS & STATUS TABS */
             <div className="space-y-6 w-full">
-              <div className="flex items-center gap-2 text-xs font-semibold text-slate-400">
+              <div className="flex items-center gap-2 text-sm font-semibold text-slate-400">
                 <Link href="/admin/dashboard" className="hover:text-[#004b87]">Tổng quan</Link>
                 <ChevronRight size={12} />
                 <span className="text-slate-700">Quản Lý Danh Mục Gói Dịch Vụ Y Khoa</span>
@@ -3517,7 +3640,7 @@ export default function AdminDashboard(props: Props) {
                 <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 pb-4 border-b border-slate-100">
                   <div>
                     <h2 className="text-xl font-extrabold text-[#004b87]">Quản Lý Danh Mục Gói Dịch Vụ Y Khoa</h2>
-                    <p className="text-xs text-slate-500 mt-1">
+                    <p className="text-sm text-slate-500 mt-1">
                       Cấu hình danh mục dịch vụ khám, giá niêm yết & các trụ cột y khoa chuyên sâu ({filteredServices.length} gói dịch vụ)
                     </p>
                   </div>
@@ -3530,24 +3653,24 @@ export default function AdminDashboard(props: Props) {
                         placeholder="Tìm gói dịch vụ, giá..."
                         value={serviceSearch}
                         onChange={(e) => setServiceSearch(e.target.value)}
-                        className="w-full bg-slate-50 border border-slate-200 rounded-xl pl-9 pr-4 py-2 text-xs text-slate-800 outline-none focus:border-[#004b87] focus:bg-white shadow-xs"
+                        className="w-full bg-slate-50 border border-slate-200 rounded-xl pl-9 pr-4 py-2 text-sm text-slate-800 outline-none focus:border-[#004b87] focus:bg-white shadow-xs"
                       />
                     </div>
 
                     <select
                       value={selectedPillarFilter}
                       onChange={(e) => setSelectedPillarFilter(e.target.value)}
-                      className="bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2 text-xs font-bold text-slate-700 outline-none focus:border-[#004b87] cursor-pointer shadow-xs"
+                      className="bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2 text-sm font-bold text-slate-700 outline-none focus:border-[#004b87] cursor-pointer shadow-xs"
                     >
                       <option value="all">Tất cả trụ cột y khoa</option>
-                      {uniquePillars.map((pillar, i) => (
-                        <option key={i} value={pillar}>{pillar}</option>
+                      {pillars.map((pillar) => (
+                        <option key={pillar.id} value={pillar.id.toString()}>{pillar.title}</option>
                       ))}
                     </select>
 
                     <button
                       onClick={handleOpenCreateService}
-                      className="flex items-center gap-1.5 bg-[#004b87] hover:bg-[#003866] text-white font-bold text-xs px-4 py-2.5 rounded-xl transition-all cursor-pointer shrink-0 shadow-sm"
+                      className="flex items-center gap-1.5 bg-[#004b87] hover:bg-[#003866] text-white font-bold text-sm px-4 py-2.5 rounded-xl transition-all cursor-pointer shrink-0 shadow-sm"
                     >
                       <Plus size={16} /> Thêm gói dịch vụ mới
                     </button>
@@ -3556,7 +3679,7 @@ export default function AdminDashboard(props: Props) {
 
                 {/* Batch Action Toolbar */}
                 {selectedServiceIds.length > 0 && (
-                  <div className="bg-blue-50 border border-blue-200/80 p-3.5 rounded-xl flex items-center justify-between text-xs animate-fadeIn">
+                  <div className="bg-blue-50 border border-blue-200/80 p-3.5 rounded-xl flex items-center justify-between text-sm animate-fadeIn">
                     <span className="font-bold text-[#004b87]">
                       Đã chọn {selectedServiceIds.length} dịch vụ y khoa:
                     </span>
@@ -3585,7 +3708,7 @@ export default function AdminDashboard(props: Props) {
 
                 {/* Table */}
                 <div className="overflow-x-auto">
-                  <table className="w-full text-left text-xs text-slate-700">
+                  <table className="w-full text-left text-sm text-slate-700">
                     <thead className="bg-slate-50/80 text-slate-400 uppercase font-extrabold tracking-wider border-b border-slate-200">
                       <tr>
                         <th className="p-4 w-10 text-center">
@@ -3605,7 +3728,6 @@ export default function AdminDashboard(props: Props) {
                         <th className="p-4 w-12 text-center">STT</th>
                         <th className="p-4">TÊN GÓI DỊCH VỤ</th>
                         <th className="p-4">NHÓM TRỤ CỘT Y KHOA</th>
-                        <th className="p-4">GIÁ NIÊM YẾT</th>
                         <th className="p-4 text-center">TRẠNG THÁI NỔI BẬT</th>
                         <th className="p-4 text-center">THAO TÁC</th>
                       </tr>
@@ -3613,7 +3735,7 @@ export default function AdminDashboard(props: Props) {
                     <tbody className="divide-y divide-slate-100">
                       {filteredServices.length === 0 ? (
                         <tr>
-                          <td colSpan={7} className="text-center py-12 text-slate-400 font-medium">
+                          <td colSpan={6} className="text-center py-12 text-slate-400 font-medium">
                             Không tìm thấy dịch vụ y khoa nào phù hợp.
                           </td>
                         </tr>
@@ -3636,10 +3758,10 @@ export default function AdminDashboard(props: Props) {
                             <td className="p-4 font-bold text-[#004b87] text-sm">
                               <div className="flex items-center gap-3">
                                 <img
-                                  src={service.image || '/assets/screening_service.png'}
+                                  src={service.image || '/assets/logo_pk.png'}
                                   alt=""
                                   className="w-10 h-10 rounded-xl object-cover border border-slate-200 shrink-0"
-                                  onError={(e) => { (e.target as HTMLImageElement).src = '/assets/screening_service.png'; }}
+                                  onError={(e) => { (e.target as HTMLImageElement).src = '/assets/logo_pk.png'; }}
                                 />
                                 <div>
                                   <div className="flex items-center gap-1.5">
@@ -3654,27 +3776,20 @@ export default function AdminDashboard(props: Props) {
                             </td>
 
                             <td className="p-4">
-                              <span className="px-3 py-1 bg-blue-50 text-[#004b87] font-bold rounded-lg text-xs border border-blue-100">
+                              <span className="px-3 py-1 bg-blue-50 text-[#004b87] font-bold rounded-lg text-sm border border-blue-100">
                                 {service.pillar_title}
                               </span>
                             </td>
 
-                            <td className="p-4 font-black text-slate-900 text-sm font-mono">
-                              <div>{service.price}</div>
-                              {service.estimated_time && (
-                                <div className="text-[11px] text-slate-400 font-normal mt-0.5 flex items-center gap-1">
-                                  <Clock size={11} /> {service.estimated_time}
-                                </div>
-                              )}
-                            </td>
+
 
                             <td className="p-4 text-center">
                               {service.is_featured ? (
-                                <span className="inline-flex items-center gap-1 px-3 py-1 bg-amber-50 text-amber-700 font-bold rounded-full text-xs border border-amber-200">
+                                <span className="inline-flex items-center gap-1 px-3 py-1 bg-amber-50 text-amber-700 font-bold rounded-full text-sm border border-amber-200">
                                   <Star size={12} fill="currentColor" /> Nổi bật
                                 </span>
                               ) : (
-                                <span className="px-3 py-1 bg-slate-100 text-slate-500 font-medium rounded-full text-xs">
+                                <span className="px-3 py-1 bg-slate-100 text-slate-500 font-medium rounded-full text-sm">
                                   Thường
                                 </span>
                               )}
@@ -3720,7 +3835,7 @@ export default function AdminDashboard(props: Props) {
         {/* TAB 6B: QUẢN LÝ DANH MỤC DỊCH VỤ (SERVICE PILLARS) */}
         {activeTab === 'pillars' && (
           <div className="space-y-6 w-full animate-fadeIn">
-            <div className="flex items-center gap-2 text-xs font-semibold text-slate-400">
+            <div className="flex items-center gap-2 text-sm font-semibold text-slate-400">
               <Link href="/admin/dashboard" className="hover:text-[#004b87]">Tổng quan</Link>
               <ChevronRight size={12} />
               <span className="text-slate-700 font-bold">Danh Mục Dịch Vụ</span>
@@ -3732,7 +3847,7 @@ export default function AdminDashboard(props: Props) {
               <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 pb-4 border-b border-slate-100">
                 <div>
                   <h2 className="text-xl font-extrabold text-[#004b87]">Quản Lý Danh Mục Dịch Vụ</h2>
-                  <p className="text-xs text-slate-500 mt-1">
+                  <p className="text-sm text-slate-500 mt-1">
                     Quản lý các danh mục (Trụ cột dịch vụ) dùng để nhóm các gói dịch vụ khám bệnh và đồng bộ với bộ lọc của khách hàng ({filteredPillars.length} danh mục)
                   </p>
                 </div>
@@ -3745,13 +3860,13 @@ export default function AdminDashboard(props: Props) {
                       placeholder="Tìm danh mục..."
                       value={pillarSearch}
                       onChange={(e) => setPillarSearch(e.target.value)}
-                      className="w-full bg-slate-50 border border-slate-200 rounded-xl pl-9 pr-4 py-2 text-xs text-slate-800 outline-none focus:border-[#004b87] focus:bg-white shadow-xs"
+                      className="w-full bg-slate-50 border border-slate-200 rounded-xl pl-9 pr-4 py-2 text-sm text-slate-800 outline-none focus:border-[#004b87] focus:bg-white shadow-xs"
                     />
                   </div>
 
                   <button
                     onClick={handleOpenCreatePillar}
-                    className="flex items-center gap-1.5 bg-[#004b87] hover:bg-[#003866] text-white font-bold text-xs px-4 py-2.5 rounded-xl transition-all cursor-pointer shrink-0 shadow-sm"
+                    className="flex items-center gap-1.5 bg-[#004b87] hover:bg-[#003866] text-white font-bold text-sm px-4 py-2.5 rounded-xl transition-all cursor-pointer shrink-0 shadow-sm"
                   >
                     <Plus size={16} /> Thêm danh mục mới
                   </button>
@@ -3760,7 +3875,7 @@ export default function AdminDashboard(props: Props) {
 
               {/* Table */}
               <div className="overflow-x-auto">
-                <table className="w-full text-left text-xs text-slate-700">
+                <table className="w-full text-left text-sm text-slate-700">
                   <thead className="bg-slate-50/80 text-slate-400 uppercase font-extrabold tracking-wider border-b border-slate-200">
                     <tr>
                       <th className="p-4 w-12 text-center">STT</th>
@@ -3802,7 +3917,7 @@ export default function AdminDashboard(props: Props) {
                           </td>
 
                           <td className="p-4 text-center">
-                            <span className="inline-block px-2.5 py-1 bg-slate-100 text-slate-700 font-bold rounded-lg text-xs">
+                            <span className="inline-block px-2.5 py-1 bg-slate-100 text-slate-700 font-bold rounded-lg text-sm">
                               {pillar.icon_name || 'Search'}
                             </span>
                           </td>
@@ -3860,7 +3975,7 @@ export default function AdminDashboard(props: Props) {
                     </button>
                   </div>
 
-                  <form onSubmit={handleSavePillar} className="p-6 space-y-4 text-xs font-semibold text-slate-700">
+                  <form onSubmit={handleSavePillar} className="p-6 space-y-4 text-sm font-semibold text-slate-700">
                     <div>
                       <label className="block text-slate-500 uppercase tracking-wider mb-1.5 font-bold">Tên danh mục *</label>
                       <input
@@ -3954,7 +4069,7 @@ export default function AdminDashboard(props: Props) {
               
               {/* Top Breadcrumbs */}
               <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2 text-xs font-semibold text-slate-400">
+                <div className="flex items-center gap-2 text-sm font-semibold text-slate-400">
                   <button
                     type="button"
                     onClick={() => setIsEditingArticlePage(false)}
@@ -3969,7 +4084,7 @@ export default function AdminDashboard(props: Props) {
                 <button
                   type="button"
                   onClick={() => setIsEditingArticlePage(false)}
-                  className="text-xs text-slate-500 hover:text-slate-800 font-bold flex items-center gap-1 cursor-pointer bg-white px-3 py-1.5 rounded-xl border border-slate-200 shadow-xs"
+                  className="text-sm text-slate-500 hover:text-slate-800 font-bold flex items-center gap-1 cursor-pointer bg-white px-3 py-1.5 rounded-xl border border-slate-200 shadow-xs"
                 >
                   <ArrowLeft size={14} /> Quay lại danh sách bài viết
                 </button>
@@ -3977,7 +4092,7 @@ export default function AdminDashboard(props: Props) {
 
               {/* Language Tab Badge */}
               <div className="flex items-center gap-2 border-b border-slate-200/80 pb-3">
-                <span className="px-4 py-1.5 bg-[#004b87] text-white font-extrabold text-xs rounded-xl shadow-xs tracking-wider">
+                <span className="px-4 py-1.5 bg-[#004b87] text-white font-extrabold text-sm rounded-xl shadow-xs tracking-wider">
                   VN Tiếng Việt
                 </span>
               </div>
@@ -3991,7 +4106,7 @@ export default function AdminDashboard(props: Props) {
                   {/* 1. TIÊU ĐỀ BÀI VIẾT & CUSTOM SLUG URL (USE CASE 2) */}
                   <div className="bg-white p-6 rounded-2xl border border-slate-200/80 shadow-xs space-y-3">
                     <div className="flex justify-between items-center">
-                      <label className="text-xs font-black text-slate-700 uppercase tracking-wider">
+                      <label className="text-sm font-black text-slate-700 uppercase tracking-wider">
                         TIÊU ĐỀ BÀI VIẾT *
                       </label>
                       <span className="text-[11px] text-slate-400 font-mono font-medium">
@@ -4050,7 +4165,7 @@ export default function AdminDashboard(props: Props) {
                   <div className="bg-white p-6 rounded-2xl border border-slate-200/80 shadow-xs space-y-4">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div>
-                        <label className="block text-xs font-black text-slate-700 uppercase tracking-wider mb-2">
+                        <label className="block text-sm font-black text-slate-700 uppercase tracking-wider mb-2">
                           LIÊN KẾT TÁC GIẢ (HỒ SƠ HỆ THỐNG)
                         </label>
                         <select
@@ -4061,7 +4176,7 @@ export default function AdminDashboard(props: Props) {
                               articleForm.setData('author', e.target.value);
                             }
                           }}
-                          className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-xs font-semibold text-slate-700 outline-none focus:border-[#004b87] cursor-pointer"
+                          className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-sm font-semibold text-slate-700 outline-none focus:border-[#004b87] cursor-pointer"
                         >
                           <option value="-- Không liên kết / Tự nhập --">-- Không liên kết / Tự nhập --</option>
                           <option value="BSCKII Đoàn Khôi">BSCKII Đoàn Khôi</option>
@@ -4070,7 +4185,7 @@ export default function AdminDashboard(props: Props) {
                       </div>
 
                       <div>
-                        <label className="block text-xs font-black text-slate-700 uppercase tracking-wider mb-2">
+                        <label className="block text-sm font-black text-slate-700 uppercase tracking-wider mb-2">
                           TÁC GIẢ HIỂN THỊ *
                         </label>
                         <input
@@ -4078,7 +4193,7 @@ export default function AdminDashboard(props: Props) {
                           required
                           value={articleForm.data.author}
                           onChange={(e) => articleForm.setData('author', e.target.value)}
-                          className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-xs font-bold text-slate-800 outline-none focus:border-[#004b87] focus:bg-white"
+                          className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-sm font-bold text-slate-800 outline-none focus:border-[#004b87] focus:bg-white"
                         />
                       </div>
                     </div>
@@ -4086,7 +4201,7 @@ export default function AdminDashboard(props: Props) {
 
                   {/* 3. MÔ TẢ TÓM TẮT */}
                   <div className="bg-white p-6 rounded-2xl border border-slate-200/80 shadow-xs space-y-2">
-                    <label className="block text-xs font-black text-slate-700 uppercase tracking-wider">
+                    <label className="block text-sm font-black text-slate-700 uppercase tracking-wider">
                       MÔ TẢ TÓM TẮT *
                     </label>
                     <textarea
@@ -4095,14 +4210,14 @@ export default function AdminDashboard(props: Props) {
                       placeholder="Tìm hiểu các tiêu chí quan trọng để đánh giá một dịch vụ tim mạch toàn diện chuẩn y khoa hiện đại..."
                       value={articleForm.data.excerpt}
                       onChange={(e) => articleForm.setData('excerpt', e.target.value)}
-                      className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3.5 text-xs text-slate-800 outline-none focus:border-[#004b87] focus:bg-white leading-relaxed resize-none"
+                      className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3.5 text-sm text-slate-800 outline-none focus:border-[#004b87] focus:bg-white leading-relaxed resize-none"
                     />
                   </div>
 
                   {/* 4. NỘI DUNG CHI TIẾT (EXACT MATCH FOR USER REFERENCE SCREENSHOT) */}
                   <div className="space-y-2">
                     <div className="flex items-center justify-between">
-                      <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider">
+                      <label className="block text-sm font-bold text-slate-500 uppercase tracking-wider">
                         NỘI DUNG CHI TIẾT *
                       </label>
 
@@ -4123,7 +4238,7 @@ export default function AdminDashboard(props: Props) {
                     <div className="bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-2xs">
                       {/* Attached Clean Minimal Toolbar matching screenshot */}
                       {editorMode === 'wysiwyg' && (
-                        <div className="px-4 py-2.5 bg-slate-50/80 border-b border-slate-200/80 flex flex-wrap items-center justify-between gap-2 text-xs font-semibold text-slate-600">
+                        <div className="px-4 py-2.5 bg-slate-50/80 border-b border-slate-200/80 flex flex-wrap items-center justify-between gap-2 text-sm font-semibold text-slate-600">
                           <div className="flex flex-wrap items-center gap-1">
                             {/* Formatting B I U S */}
                             <button
@@ -4208,7 +4323,7 @@ export default function AdminDashboard(props: Props) {
                             <button
                               type="button"
                               onClick={() => execEditorCmd('formatBlock', '<h4>')}
-                              className={`px-2 py-1 rounded-md font-bold cursor-pointer transition-all text-xs ${
+                              className={`px-2 py-1 rounded-md font-bold cursor-pointer transition-all text-sm ${
                                 activeFormats.h2 ? 'bg-[#004b87] text-white shadow-xs scale-105' : 'hover:bg-slate-200/80 text-slate-700'
                               }`}
                               title="Tiêu đề H2"
@@ -4218,7 +4333,7 @@ export default function AdminDashboard(props: Props) {
                             <button
                               type="button"
                               onClick={() => execEditorCmd('formatBlock', '<h5>')}
-                              className={`px-2 py-1 rounded-md font-bold cursor-pointer transition-all text-xs ${
+                              className={`px-2 py-1 rounded-md font-bold cursor-pointer transition-all text-sm ${
                                 activeFormats.h3 ? 'bg-[#004b87] text-white shadow-xs scale-105' : 'hover:bg-slate-200/80 text-slate-700'
                               }`}
                               title="Tiêu đề H3"
@@ -4228,7 +4343,7 @@ export default function AdminDashboard(props: Props) {
                             <button
                               type="button"
                               onClick={() => execEditorCmd('formatBlock', '<p>')}
-                              className={`px-2 py-1 rounded-md font-bold cursor-pointer transition-all text-xs ${
+                              className={`px-2 py-1 rounded-md font-bold cursor-pointer transition-all text-sm ${
                                 activeFormats.p ? 'bg-[#004b87] text-white shadow-xs scale-105' : 'hover:bg-slate-200/80 text-slate-700'
                               }`}
                               title="Đoạn văn"
@@ -4351,7 +4466,7 @@ export default function AdminDashboard(props: Props) {
                               editorRef.current.innerHTML = e.target.value;
                             }
                           }}
-                          className="w-full min-h-[380px] bg-slate-900 p-6 text-xs font-mono text-emerald-400 outline-none leading-relaxed resize-y border-none"
+                          className="w-full min-h-[380px] bg-slate-900 p-6 text-sm font-mono text-emerald-400 outline-none leading-relaxed resize-y border-none"
                         />
                       )}
                     </div>
@@ -4361,7 +4476,7 @@ export default function AdminDashboard(props: Props) {
                   <div className="bg-white p-6 rounded-2xl border border-slate-200/80 shadow-xs space-y-4">
                     <div>
                       <div className="flex justify-between items-center mb-1.5">
-                        <label className="text-xs font-black text-slate-700 uppercase tracking-wider">
+                        <label className="text-sm font-black text-slate-700 uppercase tracking-wider">
                           META TITLE
                         </label>
                         <span className="text-[11px] text-slate-400 font-mono">
@@ -4373,13 +4488,13 @@ export default function AdminDashboard(props: Props) {
                         placeholder="Nhập thẻ tiêu đề SEO (Meta Title)..."
                         value={articleForm.data.meta_title}
                         onChange={(e) => articleForm.setData('meta_title', e.target.value)}
-                        className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-xs text-slate-800 outline-none focus:border-[#004b87] focus:bg-white"
+                        className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-sm text-slate-800 outline-none focus:border-[#004b87] focus:bg-white"
                       />
                     </div>
 
                     <div>
                       <div className="flex justify-between items-center mb-1.5">
-                        <label className="text-xs font-black text-slate-700 uppercase tracking-wider">
+                        <label className="text-sm font-black text-slate-700 uppercase tracking-wider">
                           META DESCRIPTION
                         </label>
                         <span className="text-[11px] text-slate-400 font-mono">
@@ -4391,7 +4506,7 @@ export default function AdminDashboard(props: Props) {
                         placeholder="Nhập thẻ mô tả SEO (Meta Description)..."
                         value={articleForm.data.meta_description}
                         onChange={(e) => articleForm.setData('meta_description', e.target.value)}
-                        className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-xs text-slate-800 outline-none focus:border-[#004b87] focus:bg-white resize-none"
+                        className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-sm text-slate-800 outline-none focus:border-[#004b87] focus:bg-white resize-none"
                       />
                     </div>
                   </div>
@@ -4402,7 +4517,7 @@ export default function AdminDashboard(props: Props) {
                 <div className="lg:col-span-4 space-y-6">
                   
                   {/* Card 1: TRẠNG THÁI & XUẤT BẢN */}
-                  <div className="bg-white p-6 rounded-2xl border border-slate-200/80 shadow-xs space-y-4 text-xs">
+                  <div className="bg-white p-6 rounded-2xl border border-slate-200/80 shadow-xs space-y-4 text-sm">
                     <label className="block font-black text-slate-700 uppercase tracking-wider border-b border-slate-100 pb-2">
                       TRẠNG THÁI
                     </label>
@@ -4438,7 +4553,7 @@ export default function AdminDashboard(props: Props) {
                         type="text"
                         value={articleForm.data.date}
                         onChange={(e) => articleForm.setData('date', e.target.value)}
-                        className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-xs font-mono text-slate-800 outline-none focus:border-[#004b87] focus:bg-white font-bold"
+                        className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-sm font-mono text-slate-800 outline-none focus:border-[#004b87] focus:bg-white font-bold"
                       />
                     </div>
 
@@ -4456,7 +4571,7 @@ export default function AdminDashboard(props: Props) {
                   </div>
 
                   {/* Card 2: HÌNH ẢNH BÀI VIẾT (CHUẨN SCREENSHOT MỚI) */}
-                  <div className="bg-white p-6 rounded-3xl border border-slate-200/80 shadow-xs space-y-4 text-xs">
+                  <div className="bg-white p-6 rounded-3xl border border-slate-200/80 shadow-xs space-y-4 text-sm">
                     <label className="block font-black text-slate-700 uppercase tracking-wider border-b border-slate-100 pb-2">
                       HÌNH ẢNH BÀI VIẾT
                     </label>
@@ -4474,7 +4589,7 @@ export default function AdminDashboard(props: Props) {
                           <button
                             type="button"
                             onClick={() => handleOpenMediaPicker('article_featured')}
-                            className="px-5 py-2.5 bg-black/85 hover:bg-black text-white font-extrabold rounded-2xl text-xs shadow-lg cursor-pointer transition-all flex items-center gap-1.5 backdrop-blur-xs hover:scale-105"
+                            className="px-5 py-2.5 bg-black/85 hover:bg-black text-white font-extrabold rounded-2xl text-sm shadow-lg cursor-pointer transition-all flex items-center gap-1.5 backdrop-blur-xs hover:scale-105"
                           >
                             Thay đổi ảnh
                           </button>
@@ -4498,14 +4613,14 @@ export default function AdminDashboard(props: Props) {
                         <div className="w-12 h-12 rounded-2xl bg-white text-[#004b87] shadow-xs flex items-center justify-center mb-2 group-hover:scale-110 transition-transform">
                           <FolderOpen size={24} />
                         </div>
-                        <p className="font-extrabold text-[#004b87] text-xs">Bấm Để Chọn Ảnh Đại Diện</p>
+                        <p className="font-extrabold text-[#004b87] text-sm">Bấm Để Chọn Ảnh Đại Diện</p>
                         <p className="text-[11px] text-slate-400 mt-0.5">Tải tệp từ máy tính (Kéo & thả) hoặc từ Quản lý tệp</p>
                       </div>
                     )}
                   </div>
 
                   {/* Card 3: DANH MỤC & BÀI VIẾT LIÊN QUAN */}
-                  <div className="bg-white p-6 rounded-2xl border border-slate-200/80 shadow-xs space-y-4 text-xs">
+                  <div className="bg-white p-6 rounded-2xl border border-slate-200/80 shadow-xs space-y-4 text-sm">
                     <div>
                       <label className="block font-black text-slate-700 uppercase tracking-wider mb-2">
                         DANH MỤC
@@ -4513,7 +4628,7 @@ export default function AdminDashboard(props: Props) {
                       <select
                         value={articleForm.data.article_category_id}
                         onChange={(e) => articleForm.setData('article_category_id', parseInt(e.target.value))}
-                        className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-xs font-bold text-slate-800 outline-none focus:border-[#004b87] cursor-pointer"
+                        className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-sm font-bold text-slate-800 outline-none focus:border-[#004b87] cursor-pointer"
                       >
                         {articleCategories.map((cat) => (
                           <option key={cat.id} value={cat.id}>
@@ -4530,7 +4645,7 @@ export default function AdminDashboard(props: Props) {
                       <select
                         value={articleForm.data.related_article_id}
                         onChange={(e) => articleForm.setData('related_article_id', e.target.value)}
-                        className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-xs text-slate-600 outline-none focus:border-[#004b87] cursor-pointer"
+                        className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-sm text-slate-600 outline-none focus:border-[#004b87] cursor-pointer"
                       >
                         <option value="">Chọn bài viết liên quan...</option>
                         {articles.map(a => (
@@ -4546,7 +4661,7 @@ export default function AdminDashboard(props: Props) {
                       <button
                         type="button"
                         onClick={() => handleDeleteArticle(editingArticle.id, editingArticle.title)}
-                        className="text-xs font-extrabold text-rose-600 hover:text-rose-800 transition-colors cursor-pointer"
+                        className="text-sm font-extrabold text-rose-600 hover:text-rose-800 transition-colors cursor-pointer"
                       >
                         XÓA
                       </button>
@@ -4558,14 +4673,14 @@ export default function AdminDashboard(props: Props) {
                       <button
                         type="button"
                         onClick={() => setIsEditingArticlePage(false)}
-                        className="px-5 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-extrabold rounded-xl text-xs transition-all cursor-pointer"
+                        className="px-5 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-extrabold rounded-xl text-sm transition-all cursor-pointer"
                       >
                         Hủy
                       </button>
                       <button
                         type="submit"
                         disabled={articleForm.processing}
-                        className="px-7 py-2.5 bg-[#f97316] hover:bg-[#ea580c] text-white font-black rounded-xl text-xs shadow-md transition-all cursor-pointer uppercase tracking-wider"
+                        className="px-7 py-2.5 bg-[#f97316] hover:bg-[#ea580c] text-white font-black rounded-xl text-sm shadow-md transition-all cursor-pointer uppercase tracking-wider"
                       >
                         LƯU
                       </button>
@@ -4582,7 +4697,7 @@ export default function AdminDashboard(props: Props) {
             <div className="space-y-6 w-full">
               
               {/* Top Breadcrumbs */}
-              <div className="flex items-center gap-2 text-xs font-semibold text-slate-400">
+              <div className="flex items-center gap-2 text-sm font-semibold text-slate-400">
                 <Link href="/admin/dashboard" className="hover:text-[#004b87]">Tổng quan</Link>
                 <ChevronRight size={12} />
                 <span className="text-slate-700 font-bold">Quản Lý Bài Viết & Cẩm Nang Y Khoa</span>
@@ -4594,7 +4709,7 @@ export default function AdminDashboard(props: Props) {
                 <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 pb-4 border-b border-slate-100">
                   <div>
                     <h2 className="text-xl font-extrabold text-[#004b87]">Danh Sách Bài Viết & Cẩm Nang Y Khoa</h2>
-                    <p className="text-xs text-slate-500 mt-1">
+                    <p className="text-sm text-slate-500 mt-1">
                       Quản lý các bài viết chuyên môn y khoa, cẩm nang sức khỏe tim mạch ({articles.length} bài viết)
                     </p>
                   </div>
@@ -4609,7 +4724,7 @@ export default function AdminDashboard(props: Props) {
                         placeholder="Tìm tiêu đề bài viết, tác giả..."
                         value={articleSearch}
                         onChange={(e) => setArticleSearch(e.target.value)}
-                        className="w-full bg-slate-50 border border-slate-200 rounded-xl pl-9 pr-4 py-2 text-xs text-slate-800 outline-none focus:border-[#004b87] focus:bg-white shadow-xs"
+                        className="w-full bg-slate-50 border border-slate-200 rounded-xl pl-9 pr-4 py-2 text-sm text-slate-800 outline-none focus:border-[#004b87] focus:bg-white shadow-xs"
                       />
                     </div>
 
@@ -4617,18 +4732,18 @@ export default function AdminDashboard(props: Props) {
                     <select
                       value={articleCategoryFilter}
                       onChange={(e) => setArticleCategoryFilter(e.target.value)}
-                      className="bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2 text-xs font-bold text-slate-700 outline-none focus:border-[#004b87] cursor-pointer shadow-xs"
+                      className="bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2 text-sm font-bold text-slate-700 outline-none focus:border-[#004b87] cursor-pointer shadow-xs"
                     >
                       <option value="all">Tất cả chuyên mục tin tức</option>
                       {articleCategories.map((cat) => (
-                        <option key={cat.id} value={cat.name}>{cat.name}</option>
+                        <option key={cat.id} value={cat.id.toString()}>{cat.name}</option>
                       ))}
                     </select>
 
                     {/* Create New Article Button */}
                     <button
                       onClick={handleOpenCreateArticle}
-                      className="flex items-center gap-1.5 bg-[#004b87] hover:bg-[#003866] text-white font-bold text-xs px-4 py-2 rounded-xl transition-all cursor-pointer shrink-0 shadow-sm"
+                      className="flex items-center gap-1.5 bg-[#004b87] hover:bg-[#003866] text-white font-bold text-sm px-4 py-2 rounded-xl transition-all cursor-pointer shrink-0 shadow-sm"
                     >
                       <Plus size={16} /> Viết bài mới
                     </button>
@@ -4637,7 +4752,7 @@ export default function AdminDashboard(props: Props) {
 
                 {/* STATUS FILTER TABS (USE CASE 5) */}
                 <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 pb-3">
-                  <div className="flex items-center gap-1.5 bg-slate-100 p-1 rounded-xl text-xs font-bold">
+                  <div className="flex items-center gap-1.5 bg-slate-100 p-1 rounded-xl text-sm font-bold">
                     <button
                       type="button"
                       onClick={() => setArticleStatusTab('all')}
@@ -4678,9 +4793,9 @@ export default function AdminDashboard(props: Props) {
 
                 {/* FLOATING BATCH ACTION BAR (USE CASE 3) */}
                 {selectedArticleIds.length > 0 && (
-                  <div className="bg-[#004b87] text-white p-4 rounded-2xl shadow-xl flex flex-wrap items-center justify-between gap-3 animate-fade-in text-xs font-bold border border-blue-800">
+                  <div className="bg-[#004b87] text-white p-4 rounded-2xl shadow-xl flex flex-wrap items-center justify-between gap-3 animate-fade-in text-sm font-bold border border-blue-800">
                     <div className="flex items-center gap-2">
-                      <span className="w-7 h-7 rounded-full bg-white/20 flex items-center justify-center font-mono text-xs">
+                      <span className="w-7 h-7 rounded-full bg-white/20 flex items-center justify-center font-mono text-sm">
                         {selectedArticleIds.length}
                       </span>
                       <span>Đã chọn {selectedArticleIds.length} bài viết</span>
@@ -4714,7 +4829,7 @@ export default function AdminDashboard(props: Props) {
 
                 {/* Articles Table View */}
                 <div className="overflow-x-auto">
-                  <table className="w-full text-left text-xs text-slate-700">
+                  <table className="w-full text-left text-sm text-slate-700">
                     <thead className="bg-slate-50/80 text-slate-400 uppercase font-extrabold tracking-wider border-b border-slate-200">
                       <tr>
                         <th className="p-4 w-10 text-center">
@@ -4726,7 +4841,7 @@ export default function AdminDashboard(props: Props) {
                                 const matchesSearch = art.title.toLowerCase().includes(articleSearch.toLowerCase()) ||
                                                       art.author.toLowerCase().includes(articleSearch.toLowerCase()) ||
                                                       art.category.toLowerCase().includes(articleSearch.toLowerCase());
-                                const matchesCategory = articleCategoryFilter === 'all' || art.category === articleCategoryFilter;
+                                const matchesCategory = articleCategoryFilter === 'all' || art.article_category_id === parseInt(articleCategoryFilter);
                                 const matchesStatus = articleStatusTab === 'all' || 
                                                       (articleStatusTab === 'published' && art.is_published !== false) ||
                                                       (articleStatusTab === 'draft' && art.is_published === false);
@@ -4738,7 +4853,7 @@ export default function AdminDashboard(props: Props) {
                                 const matchesSearch = art.title.toLowerCase().includes(articleSearch.toLowerCase()) ||
                                                       art.author.toLowerCase().includes(articleSearch.toLowerCase()) ||
                                                       art.category.toLowerCase().includes(articleSearch.toLowerCase());
-                                const matchesCategory = articleCategoryFilter === 'all' || art.category === articleCategoryFilter;
+                                const matchesCategory = articleCategoryFilter === 'all' || art.article_category_id === parseInt(articleCategoryFilter);
                                 const matchesStatus = articleStatusTab === 'all' || 
                                                       (articleStatusTab === 'published' && art.is_published !== false) ||
                                                       (articleStatusTab === 'draft' && art.is_published === false);
@@ -4764,7 +4879,7 @@ export default function AdminDashboard(props: Props) {
                           const matchesSearch = art.title.toLowerCase().includes(articleSearch.toLowerCase()) ||
                                                 art.author.toLowerCase().includes(articleSearch.toLowerCase()) ||
                                                 art.category.toLowerCase().includes(articleSearch.toLowerCase());
-                          const matchesCategory = articleCategoryFilter === 'all' || art.category === articleCategoryFilter;
+                          const matchesCategory = articleCategoryFilter === 'all' || art.article_category_id === parseInt(articleCategoryFilter);
                           const matchesStatus = articleStatusTab === 'all' || 
                                                 (articleStatusTab === 'published' && art.is_published !== false) ||
                                                 (articleStatusTab === 'draft' && art.is_published === false);
@@ -4800,7 +4915,7 @@ export default function AdminDashboard(props: Props) {
                             </td>
 
                             <td className="p-4">
-                              <span className="px-3 py-1 bg-emerald-50 text-emerald-700 font-bold rounded-lg text-xs border border-emerald-100">
+                              <span className="px-3 py-1 bg-emerald-50 text-emerald-700 font-bold rounded-lg text-sm border border-emerald-100">
                                 {art.category}
                               </span>
                             </td>
@@ -4831,7 +4946,7 @@ export default function AdminDashboard(props: Props) {
                             <td className="p-4 text-center flex items-center justify-center gap-2">
                               <button
                                 onClick={() => handleOpenEditArticle(art)}
-                                className="inline-flex items-center gap-1 px-2.5 py-1 bg-blue-50 text-[#004b87] hover:bg-blue-100 font-bold rounded-lg text-xs transition-all border border-blue-100 cursor-pointer"
+                                className="inline-flex items-center gap-1 px-2.5 py-1 bg-blue-50 text-[#004b87] hover:bg-blue-100 font-bold rounded-lg text-sm transition-all border border-blue-100 cursor-pointer"
                                 title="Chỉnh sửa bài viết chi tiết"
                               >
                                 <Edit size={12} /> Sửa
@@ -4840,7 +4955,7 @@ export default function AdminDashboard(props: Props) {
                                 href={`/tin-tuc/${art.slug}`}
                                 target="_blank"
                                 rel="noreferrer"
-                                className="inline-flex items-center gap-1 px-2.5 py-1 bg-slate-100 text-slate-700 hover:bg-slate-200 font-bold rounded-lg text-xs transition-all cursor-pointer"
+                                className="inline-flex items-center gap-1 px-2.5 py-1 bg-slate-100 text-slate-700 hover:bg-slate-200 font-bold rounded-lg text-sm transition-all cursor-pointer"
                                 title="Xem bài viết trên Client website"
                               >
                                 <Eye size={12} /> Xem ↗
@@ -4869,7 +4984,7 @@ export default function AdminDashboard(props: Props) {
         {/* TAB 4B: QUẢN LÝ DANH MỤC BÀI VIẾT (ARTICLE CATEGORIES) */}
         {activeTab === 'articleCategories' && (
           <div className="space-y-6 w-full animate-fadeIn">
-            <div className="flex items-center gap-2 text-xs font-semibold text-slate-400">
+            <div className="flex items-center gap-2 text-sm font-semibold text-slate-400">
               <Link href="/admin/dashboard" className="hover:text-[#004b87]">Tổng quan</Link>
               <ChevronRight size={12} />
               <span className="text-slate-700 font-bold">Danh Mục Bài Viết</span>
@@ -4881,7 +4996,7 @@ export default function AdminDashboard(props: Props) {
               <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 pb-4 border-b border-slate-100">
                 <div>
                   <h2 className="text-xl font-extrabold text-[#004b87]">Quản Lý Danh Mục Bài Viết</h2>
-                  <p className="text-xs text-slate-500 mt-1">
+                  <p className="text-sm text-slate-500 mt-1">
                     Quản lý danh mục bài viết cẩm nang y khoa để nhóm các bài đăng tin tức ({filteredArticleCategories.length} danh mục)
                   </p>
                 </div>
@@ -4894,13 +5009,13 @@ export default function AdminDashboard(props: Props) {
                       placeholder="Tìm danh mục bài viết..."
                       value={articleCategorySearch}
                       onChange={(e) => setArticleCategorySearch(e.target.value)}
-                      className="w-full bg-slate-50 border border-slate-200 rounded-xl pl-9 pr-4 py-2 text-xs text-slate-800 outline-none focus:border-[#004b87] focus:bg-white shadow-xs"
+                      className="w-full bg-slate-50 border border-slate-200 rounded-xl pl-9 pr-4 py-2 text-sm text-slate-800 outline-none focus:border-[#004b87] focus:bg-white shadow-xs"
                     />
                   </div>
 
                   <button
                     onClick={handleOpenCreateArticleCategory}
-                    className="flex items-center gap-1.5 bg-[#004b87] hover:bg-[#003866] text-white font-bold text-xs px-4 py-2.5 rounded-xl transition-all cursor-pointer shrink-0 shadow-sm"
+                    className="flex items-center gap-1.5 bg-[#004b87] hover:bg-[#003866] text-white font-bold text-sm px-4 py-2.5 rounded-xl transition-all cursor-pointer shrink-0 shadow-sm"
                   >
                     <Plus size={16} /> Thêm danh mục mới
                   </button>
@@ -4909,7 +5024,7 @@ export default function AdminDashboard(props: Props) {
 
               {/* Table */}
               <div className="overflow-x-auto">
-                <table className="w-full text-left text-xs text-slate-700">
+                <table className="w-full text-left text-sm text-slate-700">
                   <thead className="bg-slate-50/80 text-slate-400 uppercase font-extrabold tracking-wider border-b border-slate-200">
                     <tr>
                       <th className="p-4 w-12 text-center">STT</th>
@@ -4997,7 +5112,7 @@ export default function AdminDashboard(props: Props) {
                     </button>
                   </div>
 
-                  <form onSubmit={handleSaveArticleCategory} className="p-6 space-y-4 text-xs font-semibold text-slate-700">
+                  <form onSubmit={handleSaveArticleCategory} className="p-6 space-y-4 text-sm font-semibold text-slate-700">
                     <div>
                       <label className="block text-slate-500 uppercase tracking-wider mb-1.5 font-bold">Tên danh mục *</label>
                       <input
@@ -5055,7 +5170,7 @@ export default function AdminDashboard(props: Props) {
                     <SlidersHorizontal size={24} className="text-[#00a896]" />
                     Quản Lý Slide Banner Website
                   </h2>
-                  <p className="text-xs text-slate-500 mt-1">
+                  <p className="text-sm text-slate-500 mt-1">
                     Cấu hình, hiển thị và phân loại danh sách slide banner trang chủ phòng khám ({banners.length} banner)
                   </p>
                 </div>
@@ -5069,14 +5184,14 @@ export default function AdminDashboard(props: Props) {
                       placeholder="Tìm tiêu đề, nhãn phụ, nội dung..."
                       value={bannerSearchQuery}
                       onChange={(e) => setBannerSearchQuery(e.target.value)}
-                      className="w-full bg-slate-50 border border-slate-200 rounded-xl pl-9 pr-4 py-2 text-xs text-slate-800 outline-none focus:border-[#004b87] focus:bg-white shadow-xs"
+                      className="w-full bg-slate-50 border border-slate-200 rounded-xl pl-9 pr-4 py-2 text-sm text-slate-800 outline-none focus:border-[#004b87] focus:bg-white shadow-xs"
                     />
                   </div>
 
                   {/* Create New Banner Button */}
                   <button
                     onClick={handleOpenCreateBanner}
-                    className="flex items-center gap-1.5 bg-[#004b87] hover:bg-[#003866] text-white font-bold text-xs px-4 py-2 rounded-xl transition-all cursor-pointer shrink-0 shadow-sm"
+                    className="flex items-center gap-1.5 bg-[#004b87] hover:bg-[#003866] text-white font-bold text-sm px-4 py-2 rounded-xl transition-all cursor-pointer shrink-0 shadow-sm"
                   >
                     <Plus size={16} /> Thêm Banner Mới
                   </button>
@@ -5085,7 +5200,7 @@ export default function AdminDashboard(props: Props) {
 
               {/* STATUS FILTER TABS */}
               <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 pb-3">
-                <div className="flex items-center gap-1.5 bg-slate-100 p-1 rounded-xl text-xs font-bold">
+                <div className="flex items-center gap-1.5 bg-slate-100 p-1 rounded-xl text-sm font-bold">
                   <button
                     type="button"
                     onClick={() => setBannerStatusTab('all')}
@@ -5126,9 +5241,9 @@ export default function AdminDashboard(props: Props) {
 
               {/* FLOATING BATCH ACTION BAR */}
               {selectedBannerIds.length > 0 && (
-                <div className="bg-[#004b87] text-white p-4 rounded-2xl shadow-xl flex flex-wrap items-center justify-between gap-3 animate-fade-in text-xs font-bold border border-blue-800">
+                <div className="bg-[#004b87] text-white p-4 rounded-2xl shadow-xl flex flex-wrap items-center justify-between gap-3 animate-fade-in text-sm font-bold border border-blue-800">
                   <div className="flex items-center gap-2">
-                    <span className="w-7 h-7 rounded-full bg-white/20 flex items-center justify-center font-mono text-xs">
+                    <span className="w-7 h-7 rounded-full bg-white/20 flex items-center justify-center font-mono text-sm">
                       {selectedBannerIds.length}
                     </span>
                     <span>Đã chọn {selectedBannerIds.length} slide banner</span>
@@ -5162,7 +5277,7 @@ export default function AdminDashboard(props: Props) {
 
               {/* Banners Table View */}
               <div className="overflow-x-auto">
-                <table className="w-full text-left text-xs text-slate-700 border-collapse">
+                <table className="w-full text-left text-sm text-slate-700 border-collapse">
                   <thead className="bg-slate-50/80 text-slate-400 uppercase font-extrabold tracking-wider border-b border-slate-200">
                     <tr>
                       <th className="p-4 w-10 text-center">
@@ -5261,7 +5376,7 @@ export default function AdminDashboard(props: Props) {
                               </span>
                             )}
                             <h3 className="font-extrabold text-[#004b87] text-sm leading-snug">{b.title}</h3>
-                            {b.subtitle && <p className="text-xs font-semibold text-slate-600">{b.subtitle}</p>}
+                            {b.subtitle && <p className="text-sm font-semibold text-slate-600">{b.subtitle}</p>}
                             {b.subheading && <p className="text-[11px] text-slate-400 line-clamp-1 italic">{b.subheading}</p>}
                           </td>
 
@@ -5288,11 +5403,11 @@ export default function AdminDashboard(props: Props) {
 
                            <td className="p-4 text-center">
                             {b.is_active !== false ? (
-                              <span className="inline-flex items-center gap-1 px-3 py-1 bg-emerald-50 text-emerald-700 font-extrabold rounded-full text-xs border border-emerald-200">
+                              <span className="inline-flex items-center gap-1 px-3 py-1 bg-emerald-50 text-emerald-700 font-extrabold rounded-full text-sm border border-emerald-200">
                                 <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" /> Kích hoạt
                               </span>
                             ) : (
-                              <span className="inline-flex items-center gap-1 px-3 py-1 bg-rose-50 text-rose-700 font-extrabold rounded-full text-xs border border-rose-200">
+                              <span className="inline-flex items-center gap-1 px-3 py-1 bg-rose-50 text-rose-700 font-extrabold rounded-full text-sm border border-rose-200">
                                 <span className="w-1.5 h-1.5 rounded-full bg-rose-500" /> Tạm ẩn
                               </span>
                             )}
@@ -5353,7 +5468,7 @@ export default function AdminDashboard(props: Props) {
               
               {/* Top Breadcrumbs */}
               <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2 text-xs font-semibold text-slate-400">
+                <div className="flex items-center gap-2 text-sm font-semibold text-slate-400">
                   <button
                     type="button"
                     onClick={() => setIsEditingDoctorPage(false)}
@@ -5368,7 +5483,7 @@ export default function AdminDashboard(props: Props) {
                 <button
                   type="button"
                   onClick={() => setIsEditingDoctorPage(false)}
-                  className="text-xs text-slate-500 hover:text-slate-800 font-bold flex items-center gap-1 cursor-pointer bg-white px-3 py-1.5 rounded-xl border border-slate-200 shadow-xs"
+                  className="text-sm text-slate-500 hover:text-slate-800 font-bold flex items-center gap-1 cursor-pointer bg-white px-3 py-1.5 rounded-xl border border-slate-200 shadow-xs"
                 >
                   <ArrowLeft size={14} /> Quay lại danh sách bác sĩ
                 </button>
@@ -5383,7 +5498,7 @@ export default function AdminDashboard(props: Props) {
                   {/* 1. HỌ TÊN BÁC SĨ & DỌC CHUYÊN KHOA */}
                   <div className="bg-white p-6 rounded-2xl border border-slate-200/80 shadow-xs space-y-4">
                     <div>
-                      <label className="block text-xs font-black text-slate-700 uppercase tracking-wider mb-1.5">
+                      <label className="block text-sm font-black text-slate-700 uppercase tracking-wider mb-1.5">
                         HỌ VÀ TÊN BÁC SĨ *
                       </label>
                       <input
@@ -5398,7 +5513,7 @@ export default function AdminDashboard(props: Props) {
 
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                       <div>
-                        <label className="block text-xs font-black text-slate-700 uppercase tracking-wider mb-1.5">
+                        <label className="block text-sm font-black text-slate-700 uppercase tracking-wider mb-1.5">
                           CHUYÊN KHOA & DANH XƯNG *
                         </label>
                         <input
@@ -5407,12 +5522,12 @@ export default function AdminDashboard(props: Props) {
                           placeholder="VD: Trưởng Khoa Nội Tim Mạch"
                           value={doctorForm.data.specialty}
                           onChange={(e) => doctorForm.setData('specialty', e.target.value)}
-                          className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-xs font-bold text-slate-800 outline-none focus:border-[#004b87] focus:bg-white"
+                          className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-sm font-bold text-slate-800 outline-none focus:border-[#004b87] focus:bg-white"
                         />
                       </div>
 
                       <div>
-                        <label className="block text-xs font-black text-slate-700 uppercase tracking-wider mb-1.5">
+                        <label className="block text-sm font-black text-slate-700 uppercase tracking-wider mb-1.5">
                           KINH NGHIỆM THÂM NIÊN *
                         </label>
                         <input
@@ -5421,7 +5536,7 @@ export default function AdminDashboard(props: Props) {
                           placeholder="VD: 20+ năm kinh nghiệm"
                           value={doctorForm.data.experience}
                           onChange={(e) => doctorForm.setData('experience', e.target.value)}
-                          className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-xs font-bold text-slate-800 outline-none focus:border-[#004b87] focus:bg-white"
+                          className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-sm font-bold text-slate-800 outline-none focus:border-[#004b87] focus:bg-white"
                         />
                       </div>
                     </div>
@@ -5429,7 +5544,7 @@ export default function AdminDashboard(props: Props) {
 
                   {/* 2. MÔ TẢ TÓM TẮT TIỂU SỬ */}
                   <div className="bg-white p-6 rounded-2xl border border-slate-200/80 shadow-xs space-y-2">
-                    <label className="block text-xs font-black text-slate-700 uppercase tracking-wider">
+                    <label className="block text-sm font-black text-slate-700 uppercase tracking-wider">
                       MÔ TẢ TÓM TẮT BÁC SĨ (SHORT BIO) *
                     </label>
                     <textarea
@@ -5438,14 +5553,14 @@ export default function AdminDashboard(props: Props) {
                       placeholder="Gần 20 năm kinh nghiệm thăm khám và điều trị chuyên sâu các bệnh lý tim mạch, tăng huyết áp..."
                       value={doctorForm.data.bio}
                       onChange={(e) => doctorForm.setData('bio', e.target.value)}
-                      className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3.5 text-xs text-slate-800 outline-none focus:border-[#004b87] focus:bg-white leading-relaxed resize-none"
+                      className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3.5 text-sm text-slate-800 outline-none focus:border-[#004b87] focus:bg-white leading-relaxed resize-none"
                     />
                   </div>
 
                   {/* 3. QUÁ TRÌNH ĐÀO TẠO & HỒ SƠ CHUYÊN MÔN CHI TIẾT (WYSIWYG RICH TEXT EDITOR) */}
                   <div className="space-y-2">
                     <div className="flex items-center justify-between">
-                      <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider">
+                      <label className="block text-sm font-bold text-slate-500 uppercase tracking-wider">
                         HỒ SƠ CHUYÊN MÔN & QUÁ TRÌNH ĐÀO TẠO CHI TIẾT *
                       </label>
 
@@ -5457,7 +5572,7 @@ export default function AdminDashboard(props: Props) {
                     <div className="bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-2xs">
                       {/* Attached Toolbar */}
                       {(doctorEditorMode as string) === 'wysiwyg' && (
-                        <div className="px-4 py-2.5 bg-slate-50/80 border-b border-slate-200/80 flex flex-wrap items-center justify-between gap-2 text-xs font-semibold text-slate-600">
+                        <div className="px-4 py-2.5 bg-slate-50/80 border-b border-slate-200/80 flex flex-wrap items-center justify-between gap-2 text-sm font-semibold text-slate-600">
                           <div className="flex flex-wrap items-center gap-1">
                             <button type="button" onClick={() => execDoctorEditorCmd('bold')} className={`p-1.5 rounded-md cursor-pointer ${activeFormats.bold ? 'bg-[#004b87] text-white font-black' : 'hover:bg-slate-200/80 text-slate-700 font-extrabold'}`} title="In đậm">B</button>
                             <button type="button" onClick={() => execDoctorEditorCmd('italic')} className={`p-1.5 rounded-md cursor-pointer ${activeFormats.italic ? 'bg-[#004b87] text-white italic' : 'hover:bg-slate-200/80 text-slate-700 italic'}`} title="In nghiêng">I</button>
@@ -5468,9 +5583,9 @@ export default function AdminDashboard(props: Props) {
                             <button type="button" onClick={() => execDoctorEditorCmd('unlink')} className="p-1.5 hover:bg-slate-200/80 text-slate-700 rounded-md cursor-pointer" title="Xóa link"><Unlink size={15} /></button>
                             <button type="button" onClick={() => handleOpenMediaPicker('doctor_editor')} className="p-1.5 hover:bg-slate-200/80 text-slate-700 rounded-md cursor-pointer" title="Chèn hình ảnh"><ImageIcon size={15} /></button>
                             <span className="w-px h-4 bg-slate-300 mx-1"></span>
-                            <button type="button" onClick={() => execDoctorEditorCmd('formatBlock', '<h4>')} className="px-2 py-1 rounded-md font-bold hover:bg-slate-200/80 text-slate-700 text-xs" title="Tiêu đề H2">H2</button>
-                            <button type="button" onClick={() => execDoctorEditorCmd('formatBlock', '<h5>')} className="px-2 py-1 rounded-md font-bold hover:bg-slate-200/80 text-slate-700 text-xs" title="Tiêu đề H3">H3</button>
-                            <button type="button" onClick={() => execDoctorEditorCmd('formatBlock', '<p>')} className="px-2 py-1 rounded-md font-bold hover:bg-slate-200/80 text-slate-700 text-xs" title="Đoạn văn">P</button>
+                            <button type="button" onClick={() => execDoctorEditorCmd('formatBlock', '<h4>')} className="px-2 py-1 rounded-md font-bold hover:bg-slate-200/80 text-slate-700 text-sm" title="Tiêu đề H2">H2</button>
+                            <button type="button" onClick={() => execDoctorEditorCmd('formatBlock', '<h5>')} className="px-2 py-1 rounded-md font-bold hover:bg-slate-200/80 text-slate-700 text-sm" title="Tiêu đề H3">H3</button>
+                            <button type="button" onClick={() => execDoctorEditorCmd('formatBlock', '<p>')} className="px-2 py-1 rounded-md font-bold hover:bg-slate-200/80 text-slate-700 text-sm" title="Đoạn văn">P</button>
                             <span className="w-px h-4 bg-slate-300 mx-1"></span>
                             <button type="button" onClick={() => execDoctorEditorCmd('insertUnorderedList')} className="p-1.5 hover:bg-slate-200/80 text-slate-700 rounded-md cursor-pointer" title="Danh sách chấm"><List size={15} /></button>
                             <button type="button" onClick={() => execDoctorEditorCmd('insertOrderedList')} className="p-1.5 hover:bg-slate-200/80 text-slate-700 rounded-md cursor-pointer" title="Danh sách số"><ListOrdered size={15} /></button>
@@ -5510,7 +5625,7 @@ export default function AdminDashboard(props: Props) {
                             doctorForm.setData('detailed_bio', e.target.value);
                             if (doctorEditorRef.current) doctorEditorRef.current.innerHTML = e.target.value;
                           }}
-                          className="w-full min-h-[280px] bg-slate-900 p-6 text-xs font-mono text-emerald-400 outline-none leading-relaxed resize-y border-none"
+                          className="w-full min-h-[280px] bg-slate-900 p-6 text-sm font-mono text-emerald-400 outline-none leading-relaxed resize-y border-none"
                         />
                       )}
                     </div>
@@ -5519,7 +5634,7 @@ export default function AdminDashboard(props: Props) {
                   {/* 4. SEO META SECTION */}
                   <div className="bg-white p-6 rounded-2xl border border-slate-200/80 shadow-xs space-y-4">
                     <div>
-                      <label className="block text-xs font-black text-slate-700 uppercase tracking-wider mb-1.5">
+                      <label className="block text-sm font-black text-slate-700 uppercase tracking-wider mb-1.5">
                         META TITLE (CẤU HÌNH SEO)
                       </label>
                       <input
@@ -5527,12 +5642,12 @@ export default function AdminDashboard(props: Props) {
                         placeholder="VD: BSCKII Đoàn Khôi - Trưởng Khoa Nội Tim Mạch MediPlus"
                         value={doctorForm.data.meta_title}
                         onChange={(e) => doctorForm.setData('meta_title', e.target.value)}
-                        className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-xs text-slate-800 outline-none focus:border-[#004b87] focus:bg-white"
+                        className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-sm text-slate-800 outline-none focus:border-[#004b87] focus:bg-white"
                       />
                     </div>
 
                     <div>
-                      <label className="block text-xs font-black text-slate-700 uppercase tracking-wider mb-1.5">
+                      <label className="block text-sm font-black text-slate-700 uppercase tracking-wider mb-1.5">
                         META DESCRIPTION
                       </label>
                       <textarea
@@ -5540,7 +5655,7 @@ export default function AdminDashboard(props: Props) {
                         placeholder="Thông tin tiểu sử, bằng cấp và quá trình công tác của BSCKII Đoàn Khôi..."
                         value={doctorForm.data.meta_description}
                         onChange={(e) => doctorForm.setData('meta_description', e.target.value)}
-                        className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-xs text-slate-800 outline-none focus:border-[#004b87] focus:bg-white resize-none"
+                        className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-sm text-slate-800 outline-none focus:border-[#004b87] focus:bg-white resize-none"
                       />
                     </div>
                   </div>
@@ -5552,21 +5667,21 @@ export default function AdminDashboard(props: Props) {
                   
                   {/* 1. HÀNH ĐỘNG & TRẠNG THÁI */}
                   <div className="bg-white p-6 rounded-2xl border border-slate-200/80 shadow-xs space-y-4">
-                    <h3 className="text-xs font-black text-slate-700 uppercase tracking-wider border-b border-slate-100 pb-3">
+                    <h3 className="text-sm font-black text-slate-700 uppercase tracking-wider border-b border-slate-100 pb-3">
                       HÀNH ĐỘNG & TRẠNG THÁI
                     </h3>
 
                     <button
                       type="submit"
                       disabled={doctorForm.processing}
-                      className="w-full py-3.5 bg-[#004b87] hover:bg-[#003866] text-white font-extrabold text-xs uppercase tracking-wider rounded-xl shadow-md transition-all cursor-pointer flex items-center justify-center gap-2"
+                      className="w-full py-3.5 bg-[#004b87] hover:bg-[#003866] text-white font-extrabold text-sm uppercase tracking-wider rounded-xl shadow-md transition-all cursor-pointer flex items-center justify-center gap-2"
                     >
                       <Save size={16} /> {editingDoctor ? 'LƯU & CẬP NHẬT BÁC SĨ' : 'THÊM HỒ SƠ BÁC SĨ'}
                     </button>
 
                     <div className="flex items-center justify-between py-2 border-t border-b border-slate-100">
                       <div>
-                        <span className="text-xs font-bold text-slate-800 block">Bác sĩ nổi bật</span>
+                        <span className="text-sm font-bold text-slate-800 block">Bác sĩ nổi bật</span>
                         <span className="text-[11px] text-slate-400 block">Hiển thị ưu tiên tại trang chủ</span>
                       </div>
                       <label className="relative inline-flex items-center cursor-pointer">
@@ -5592,14 +5707,14 @@ export default function AdminDashboard(props: Props) {
                         detailed_bio: doctorForm.data.detailed_bio,
                         is_featured: doctorForm.data.is_featured,
                       })}
-                      className="w-full py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-extrabold rounded-xl text-xs flex items-center justify-center gap-2 cursor-pointer transition-all"
+                      className="w-full py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-extrabold rounded-xl text-sm flex items-center justify-center gap-2 cursor-pointer transition-all"
                     >
                       <Eye size={16} /> Xem trước hồ sơ bác sĩ
                     </button>
                   </div>
 
                   {/* 2. CHỌN ẢNH ĐẠI DIỆN BÁC SĨ */}
-                  <div className="bg-white p-6 rounded-3xl border border-slate-200/80 shadow-xs space-y-4 text-xs">
+                  <div className="bg-white p-6 rounded-3xl border border-slate-200/80 shadow-xs space-y-4 text-sm">
                     <label className="block font-black text-slate-700 uppercase tracking-wider border-b border-slate-100 pb-2">
                       ẢNH ĐẠI DIỆN BÁC SĨ
                     </label>
@@ -5616,7 +5731,7 @@ export default function AdminDashboard(props: Props) {
                           <button
                             type="button"
                             onClick={() => handleOpenMediaPicker('doctor_avatar')}
-                            className="px-5 py-2.5 bg-black/85 hover:bg-black text-white font-extrabold rounded-2xl text-xs shadow-lg cursor-pointer transition-all flex items-center gap-1.5 backdrop-blur-xs hover:scale-105"
+                            className="px-5 py-2.5 bg-black/85 hover:bg-black text-white font-extrabold rounded-2xl text-sm shadow-lg cursor-pointer transition-all flex items-center gap-1.5 backdrop-blur-xs hover:scale-105"
                           >
                             Thay đổi ảnh
                           </button>
@@ -5639,7 +5754,7 @@ export default function AdminDashboard(props: Props) {
                         <div className="w-12 h-12 rounded-2xl bg-white text-[#004b87] shadow-xs flex items-center justify-center mb-2 group-hover:scale-110 transition-transform">
                           <FolderOpen size={24} />
                         </div>
-                        <p className="font-extrabold text-[#004b87] text-xs">Bấm Để Chọn Ảnh Đại Diện</p>
+                        <p className="font-extrabold text-[#004b87] text-sm">Bấm Để Chọn Ảnh Đại Diện</p>
                         <p className="text-[11px] text-slate-400 mt-0.5">Tải tệp từ máy tính (Kéo & thả) hoặc từ Quản lý tệp</p>
                       </div>
                     )}
@@ -5658,14 +5773,14 @@ export default function AdminDashboard(props: Props) {
                 <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 pb-4 border-b border-slate-100">
                   <div>
                     <h2 className="text-xl font-extrabold text-[#004b87]">Đội Ngũ Bác Sĩ Chuyên Khoa</h2>
-                    <p className="text-xs text-slate-500 mt-1">
+                    <p className="text-sm text-slate-500 mt-1">
                       Quản lý thông tin bằng cấp, danh xưng chuyên khoa và hồ sơ bác sĩ ({doctors.length} bác sĩ)
                     </p>
                   </div>
 
                   <button
                     onClick={handleOpenCreateDoctor}
-                    className="flex items-center gap-1.5 bg-[#004b87] hover:bg-[#003866] text-white font-bold text-xs px-4 py-2 rounded-xl transition-all cursor-pointer shrink-0 shadow-sm"
+                    className="flex items-center gap-1.5 bg-[#004b87] hover:bg-[#003866] text-white font-bold text-sm px-4 py-2 rounded-xl transition-all cursor-pointer shrink-0 shadow-sm"
                   >
                     <Plus size={16} /> Thêm Bác Sĩ Mới
                   </button>
@@ -5673,7 +5788,7 @@ export default function AdminDashboard(props: Props) {
 
                 {/* STATUS FILTER TABS */}
                 <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 pb-3">
-                  <div className="flex items-center gap-1.5 bg-slate-100 p-1 rounded-xl text-xs font-bold">
+                  <div className="flex items-center gap-1.5 bg-slate-100 p-1 rounded-xl text-sm font-bold">
                     <button
                       type="button"
                       onClick={() => setDoctorStatusTab('all')}
@@ -5701,9 +5816,9 @@ export default function AdminDashboard(props: Props) {
 
                 {/* BATCH ACTION BAR */}
                 {selectedDoctorIds.length > 0 && (
-                  <div className="bg-[#004b87] text-white p-4 rounded-2xl shadow-xl flex flex-wrap items-center justify-between gap-3 animate-fade-in text-xs font-bold">
+                  <div className="bg-[#004b87] text-white p-4 rounded-2xl shadow-xl flex flex-wrap items-center justify-between gap-3 animate-fade-in text-sm font-bold">
                     <div className="flex items-center gap-2">
-                      <span className="w-7 h-7 rounded-full bg-white/20 flex items-center justify-center font-mono text-xs">
+                      <span className="w-7 h-7 rounded-full bg-white/20 flex items-center justify-center font-mono text-sm">
                         {selectedDoctorIds.length}
                       </span>
                       <span>Đã chọn {selectedDoctorIds.length} bác sĩ</span>
@@ -5719,7 +5834,7 @@ export default function AdminDashboard(props: Props) {
 
                 {/* DOCTORS TABLE LIST VIEW */}
                 <div className="overflow-x-auto">
-                  <table className="w-full text-left text-xs text-slate-700 border-collapse">
+                  <table className="w-full text-left text-sm text-slate-700 border-collapse">
                     <thead className="bg-slate-50/80 text-slate-400 uppercase font-extrabold tracking-wider border-b border-slate-200">
                       <tr>
                         <th className="p-4 w-10 text-center">
@@ -5790,7 +5905,7 @@ export default function AdminDashboard(props: Props) {
 
                             <td className="p-4 space-y-1">
                               <h3 className="font-extrabold text-[#004b87] text-sm leading-snug">{doc.name}</h3>
-                              <p className="text-xs font-bold text-emerald-700">{doc.specialty}</p>
+                              <p className="text-sm font-bold text-emerald-700">{doc.specialty}</p>
                             </td>
 
                             <td className="p-4 space-y-1 max-w-xs">
@@ -5806,11 +5921,11 @@ export default function AdminDashboard(props: Props) {
 
                             <td className="p-4 text-center">
                               {doc.is_featured !== false ? (
-                                <span className="inline-flex items-center gap-1 px-3 py-1 bg-amber-50 text-amber-700 font-extrabold rounded-full text-xs border border-amber-200">
+                                <span className="inline-flex items-center gap-1 px-3 py-1 bg-amber-50 text-amber-700 font-extrabold rounded-full text-sm border border-amber-200">
                                   <Star size={12} className="fill-amber-500 text-amber-500" /> Nổi bật
                                 </span>
                               ) : (
-                                <span className="inline-flex items-center gap-1 px-3 py-1 bg-slate-100 text-slate-600 font-extrabold rounded-full text-xs border border-slate-200">
+                                <span className="inline-flex items-center gap-1 px-3 py-1 bg-slate-100 text-slate-600 font-extrabold rounded-full text-sm border border-slate-200">
                                   Thường
                                 </span>
                               )}
@@ -5869,7 +5984,7 @@ export default function AdminDashboard(props: Props) {
               
               {/* Top Breadcrumbs */}
               <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2 text-xs font-semibold text-slate-400">
+                <div className="flex items-center gap-2 text-sm font-semibold text-slate-400">
                   <button
                     type="button"
                     onClick={() => setIsEditingResultPage(false)}
@@ -5884,7 +5999,7 @@ export default function AdminDashboard(props: Props) {
                 <button
                   type="button"
                   onClick={() => setIsEditingResultPage(false)}
-                  className="text-xs text-slate-500 hover:text-slate-800 font-bold flex items-center gap-1 cursor-pointer bg-white px-3 py-1.5 rounded-xl border border-slate-200 shadow-xs"
+                  className="text-sm text-slate-500 hover:text-slate-800 font-bold flex items-center gap-1 cursor-pointer bg-white px-3 py-1.5 rounded-xl border border-slate-200 shadow-xs"
                 >
                   <ArrowLeft size={14} /> Quay lại danh sách kết quả
                 </button>
@@ -5899,7 +6014,7 @@ export default function AdminDashboard(props: Props) {
                   {/* 1. TÊM CA BỆNH NHA VÀ CHẨN ĐOÁN */}
                   <div className="bg-white p-6 rounded-2xl border border-slate-200/80 shadow-xs space-y-4">
                     <div>
-                      <label className="block text-xs font-black text-slate-700 uppercase tracking-wider mb-1.5">
+                      <label className="block text-sm font-black text-slate-700 uppercase tracking-wider mb-1.5">
                         TIÊU ĐỀ CA BỆNH NHÂN *
                       </label>
                       <input
@@ -5913,7 +6028,7 @@ export default function AdminDashboard(props: Props) {
                     </div>
 
                     <div>
-                      <label className="block text-xs font-black text-slate-700 uppercase tracking-wider mb-1.5">
+                      <label className="block text-sm font-black text-slate-700 uppercase tracking-wider mb-1.5">
                         CHẨN ĐOÁN LÂM SÀNG BAN ĐẦU *
                       </label>
                       <input
@@ -5922,14 +6037,14 @@ export default function AdminDashboard(props: Props) {
                         placeholder="VD: Tăng huyết áp nguyên phát độ 3, nguy cơ tim mạch rất cao"
                         value={resultForm.data.diagnosis}
                         onChange={(e) => resultForm.setData('diagnosis', e.target.value)}
-                        className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-xs font-bold text-slate-800 outline-none focus:border-[#004b87] focus:bg-white"
+                        className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-sm font-bold text-slate-800 outline-none focus:border-[#004b87] focus:bg-white"
                       />
                     </div>
                   </div>
 
                   {/* 2. TÓM TẮT KẾT QUẢ PHÁC ĐỒ */}
                   <div className="bg-white p-6 rounded-2xl border border-slate-200/80 shadow-xs space-y-2">
-                    <label className="block text-xs font-black text-slate-700 uppercase tracking-wider">
+                    <label className="block text-sm font-black text-slate-700 uppercase tracking-wider">
                       MÔ TẢ KẾT QUẢ ĐIỀU TRỊ THỰC TẾ (OUTCOME SUMMARY) *
                     </label>
                     <textarea
@@ -5938,14 +6053,14 @@ export default function AdminDashboard(props: Props) {
                       placeholder="Huyết áp ổn định về mức 120/80 mmHg sau 4 tuần phác đồ phối hợp. Không còn triệu chứng đau đầu tức ngực..."
                       value={resultForm.data.outcome}
                       onChange={(e) => resultForm.setData('outcome', e.target.value)}
-                      className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3.5 text-xs text-slate-800 outline-none focus:border-[#004b87] focus:bg-white leading-relaxed resize-none"
+                      className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3.5 text-sm text-slate-800 outline-none focus:border-[#004b87] focus:bg-white leading-relaxed resize-none"
                     />
                   </div>
 
                   {/* 3. BÁO CÁO PHÁC ĐỒ ĐIỀU TRỊ VÀ DIỄN TIẾN CA BỆNH CHI TIẾT (WYSIWYG RICH TEXT EDITOR) */}
                   <div className="space-y-2">
                     <div className="flex items-center justify-between">
-                      <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider">
+                      <label className="block text-sm font-bold text-slate-500 uppercase tracking-wider">
                         CHI TIẾT PHÁC ĐỒ ĐIỀU TRỊ & DIỄN TIẾN LÂM SÀNG *
                       </label>
 
@@ -5957,7 +6072,7 @@ export default function AdminDashboard(props: Props) {
                     <div className="bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-2xs">
                       {/* Attached Toolbar */}
                       {(resultEditorMode as string) === 'wysiwyg' && (
-                        <div className="px-4 py-2.5 bg-slate-50/80 border-b border-slate-200/80 flex flex-wrap items-center justify-between gap-2 text-xs font-semibold text-slate-600">
+                        <div className="px-4 py-2.5 bg-slate-50/80 border-b border-slate-200/80 flex flex-wrap items-center justify-between gap-2 text-sm font-semibold text-slate-600">
                           <div className="flex flex-wrap items-center gap-1">
                             <button type="button" onClick={() => execResultEditorCmd('bold')} className={`p-1.5 rounded-md cursor-pointer ${activeFormats.bold ? 'bg-[#004b87] text-white font-black' : 'hover:bg-slate-200/80 text-slate-700 font-extrabold'}`} title="In đậm">B</button>
                             <button type="button" onClick={() => execResultEditorCmd('italic')} className={`p-1.5 rounded-md cursor-pointer ${activeFormats.italic ? 'bg-[#004b87] text-white italic' : 'hover:bg-slate-200/80 text-slate-700 italic'}`} title="In nghiêng">I</button>
@@ -5968,9 +6083,9 @@ export default function AdminDashboard(props: Props) {
                             <button type="button" onClick={() => execResultEditorCmd('unlink')} className="p-1.5 hover:bg-slate-200/80 text-slate-700 rounded-md cursor-pointer" title="Xóa link"><Unlink size={15} /></button>
                             <button type="button" onClick={() => handleOpenMediaPicker('result_editor')} className="p-1.5 hover:bg-slate-200/80 text-slate-700 rounded-md cursor-pointer" title="Chèn hình ảnh"><ImageIcon size={15} /></button>
                             <span className="w-px h-4 bg-slate-300 mx-1"></span>
-                            <button type="button" onClick={() => execResultEditorCmd('formatBlock', '<h4>')} className="px-2 py-1 rounded-md font-bold hover:bg-slate-200/80 text-slate-700 text-xs" title="Tiêu đề H2">H2</button>
-                            <button type="button" onClick={() => execResultEditorCmd('formatBlock', '<h5>')} className="px-2 py-1 rounded-md font-bold hover:bg-slate-200/80 text-slate-700 text-xs" title="Tiêu đề H3">H3</button>
-                            <button type="button" onClick={() => execResultEditorCmd('formatBlock', '<p>')} className="px-2 py-1 rounded-md font-bold hover:bg-slate-200/80 text-slate-700 text-xs" title="Đoạn văn">P</button>
+                            <button type="button" onClick={() => execResultEditorCmd('formatBlock', '<h4>')} className="px-2 py-1 rounded-md font-bold hover:bg-slate-200/80 text-slate-700 text-sm" title="Tiêu đề H2">H2</button>
+                            <button type="button" onClick={() => execResultEditorCmd('formatBlock', '<h5>')} className="px-2 py-1 rounded-md font-bold hover:bg-slate-200/80 text-slate-700 text-sm" title="Tiêu đề H3">H3</button>
+                            <button type="button" onClick={() => execResultEditorCmd('formatBlock', '<p>')} className="px-2 py-1 rounded-md font-bold hover:bg-slate-200/80 text-slate-700 text-sm" title="Đoạn văn">P</button>
                             <span className="w-px h-4 bg-slate-300 mx-1"></span>
                             <button type="button" onClick={() => execResultEditorCmd('insertUnorderedList')} className="p-1.5 hover:bg-slate-200/80 text-slate-700 rounded-md cursor-pointer" title="Danh sách chấm"><List size={15} /></button>
                             <button type="button" onClick={() => execResultEditorCmd('insertOrderedList')} className="p-1.5 hover:bg-slate-200/80 text-slate-700 rounded-md cursor-pointer" title="Danh sách số"><ListOrdered size={15} /></button>
@@ -6010,7 +6125,7 @@ export default function AdminDashboard(props: Props) {
                             resultForm.setData('detailed_case', e.target.value);
                             if (resultEditorRef.current) resultEditorRef.current.innerHTML = e.target.value;
                           }}
-                          className="w-full min-h-[280px] bg-slate-900 p-6 text-xs font-mono text-emerald-400 outline-none leading-relaxed resize-y border-none"
+                          className="w-full min-h-[280px] bg-slate-900 p-6 text-sm font-mono text-emerald-400 outline-none leading-relaxed resize-y border-none"
                         />
                       )}
                     </div>
@@ -6019,7 +6134,7 @@ export default function AdminDashboard(props: Props) {
                   {/* 4. SEO META SECTION */}
                   <div className="bg-white p-6 rounded-2xl border border-slate-200/80 shadow-xs space-y-4">
                     <div>
-                      <label className="block text-xs font-black text-slate-700 uppercase tracking-wider mb-1.5">
+                      <label className="block text-sm font-black text-slate-700 uppercase tracking-wider mb-1.5">
                         META TITLE (CẤU HÌNH SEO)
                       </label>
                       <input
@@ -6027,12 +6142,12 @@ export default function AdminDashboard(props: Props) {
                         placeholder="VD: Kết quả điều trị Tăng Huyết Áp độ 3 thành công - MediPlus"
                         value={resultForm.data.meta_title}
                         onChange={(e) => resultForm.setData('meta_title', e.target.value)}
-                        className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-xs text-slate-800 outline-none focus:border-[#004b87] focus:bg-white"
+                        className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-sm text-slate-800 outline-none focus:border-[#004b87] focus:bg-white"
                       />
                     </div>
 
                     <div>
-                      <label className="block text-xs font-black text-slate-700 uppercase tracking-wider mb-1.5">
+                      <label className="block text-sm font-black text-slate-700 uppercase tracking-wider mb-1.5">
                         META DESCRIPTION
                       </label>
                       <textarea
@@ -6040,7 +6155,7 @@ export default function AdminDashboard(props: Props) {
                         placeholder="Xem chi tiết diễn tiến điều trị và hình ảnh lâm sàng ca bệnh..."
                         value={resultForm.data.meta_description}
                         onChange={(e) => resultForm.setData('meta_description', e.target.value)}
-                        className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-xs text-slate-800 outline-none focus:border-[#004b87] focus:bg-white resize-none"
+                        className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-sm text-slate-800 outline-none focus:border-[#004b87] focus:bg-white resize-none"
                       />
                     </div>
                   </div>
@@ -6052,21 +6167,21 @@ export default function AdminDashboard(props: Props) {
                   
                   {/* 1. HÀNH ĐỘNG & TRẠNG THÁI */}
                   <div className="bg-white p-6 rounded-2xl border border-slate-200/80 shadow-xs space-y-4">
-                    <h3 className="text-xs font-black text-slate-700 uppercase tracking-wider border-b border-slate-100 pb-3">
+                    <h3 className="text-sm font-black text-slate-700 uppercase tracking-wider border-b border-slate-100 pb-3">
                       HÀNH ĐỘNG & TRẠNG THÁI
                     </h3>
 
                     <button
                       type="submit"
                       disabled={resultForm.processing}
-                      className="w-full py-3.5 bg-[#004b87] hover:bg-[#003866] text-white font-extrabold text-xs uppercase tracking-wider rounded-xl shadow-md transition-all cursor-pointer flex items-center justify-center gap-2"
+                      className="w-full py-3.5 bg-[#004b87] hover:bg-[#003866] text-white font-extrabold text-sm uppercase tracking-wider rounded-xl shadow-md transition-all cursor-pointer flex items-center justify-center gap-2"
                     >
                       <Save size={16} /> {editingResult ? 'LƯU & CẬP NHẬT CA ĐIỀU TRỊ' : 'XUẤT BẢN CA ĐIỀU TRỊ MỚI'}
                     </button>
 
                     <div className="flex items-center justify-between py-2 border-t border-b border-slate-100">
                       <div>
-                        <span className="text-xs font-bold text-slate-800 block">Ca lâm sàng nổi bật</span>
+                        <span className="text-sm font-bold text-slate-800 block">Ca lâm sàng nổi bật</span>
                         <span className="text-[11px] text-slate-400 block">Hiển thị ưu tiên tại trang chủ</span>
                       </div>
                       <label className="relative inline-flex items-center cursor-pointer">
@@ -6092,14 +6207,14 @@ export default function AdminDashboard(props: Props) {
                         detailed_case: resultForm.data.detailed_case,
                         is_featured: resultForm.data.is_featured,
                       })}
-                      className="w-full py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-extrabold rounded-xl text-xs flex items-center justify-center gap-2 cursor-pointer transition-all"
+                      className="w-full py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-extrabold rounded-xl text-sm flex items-center justify-center gap-2 cursor-pointer transition-all"
                     >
                       <Eye size={16} /> Xem trước ca lâm sàng
                     </button>
                   </div>
 
                   {/* 2. CHỌN ẢNH TRƯỚC VÀ SAU ĐIỀU TRỊ */}
-                  <div className="bg-white p-6 rounded-3xl border border-slate-200/80 shadow-xs space-y-4 text-xs">
+                  <div className="bg-white p-6 rounded-3xl border border-slate-200/80 shadow-xs space-y-4 text-sm">
                     <label className="block font-black text-slate-700 uppercase tracking-wider border-b border-slate-100 pb-2">
                       HÌNH ÁNH LÂM SÀNG TRƯỚC & SAU (BEFORE / AFTER)
                     </label>
@@ -6218,14 +6333,14 @@ export default function AdminDashboard(props: Props) {
                 <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 pb-4 border-b border-slate-100">
                   <div>
                     <h2 className="text-xl font-extrabold text-[#004b87]">Kết Quả Điều Trị Thực Tế</h2>
-                    <p className="text-xs text-slate-500 mt-1">
+                    <p className="text-sm text-slate-500 mt-1">
                       Quản lý kho dữ liệu ca bệnh lâm sàng thực tế ({treatmentResults.length} ca điều trị)
                     </p>
                   </div>
 
                   <button
                     onClick={handleOpenCreateResult}
-                    className="flex items-center gap-1.5 bg-[#004b87] hover:bg-[#003866] text-white font-bold text-xs px-4 py-2 rounded-xl transition-all cursor-pointer shrink-0 shadow-sm"
+                    className="flex items-center gap-1.5 bg-[#004b87] hover:bg-[#003866] text-white font-bold text-sm px-4 py-2 rounded-xl transition-all cursor-pointer shrink-0 shadow-sm"
                   >
                     <Plus size={16} /> Thêm Ca Thực Tế Mới
                   </button>
@@ -6233,7 +6348,7 @@ export default function AdminDashboard(props: Props) {
 
                 {/* STATUS FILTER TABS */}
                 <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 pb-3">
-                  <div className="flex items-center gap-1.5 bg-slate-100 p-1 rounded-xl text-xs font-bold">
+                  <div className="flex items-center gap-1.5 bg-slate-100 p-1 rounded-xl text-sm font-bold">
                     <button
                       type="button"
                       onClick={() => setResultStatusTab('all')}
@@ -6261,9 +6376,9 @@ export default function AdminDashboard(props: Props) {
 
                 {/* BATCH ACTION BAR */}
                 {selectedResultIds.length > 0 && (
-                  <div className="bg-[#004b87] text-white p-4 rounded-2xl shadow-xl flex flex-wrap items-center justify-between gap-3 animate-fade-in text-xs font-bold">
+                  <div className="bg-[#004b87] text-white p-4 rounded-2xl shadow-xl flex flex-wrap items-center justify-between gap-3 animate-fade-in text-sm font-bold">
                     <div className="flex items-center gap-2">
-                      <span className="w-7 h-7 rounded-full bg-white/20 flex items-center justify-center font-mono text-xs">
+                      <span className="w-7 h-7 rounded-full bg-white/20 flex items-center justify-center font-mono text-sm">
                         {selectedResultIds.length}
                       </span>
                       <span>Đã chọn {selectedResultIds.length} ca điều trị</span>
@@ -6279,7 +6394,7 @@ export default function AdminDashboard(props: Props) {
 
                 {/* Treatment Results Table List View */}
                 <div className="overflow-x-auto">
-                  <table className="w-full text-left text-xs text-slate-700 border-collapse">
+                  <table className="w-full text-left text-sm text-slate-700 border-collapse">
                     <thead className="bg-slate-50/80 text-slate-400 uppercase font-extrabold tracking-wider border-b border-slate-200">
                       <tr>
                         <th className="p-4 w-10 text-center">
@@ -6362,17 +6477,17 @@ export default function AdminDashboard(props: Props) {
                               </span>
                             </td>
 
-                            <td className="p-4 text-slate-600 text-xs leading-relaxed max-w-sm line-clamp-3">
+                            <td className="p-4 text-slate-600 text-sm leading-relaxed max-w-sm line-clamp-3">
                               {res.outcome}
                             </td>
 
                             <td className="p-4 text-center">
                               {res.is_featured !== false ? (
-                                <span className="inline-flex items-center gap-1 px-3 py-1 bg-amber-50 text-amber-700 font-extrabold rounded-full text-xs border border-amber-200">
+                                <span className="inline-flex items-center gap-1 px-3 py-1 bg-amber-50 text-amber-700 font-extrabold rounded-full text-sm border border-amber-200">
                                   <Star size={12} className="fill-amber-500 text-amber-500" /> Ca Nổi bật
                                 </span>
                               ) : (
-                                <span className="inline-flex items-center gap-1 px-3 py-1 bg-slate-100 text-slate-600 font-extrabold rounded-full text-xs border border-slate-200">
+                                <span className="inline-flex items-center gap-1 px-3 py-1 bg-slate-100 text-slate-600 font-extrabold rounded-full text-sm border border-slate-200">
                                   Thường
                                 </span>
                               )}
@@ -6425,7 +6540,7 @@ export default function AdminDashboard(props: Props) {
             <div className="space-y-6 w-full">
               {/* Header Navigation Bar */}
               <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-white p-5 rounded-2xl border border-slate-200/80 shadow-xs">
-                <div className="flex items-center gap-2 text-xs font-bold text-slate-500">
+                <div className="flex items-center gap-2 text-sm font-bold text-slate-500">
                   <button type="button" onClick={() => setIsEditingAuthorPage(false)} className="hover:text-[#004b87] transition-colors">
                     Tác giả bài viết
                   </button>
@@ -6438,7 +6553,7 @@ export default function AdminDashboard(props: Props) {
                 <button
                   type="button"
                   onClick={() => setIsEditingAuthorPage(false)}
-                  className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl text-xs transition-all cursor-pointer border border-slate-200"
+                  className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl text-sm transition-all cursor-pointer border border-slate-200"
                 >
                   Quay lại danh sách
                 </button>
@@ -6452,7 +6567,7 @@ export default function AdminDashboard(props: Props) {
                   {/* Card 1: Thông tin cơ bản tác giả */}
                   <div className="bg-white p-6 rounded-2xl border border-slate-200/80 shadow-xs space-y-4">
                     <div>
-                      <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">
+                      <label className="block text-sm font-bold text-slate-500 uppercase tracking-wider mb-2">
                         TÊN TÁC GIẢ *
                       </label>
                       <input
@@ -6461,12 +6576,12 @@ export default function AdminDashboard(props: Props) {
                         placeholder="Nhập họ và tên tác giả"
                         value={authorForm.data.name}
                         onChange={(e) => authorForm.setData('name', e.target.value)}
-                        className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3.5 text-xs font-bold text-slate-800 outline-none focus:border-[#004b87] focus:bg-white"
+                        className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3.5 text-sm font-bold text-slate-800 outline-none focus:border-[#004b87] focus:bg-white"
                       />
                     </div>
 
                     <div>
-                      <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">
+                      <label className="block text-sm font-bold text-slate-500 uppercase tracking-wider mb-2">
                         CHỨC DANH / VAI TRÒ
                       </label>
                       <input
@@ -6474,12 +6589,12 @@ export default function AdminDashboard(props: Props) {
                         placeholder="Ví dụ: Bác sĩ CKI Da liễu, Chuyên gia thẩm mỹ..."
                         value={authorForm.data.title}
                         onChange={(e) => authorForm.setData('title', e.target.value)}
-                        className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3.5 text-xs text-slate-800 outline-none focus:border-[#004b87] focus:bg-white"
+                        className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3.5 text-sm text-slate-800 outline-none focus:border-[#004b87] focus:bg-white"
                       />
                     </div>
 
                     <div>
-                      <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">
+                      <label className="block text-sm font-bold text-slate-500 uppercase tracking-wider mb-2">
                         TÓM TẮT TIỂU SỬ
                       </label>
                       <textarea
@@ -6487,21 +6602,21 @@ export default function AdminDashboard(props: Props) {
                         placeholder="Nhập thông tin giới thiệu tóm tắt..."
                         value={authorForm.data.bio}
                         onChange={(e) => authorForm.setData('bio', e.target.value)}
-                        className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3.5 text-xs text-slate-800 outline-none focus:border-[#004b87] focus:bg-white leading-relaxed resize-none"
+                        className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3.5 text-sm text-slate-800 outline-none focus:border-[#004b87] focus:bg-white leading-relaxed resize-none"
                       />
                     </div>
                   </div>
 
                   {/* Card 2: Nội dung giới thiệu chi tiết (Rich Editor matching screenshot) */}
                   <div className="space-y-2">
-                    <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider">
+                    <label className="block text-sm font-bold text-slate-500 uppercase tracking-wider">
                       NỘI DUNG GIỚI THIỆU CHI TIẾT (MARKDOWN/HTML)
                     </label>
 
                     <div className="bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-2xs">
                       {/* Attached Toolbar Identical to Article Editor */}
                       {editorMode === 'wysiwyg' && (
-                        <div className="px-4 py-2.5 bg-slate-50/80 border-b border-slate-200/80 flex flex-wrap items-center justify-between gap-2 text-xs font-semibold text-slate-600">
+                        <div className="px-4 py-2.5 bg-slate-50/80 border-b border-slate-200/80 flex flex-wrap items-center justify-between gap-2 text-sm font-semibold text-slate-600">
                           <div className="flex flex-wrap items-center gap-1">
                             {/* Formatting B I U S */}
                             <button
@@ -6586,7 +6701,7 @@ export default function AdminDashboard(props: Props) {
                             <button
                               type="button"
                               onClick={() => execEditorCmd('formatBlock', '<h4>')}
-                              className={`px-2 py-1 rounded-md font-bold cursor-pointer transition-all text-xs ${
+                              className={`px-2 py-1 rounded-md font-bold cursor-pointer transition-all text-sm ${
                                 activeFormats.h2 ? 'bg-[#004b87] text-white shadow-xs scale-105' : 'hover:bg-slate-200/80 text-slate-700'
                               }`}
                               title="Tiêu đề H2"
@@ -6596,7 +6711,7 @@ export default function AdminDashboard(props: Props) {
                             <button
                               type="button"
                               onClick={() => execEditorCmd('formatBlock', '<h5>')}
-                              className={`px-2 py-1 rounded-md font-bold cursor-pointer transition-all text-xs ${
+                              className={`px-2 py-1 rounded-md font-bold cursor-pointer transition-all text-sm ${
                                 activeFormats.h3 ? 'bg-[#004b87] text-white shadow-xs scale-105' : 'hover:bg-slate-200/80 text-slate-700'
                               }`}
                               title="Tiêu đề H3"
@@ -6606,7 +6721,7 @@ export default function AdminDashboard(props: Props) {
                             <button
                               type="button"
                               onClick={() => execEditorCmd('formatBlock', '<p>')}
-                              className={`px-2 py-1 rounded-md font-bold cursor-pointer transition-all text-xs ${
+                              className={`px-2 py-1 rounded-md font-bold cursor-pointer transition-all text-sm ${
                                 activeFormats.p ? 'bg-[#004b87] text-white shadow-xs scale-105' : 'hover:bg-slate-200/80 text-slate-700'
                               }`}
                               title="Đoạn văn"
@@ -6729,7 +6844,7 @@ export default function AdminDashboard(props: Props) {
                               authorEditorRef.current.innerHTML = e.target.value;
                             }
                           }}
-                          className="w-full min-h-[300px] bg-slate-900 p-6 text-xs font-mono text-emerald-400 outline-none leading-relaxed resize-y border-none"
+                          className="w-full min-h-[300px] bg-slate-900 p-6 text-sm font-mono text-emerald-400 outline-none leading-relaxed resize-y border-none"
                         />
                       )}
                     </div>
@@ -6740,7 +6855,7 @@ export default function AdminDashboard(props: Props) {
                     <button
                       type="button"
                       onClick={() => setShowAuthorSeoAccordion(!showAuthorSeoAccordion)}
-                      className="w-full p-4 flex justify-between items-center bg-slate-50/50 hover:bg-slate-100/60 transition-colors text-left font-bold text-xs text-[#004b87] cursor-pointer"
+                      className="w-full p-4 flex justify-between items-center bg-slate-50/50 hover:bg-slate-100/60 transition-colors text-left font-bold text-sm text-[#004b87] cursor-pointer"
                     >
                       <span className="flex items-center gap-2">
                         {showAuthorSeoAccordion ? '▼' : '▶'} Cấu hình SEO & Nâng cao
@@ -6751,24 +6866,24 @@ export default function AdminDashboard(props: Props) {
                     {showAuthorSeoAccordion && (
                       <div className="p-6 border-t border-slate-200/80 space-y-4 bg-white">
                         <div>
-                          <label className="block text-xs font-bold text-slate-500 mb-1">META TITLE</label>
+                          <label className="block text-sm font-bold text-slate-500 mb-1">META TITLE</label>
                           <input
                             type="text"
                             placeholder="Nhập thẻ tiêu đề SEO hồ sơ tác giả..."
                             value={authorForm.data.meta_title}
                             onChange={(e) => authorForm.setData('meta_title', e.target.value)}
-                            className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-xs text-slate-800 outline-none focus:border-[#004b87]"
+                            className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-sm text-slate-800 outline-none focus:border-[#004b87]"
                           />
                         </div>
 
                         <div>
-                          <label className="block text-xs font-bold text-slate-500 mb-1">META DESCRIPTION</label>
+                          <label className="block text-sm font-bold text-slate-500 mb-1">META DESCRIPTION</label>
                           <textarea
                             rows={3}
                             placeholder="Nhập thẻ mô tả SEO hồ sơ tác giả..."
                             value={authorForm.data.meta_description}
                             onChange={(e) => authorForm.setData('meta_description', e.target.value)}
-                            className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-xs text-slate-800 outline-none focus:border-[#004b87] resize-none"
+                            className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-sm text-slate-800 outline-none focus:border-[#004b87] resize-none"
                           />
                         </div>
                       </div>
@@ -6782,7 +6897,7 @@ export default function AdminDashboard(props: Props) {
                   
                   {/* Card 1: ẢNH ĐẠI DIỆN (MATCHING USER SCREENSHOT) */}
                   <div className="bg-white p-6 rounded-2xl border border-slate-200/80 shadow-xs space-y-5 text-center">
-                    <label className="block font-bold text-slate-500 uppercase tracking-wider text-xs border-b border-slate-100 pb-2 text-left">
+                    <label className="block font-bold text-slate-500 uppercase tracking-wider text-sm border-b border-slate-100 pb-2 text-left">
                       ẢNH ĐẠI DIỆN
                     </label>
 
@@ -6806,7 +6921,7 @@ export default function AdminDashboard(props: Props) {
                             </div>
                           )}
 
-                          <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white text-xs font-bold gap-1">
+                          <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white text-sm font-bold gap-1">
                             <FolderOpen size={13} className="text-white fill-white/20" /> Đổi ảnh
                           </div>
                         </div>
@@ -6832,7 +6947,7 @@ export default function AdminDashboard(props: Props) {
                         <button
                           type="button"
                           onClick={() => handleOpenMediaPicker('author_avatar')}
-                          className="w-full py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl text-xs border border-slate-200 cursor-pointer transition-all flex items-center justify-center gap-1.5"
+                          className="w-full py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl text-sm border border-slate-200 cursor-pointer transition-all flex items-center justify-center gap-1.5"
                         >
                           <FolderOpen size={14} /> Choose File từ Quản Lý Tệp
                         </button>
@@ -6845,7 +6960,7 @@ export default function AdminDashboard(props: Props) {
                     <button
                       type="submit"
                       disabled={authorForm.processing}
-                      className="w-full py-3 bg-[#004b87] hover:bg-[#003866] text-white font-black text-xs uppercase tracking-wider rounded-xl shadow-md cursor-pointer transition-all hover:scale-[1.01]"
+                      className="w-full py-3 bg-[#004b87] hover:bg-[#003866] text-white font-black text-sm uppercase tracking-wider rounded-xl shadow-md cursor-pointer transition-all hover:scale-[1.01]"
                     >
                       LƯU CẤU HÌNH TÁC GIẢ
                     </button>
@@ -6853,7 +6968,7 @@ export default function AdminDashboard(props: Props) {
                     <button
                       type="button"
                       onClick={() => setIsEditingAuthorPage(false)}
-                      className="w-full py-2.5 bg-white border border-slate-200 text-slate-600 font-bold text-xs rounded-xl hover:bg-slate-50 cursor-pointer transition-all"
+                      className="w-full py-2.5 bg-white border border-slate-200 text-slate-600 font-bold text-sm rounded-xl hover:bg-slate-50 cursor-pointer transition-all"
                     >
                       HỦY BỎ
                     </button>
@@ -6872,7 +6987,7 @@ export default function AdminDashboard(props: Props) {
                   <h2 className="text-lg font-black text-[#004b87] uppercase tracking-wider flex items-center gap-2">
                     <Users size={22} className="text-[#00a896]" /> QUẢN LÝ TÁC GIẢ & HỘI ĐỒNG CỐ VẤN Y KHOA
                   </h2>
-                  <p className="text-xs text-slate-500 mt-1">
+                  <p className="text-sm text-slate-500 mt-1">
                     Quản lý danh sách tác giả bài viết, chức danh chuyên môn và tiểu sử hiển thị trên các bài viết cẩm nang y tế
                   </p>
                 </div>
@@ -6880,7 +6995,7 @@ export default function AdminDashboard(props: Props) {
                 <button
                   type="button"
                   onClick={handleOpenCreateAuthor}
-                  className="px-5 py-2.5 bg-[#004b87] hover:bg-[#003866] text-white font-bold rounded-xl text-xs shadow-md flex items-center gap-2 cursor-pointer transition-all"
+                  className="px-5 py-2.5 bg-[#004b87] hover:bg-[#003866] text-white font-bold rounded-xl text-sm shadow-md flex items-center gap-2 cursor-pointer transition-all"
                 >
                   <Plus size={16} /> Thêm Tác Giả Mới ➔
                 </button>
@@ -6889,7 +7004,7 @@ export default function AdminDashboard(props: Props) {
               {/* Table Container */}
               <div className="bg-white rounded-2xl border border-slate-200/80 shadow-xs overflow-hidden">
                 <div className="p-4 border-b border-slate-100 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
-                  <div className="flex items-center gap-2 text-xs font-black text-slate-700 uppercase">
+                  <div className="flex items-center gap-2 text-sm font-black text-slate-700 uppercase">
                     <span>Danh Sách Tác Giả</span>
                     <span className="px-2 py-0.5 bg-blue-50 text-[#004b87] rounded-md font-mono text-[11px]">
                       {authors.length} tác giả
@@ -6903,13 +7018,13 @@ export default function AdminDashboard(props: Props) {
                       placeholder="Tìm kiếm tác giả theo tên, chức danh..."
                       value={authorSearchQuery}
                       onChange={(e) => setAuthorSearchQuery(e.target.value)}
-                      className="w-full pl-8 pr-3 py-1.5 bg-slate-50 border border-slate-200 rounded-xl text-xs outline-none focus:border-[#004b87]"
+                      className="w-full pl-8 pr-3 py-1.5 bg-slate-50 border border-slate-200 rounded-xl text-sm outline-none focus:border-[#004b87]"
                     />
                   </div>
                 </div>
 
                 <div className="overflow-x-auto">
-                  <table className="w-full text-left border-collapse text-xs">
+                  <table className="w-full text-left border-collapse text-sm">
                     <thead>
                       <tr className="bg-slate-50/80 text-slate-500 font-extrabold uppercase border-b border-slate-200/80 tracking-wider">
                         <th className="p-4 w-12 text-center">#</th>
@@ -6961,7 +7076,7 @@ export default function AdminDashboard(props: Props) {
                                 <button
                                   type="button"
                                   onClick={() => handleOpenEditAuthor(author)}
-                                  className="inline-flex items-center gap-1 px-3 py-1.5 bg-blue-50 text-[#004b87] hover:bg-blue-100 font-bold rounded-lg text-xs transition-all border border-blue-100 cursor-pointer"
+                                  className="inline-flex items-center gap-1 px-3 py-1.5 bg-blue-50 text-[#004b87] hover:bg-blue-100 font-bold rounded-lg text-sm transition-all border border-blue-100 cursor-pointer"
                                   title="Sửa tác giả chi tiết"
                                 >
                                   <Edit size={13} /> Sửa Chi Tiết
@@ -7001,7 +7116,7 @@ export default function AdminDashboard(props: Props) {
                     <MessageSquare size={24} className="text-[#00a896]" />
                     Quản Lý Đánh Giá & Phản Hồi Bệnh Nhân
                   </h2>
-                  <p className="text-xs text-slate-500 mt-1">
+                  <p className="text-sm text-slate-500 mt-1">
                     Kiểm duyệt, phê duyệt, từ chối và quản lý ý kiến nhận xét của khách hàng ({reviews.length} đánh giá)
                   </p>
                 </div>
@@ -7015,7 +7130,7 @@ export default function AdminDashboard(props: Props) {
                       placeholder="Tìm tên bệnh nhân, dịch vụ, nội dung..."
                       value={reviewSearchQuery}
                       onChange={(e) => setReviewSearchQuery(e.target.value)}
-                      className="w-full bg-slate-50 border border-slate-200 rounded-xl pl-9 pr-4 py-2 text-xs text-slate-800 outline-none focus:border-[#004b87] focus:bg-white shadow-xs"
+                      className="w-full bg-slate-50 border border-slate-200 rounded-xl pl-9 pr-4 py-2 text-sm text-slate-800 outline-none focus:border-[#004b87] focus:bg-white shadow-xs"
                     />
                   </div>
 
@@ -7023,7 +7138,7 @@ export default function AdminDashboard(props: Props) {
                   <select
                     value={reviewRatingFilter}
                     onChange={(e) => setReviewRatingFilter(e.target.value === 'all' ? 'all' : Number(e.target.value))}
-                    className="bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2 text-xs font-bold text-slate-700 outline-none focus:border-[#004b87] cursor-pointer shadow-xs"
+                    className="bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2 text-sm font-bold text-slate-700 outline-none focus:border-[#004b87] cursor-pointer shadow-xs"
                   >
                     <option value="all">Tất cả xếp hạng (1 - 5 sao)</option>
                     <option value="5">★★★★★ 5 Sao</option>
@@ -7036,7 +7151,7 @@ export default function AdminDashboard(props: Props) {
                   {/* Create New Review Button */}
                   <button
                     onClick={handleOpenCreateReview}
-                    className="flex items-center gap-1.5 bg-[#004b87] hover:bg-[#003866] text-white font-bold text-xs px-4 py-2 rounded-xl transition-all cursor-pointer shrink-0 shadow-sm"
+                    className="flex items-center gap-1.5 bg-[#004b87] hover:bg-[#003866] text-white font-bold text-sm px-4 py-2 rounded-xl transition-all cursor-pointer shrink-0 shadow-sm"
                   >
                     <Plus size={16} /> Thêm Đánh Giá Mới
                   </button>
@@ -7045,7 +7160,7 @@ export default function AdminDashboard(props: Props) {
 
               {/* STATUS FILTER TABS */}
               <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 pb-3">
-                <div className="flex items-center gap-1.5 bg-slate-100 p-1 rounded-xl text-xs font-bold">
+                <div className="flex items-center gap-1.5 bg-slate-100 p-1 rounded-xl text-sm font-bold">
                   <button
                     type="button"
                     onClick={() => setReviewStatusTab('all')}
@@ -7086,9 +7201,9 @@ export default function AdminDashboard(props: Props) {
 
               {/* FLOATING BATCH ACTION BAR */}
               {selectedReviewIds.length > 0 && (
-                <div className="bg-[#004b87] text-white p-4 rounded-2xl shadow-xl flex flex-wrap items-center justify-between gap-3 animate-fade-in text-xs font-bold border border-blue-800">
+                <div className="bg-[#004b87] text-white p-4 rounded-2xl shadow-xl flex flex-wrap items-center justify-between gap-3 animate-fade-in text-sm font-bold border border-blue-800">
                   <div className="flex items-center gap-2">
-                    <span className="w-7 h-7 rounded-full bg-white/20 flex items-center justify-center font-mono text-xs">
+                    <span className="w-7 h-7 rounded-full bg-white/20 flex items-center justify-center font-mono text-sm">
                       {selectedReviewIds.length}
                     </span>
                     <span>Đã chọn {selectedReviewIds.length} đánh giá</span>
@@ -7122,7 +7237,7 @@ export default function AdminDashboard(props: Props) {
 
               {/* Reviews Table View */}
               <div className="overflow-x-auto">
-                <table className="w-full text-left text-xs text-slate-700 border-collapse">
+                <table className="w-full text-left text-sm text-slate-700 border-collapse">
                   <thead className="bg-slate-50/80 text-slate-400 uppercase font-extrabold tracking-wider border-b border-slate-200">
                     <tr>
                       <th className="p-4 w-10 text-center">
@@ -7198,7 +7313,7 @@ export default function AdminDashboard(props: Props) {
 
                           <td className="p-4 font-bold text-[#004b87]">
                             <div className="flex items-center gap-3">
-                              <div className="w-9 h-9 rounded-full bg-blue-100 text-[#004b87] font-black flex items-center justify-center text-xs shrink-0 shadow-2xs border border-blue-200">
+                              <div className="w-9 h-9 rounded-full bg-blue-100 text-[#004b87] font-black flex items-center justify-center text-sm shrink-0 shadow-2xs border border-blue-200">
                                 {rev.patient_name.charAt(0).toUpperCase()}
                               </div>
                               <div>
@@ -7219,23 +7334,23 @@ export default function AdminDashboard(props: Props) {
                                   className={i < rev.rating ? 'fill-amber-400 text-amber-500' : 'text-slate-300'}
                                 />
                               ))}
-                              <span className="text-xs font-black text-amber-700 ml-1">{rev.rating}/5</span>
+                              <span className="text-sm font-black text-amber-700 ml-1">{rev.rating}/5</span>
                             </div>
                           </td>
 
                           <td className="p-4">
-                            <div className="p-3 bg-slate-50 rounded-xl border border-slate-200/60 leading-relaxed text-xs text-slate-700 italic">
+                            <div className="p-3 bg-slate-50 rounded-xl border border-slate-200/60 leading-relaxed text-sm text-slate-700 italic">
                               "{rev.comment}"
                             </div>
                           </td>
 
                           <td className="p-4 text-center">
                             {rev.is_approved !== false ? (
-                              <span className="inline-flex items-center gap-1 px-3 py-1 bg-emerald-50 text-emerald-700 font-extrabold rounded-full text-xs border border-emerald-200">
+                              <span className="inline-flex items-center gap-1 px-3 py-1 bg-emerald-50 text-emerald-700 font-extrabold rounded-full text-sm border border-emerald-200">
                                 <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" /> Đã phê duyệt
                               </span>
                             ) : (
-                              <span className="inline-flex items-center gap-1 px-3 py-1 bg-rose-50 text-rose-700 font-extrabold rounded-full text-xs border border-rose-200">
+                              <span className="inline-flex items-center gap-1 px-3 py-1 bg-rose-50 text-rose-700 font-extrabold rounded-full text-sm border border-rose-200">
                                 <span className="w-1.5 h-1.5 rounded-full bg-rose-500" /> Từ chối / Ẩn
                               </span>
                             )}
@@ -7300,7 +7415,7 @@ export default function AdminDashboard(props: Props) {
         {activeTab === 'schedules' && (
           <div className="space-y-6 w-full">
             {/* Top Breadcrumb */}
-            <div className="flex items-center gap-2 text-xs font-semibold text-slate-400">
+            <div className="flex items-center gap-2 text-sm font-semibold text-slate-400">
               <span className="text-amber-700">🏠</span>
               <span>/</span>
               <span className="text-slate-700 font-bold">Lịch trực bác sĩ</span>
@@ -7309,20 +7424,20 @@ export default function AdminDashboard(props: Props) {
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
               {/* LEFT BOX: THÊM LỊCH TRỰC MỚI (Col-span 5) */}
               <div className="lg:col-span-5 bg-white p-7 rounded-3xl border border-slate-200/80 shadow-xs space-y-5">
-                <h3 className="text-xs font-black text-slate-400 uppercase tracking-widest border-b border-slate-100 pb-3">
+                <h3 className="text-sm font-black text-slate-400 uppercase tracking-widest border-b border-slate-100 pb-3">
                   THÊM LỊCH TRỰC MỚI
                 </h3>
 
-                <form onSubmit={handleSaveSchedule} className="space-y-4 text-xs">
+                <form onSubmit={handleSaveSchedule} className="space-y-4 text-sm">
                   <div>
-                    <label className="block text-xs font-black text-slate-700 mb-1.5">
+                    <label className="block text-sm font-black text-slate-700 mb-1.5">
                       Chọn Bác sĩ *
                     </label>
                     <select
                       required
                       value={scheduleForm.data.doctor_id}
                       onChange={(e) => scheduleForm.setData('doctor_id', e.target.value)}
-                      className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-xs font-bold text-slate-800 outline-none focus:border-[#004b87] focus:bg-white cursor-pointer"
+                      className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-sm font-bold text-slate-800 outline-none focus:border-[#004b87] focus:bg-white cursor-pointer"
                     >
                       <option value="">-- Chọn bác sĩ --</option>
                       {doctors.map(d => (
@@ -7332,14 +7447,14 @@ export default function AdminDashboard(props: Props) {
                   </div>
 
                   <div>
-                    <label className="block text-xs font-black text-slate-700 mb-1.5">
+                    <label className="block text-sm font-black text-slate-700 mb-1.5">
                       Thứ trong tuần *
                     </label>
                     <select
                       required
                       value={scheduleForm.data.day_of_week}
                       onChange={(e) => scheduleForm.setData('day_of_week', e.target.value)}
-                      className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-xs font-bold text-slate-800 outline-none focus:border-[#004b87] focus:bg-white cursor-pointer"
+                      className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-sm font-bold text-slate-800 outline-none focus:border-[#004b87] focus:bg-white cursor-pointer"
                     >
                       <option value="Thứ Hai (Thứ 2)">Thứ Hai (Thứ 2)</option>
                       <option value="Thứ Ba (Thứ 3)">Thứ Ba (Thứ 3)</option>
@@ -7353,7 +7468,7 @@ export default function AdminDashboard(props: Props) {
 
                   <div className="grid grid-cols-2 gap-3">
                     <div>
-                      <label className="block text-xs font-black text-slate-700 mb-1.5">
+                      <label className="block text-sm font-black text-slate-700 mb-1.5">
                         Bắt đầu *
                       </label>
                       <input
@@ -7362,11 +7477,11 @@ export default function AdminDashboard(props: Props) {
                         placeholder="08:00"
                         value={scheduleForm.data.start_time}
                         onChange={(e) => scheduleForm.setData('start_time', e.target.value)}
-                        className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-xs font-bold text-slate-800 outline-none focus:border-[#004b87] focus:bg-white"
+                        className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-sm font-bold text-slate-800 outline-none focus:border-[#004b87] focus:bg-white"
                       />
                     </div>
                     <div>
-                      <label className="block text-xs font-black text-slate-700 mb-1.5">
+                      <label className="block text-sm font-black text-slate-700 mb-1.5">
                         Kết thúc *
                       </label>
                       <input
@@ -7375,19 +7490,19 @@ export default function AdminDashboard(props: Props) {
                         placeholder="17:00"
                         value={scheduleForm.data.end_time}
                         onChange={(e) => scheduleForm.setData('end_time', e.target.value)}
-                        className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-xs font-bold text-slate-800 outline-none focus:border-[#004b87] focus:bg-white"
+                        className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-sm font-bold text-slate-800 outline-none focus:border-[#004b87] focus:bg-white"
                       />
                     </div>
                   </div>
 
                   <div>
-                    <label className="block text-xs font-black text-slate-700 mb-1.5">
+                    <label className="block text-sm font-black text-slate-700 mb-1.5">
                       Chi nhánh / Cơ sở
                     </label>
                     <select
                       value={scheduleForm.data.branch}
                       onChange={(e) => scheduleForm.setData('branch', e.target.value)}
-                      className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-xs font-bold text-slate-800 outline-none focus:border-[#004b87] focus:bg-white cursor-pointer"
+                      className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-sm font-bold text-slate-800 outline-none focus:border-[#004b87] focus:bg-white cursor-pointer"
                     >
                       <option value="Hà Nội (Hồ Tây)">Hà Nội (Hồ Tây)</option>
                       <option value="Cơ sở Chính: 123 Nguyễn Đức Cảnh, Hải Phòng">Cơ sở Chính: Hải Phòng</option>
@@ -7397,7 +7512,7 @@ export default function AdminDashboard(props: Props) {
                   <button
                     type="submit"
                     disabled={scheduleForm.processing}
-                    className="w-full py-3.5 bg-[#b89a67] hover:bg-[#a38553] text-white font-black text-xs uppercase tracking-wider rounded-xl shadow-md transition-all cursor-pointer mt-2"
+                    className="w-full py-3.5 bg-[#b89a67] hover:bg-[#a38553] text-white font-black text-sm uppercase tracking-wider rounded-xl shadow-md transition-all cursor-pointer mt-2"
                   >
                     THÊM CA TRỰC
                   </button>
@@ -7406,12 +7521,12 @@ export default function AdminDashboard(props: Props) {
 
               {/* RIGHT BOX: DANH SÁCH LỊCH TRỰC HIỆN TẠI (Col-span 7) */}
               <div className="lg:col-span-7 bg-white p-7 rounded-3xl border border-slate-200/80 shadow-xs min-h-[380px] flex flex-col justify-start">
-                <h3 className="text-xs font-black text-slate-400 uppercase tracking-widest border-b border-slate-100 pb-3 mb-6">
+                <h3 className="text-sm font-black text-slate-400 uppercase tracking-widest border-b border-slate-100 pb-3 mb-6">
                   DANH SÁCH LỊCH TRỰC HIỆN TẠI
                 </h3>
 
                 {schedules.length === 0 ? (
-                  <div className="flex-1 flex flex-col items-center justify-center text-center p-12 text-slate-400 text-xs space-y-2">
+                  <div className="flex-1 flex flex-col items-center justify-center text-center p-12 text-slate-400 text-sm space-y-2">
                     <p className="font-semibold">Chưa cấu hình lịch trực cho bác sĩ nào.</p>
                   </div>
                 ) : (
@@ -7423,7 +7538,7 @@ export default function AdminDashboard(props: Props) {
                             <img src={sch.doctor?.avatar || '/assets/doctor_khoi.png'} alt={sch.doctor?.name || 'Bác sĩ'} className="w-full h-full object-cover" />
                           </div>
                           <div>
-                            <h4 className="font-extrabold text-[#004b87] text-xs">{sch.doctor?.name || 'Bác sĩ chuyên khoa'}</h4>
+                            <h4 className="font-extrabold text-[#004b87] text-sm">{sch.doctor?.name || 'Bác sĩ chuyên khoa'}</h4>
                             <p className="text-[11px] font-bold text-slate-600 mt-0.5">{sch.day_of_week} • <span className="text-emerald-700">{sch.start_time || '08:00'} - {sch.end_time || '17:00'}</span></p>
                             <span className="text-[10px] text-slate-400 block italic">{sch.branch || sch.room || 'Hà Nội (Hồ Tây)'}</span>
                           </div>
@@ -7450,7 +7565,7 @@ export default function AdminDashboard(props: Props) {
         {activeTab === 'faqs' && (
           <div className="space-y-6 w-full">
             {/* Top Breadcrumb */}
-            <div className="flex items-center gap-2 text-xs font-semibold text-slate-400">
+            <div className="flex items-center gap-2 text-sm font-semibold text-slate-400">
               <span className="text-amber-700">🏠</span>
               <span>/</span>
               <span className="text-slate-700 font-bold">Câu hỏi thường gặp FAQ</span>
@@ -7462,7 +7577,7 @@ export default function AdminDashboard(props: Props) {
               <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                 <button
                   onClick={handleOpenCreateFaq}
-                  className="flex items-center gap-1.5 bg-[#f97316] hover:bg-[#ea580c] text-white font-extrabold text-xs px-5 py-2.5 rounded-xl transition-all cursor-pointer shadow-md uppercase tracking-wider"
+                  className="flex items-center gap-1.5 bg-[#f97316] hover:bg-[#ea580c] text-white font-extrabold text-sm px-5 py-2.5 rounded-xl transition-all cursor-pointer shadow-md uppercase tracking-wider"
                 >
                   THÊM MỚI
                 </button>
@@ -7473,7 +7588,7 @@ export default function AdminDashboard(props: Props) {
                     placeholder="Tìm kiếm.."
                     value={faqSearchQuery}
                     onChange={(e) => setFaqSearchQuery(e.target.value)}
-                    className="w-full bg-slate-50 border border-slate-200 rounded-xl py-2 pl-3 pr-9 text-xs text-slate-800 outline-none focus:border-[#004b87] focus:bg-white"
+                    className="w-full bg-slate-50 border border-slate-200 rounded-xl py-2 pl-3 pr-9 text-sm text-slate-800 outline-none focus:border-[#004b87] focus:bg-white"
                   />
                   <Search size={14} className="absolute right-3 top-2.5 text-slate-400" />
                 </div>
@@ -7481,9 +7596,9 @@ export default function AdminDashboard(props: Props) {
 
               {/* BATCH ACTION BAR FOR FAQS */}
               {selectedFaqIds.length > 0 && (
-                <div className="bg-[#004b87] text-white p-4 rounded-2xl shadow-xl flex flex-wrap items-center justify-between gap-3 animate-fade-in text-xs font-bold border border-blue-800">
+                <div className="bg-[#004b87] text-white p-4 rounded-2xl shadow-xl flex flex-wrap items-center justify-between gap-3 animate-fade-in text-sm font-bold border border-blue-800">
                   <div className="flex items-center gap-2">
-                    <span className="w-7 h-7 rounded-full bg-white/20 flex items-center justify-center font-mono text-xs">
+                    <span className="w-7 h-7 rounded-full bg-white/20 flex items-center justify-center font-mono text-sm">
                       {selectedFaqIds.length}
                     </span>
                     <span>Đã chọn {selectedFaqIds.length} câu hỏi FAQ</span>
@@ -7499,7 +7614,7 @@ export default function AdminDashboard(props: Props) {
 
               {/* FAQs Table View */}
               <div className="overflow-x-auto">
-                <table className="w-full text-left text-xs text-slate-700 border-collapse">
+                <table className="w-full text-left text-sm text-slate-700 border-collapse">
                   <thead className="bg-slate-50/80 text-slate-400 uppercase font-extrabold tracking-wider border-b border-slate-200">
                     <tr>
                       <th className="p-4 w-10 text-center">
@@ -7546,11 +7661,11 @@ export default function AdminDashboard(props: Props) {
                             {faq.id}
                           </td>
 
-                          <td className="p-4 font-black text-slate-800 uppercase tracking-tight text-xs leading-snug">
+                          <td className="p-4 font-black text-slate-800 uppercase tracking-tight text-sm leading-snug">
                             {faq.question}
                           </td>
 
-                          <td className="p-4 text-slate-500 text-xs leading-relaxed line-clamp-3">
+                          <td className="p-4 text-slate-500 text-sm leading-relaxed line-clamp-3">
                             {faq.answer}
                           </td>
 
@@ -7614,14 +7729,14 @@ export default function AdminDashboard(props: Props) {
 
             {/* 1. KHỐI GIỚI THIỆU CHÍNH (GIỚI THIỆU & TRIẾT LÝ) */}
             <div className="bg-white p-8 rounded-3xl border border-slate-200/80 shadow-xs space-y-6">
-              <h3 className="text-xs font-black text-[#b89a67] uppercase tracking-widest border-b border-slate-100 pb-3">
+              <h3 className="text-sm font-black text-[#b89a67] uppercase tracking-widest border-b border-slate-100 pb-3">
                 1. KHỐI GIỚI THIỆU CHÍNH (GIỚI THIỆU & TRIẾT LÝ)
               </h3>
 
               <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
                 
                 {/* LEFT 8 COLUMNS */}
-                <div className="lg:col-span-8 space-y-4 text-xs">
+                <div className="lg:col-span-8 space-y-4 text-sm">
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
                       <label className="block font-black text-slate-700 uppercase tracking-wider mb-1.5">
@@ -7631,7 +7746,7 @@ export default function AdminDashboard(props: Props) {
                         type="text"
                         value={settingsData.about_eyebrow || 'Về Chúng Tôi'}
                         onChange={(e) => setSettingsData({ ...settingsData, about_eyebrow: e.target.value })}
-                        className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3.5 text-xs text-slate-800 outline-none focus:border-[#004b87] focus:bg-white font-bold"
+                        className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3.5 text-sm text-slate-800 outline-none focus:border-[#004b87] focus:bg-white font-bold"
                       />
                     </div>
 
@@ -7643,7 +7758,7 @@ export default function AdminDashboard(props: Props) {
                         type="text"
                         value={settingsData.about_title || 'MEDIPLUS HP MEDICAL CENTRE'}
                         onChange={(e) => setSettingsData({ ...settingsData, about_title: e.target.value })}
-                        className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3.5 text-xs text-slate-800 outline-none focus:border-[#004b87] focus:bg-white font-black"
+                        className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3.5 text-sm text-slate-800 outline-none focus:border-[#004b87] focus:bg-white font-black"
                       />
                     </div>
                   </div>
@@ -7656,7 +7771,7 @@ export default function AdminDashboard(props: Props) {
                       rows={3}
                       value={settingsData.about_desc1 || ''}
                       onChange={(e) => setSettingsData({ ...settingsData, about_desc1: e.target.value })}
-                      className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3.5 text-xs text-slate-800 outline-none focus:border-[#004b87] focus:bg-white leading-relaxed resize-none"
+                      className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3.5 text-sm text-slate-800 outline-none focus:border-[#004b87] focus:bg-white leading-relaxed resize-none"
                     />
                   </div>
 
@@ -7668,13 +7783,13 @@ export default function AdminDashboard(props: Props) {
                       rows={3}
                       value={settingsData.about_desc2 || ''}
                       onChange={(e) => setSettingsData({ ...settingsData, about_desc2: e.target.value })}
-                      className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3.5 text-xs text-slate-800 outline-none focus:border-[#004b87] focus:bg-white leading-relaxed resize-none"
+                      className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3.5 text-sm text-slate-800 outline-none focus:border-[#004b87] focus:bg-white leading-relaxed resize-none"
                     />
                   </div>
                 </div>
 
                 {/* RIGHT 4 COLUMNS: ẢNH ĐẠI DIỆN PHẦN GIỚI THIỆU */}
-                <div className="lg:col-span-4 space-y-2 text-xs">
+                <div className="lg:col-span-4 space-y-2 text-sm">
                   <label className="block font-black text-slate-700 uppercase tracking-wider mb-1.5">
                     ẢNH ĐẠI DIỆN PHẦN GIỚI THIỆU (ẢNH LỚN TRANG CHỦ)
                   </label>
@@ -7700,7 +7815,7 @@ export default function AdminDashboard(props: Props) {
                       <button
                         type="button"
                         onClick={() => handleOpenMediaPicker('about_main_image')}
-                        className="px-4 py-2 bg-white/95 text-slate-800 font-extrabold rounded-xl text-xs shadow-lg cursor-pointer hover:bg-white transition-all flex items-center gap-1.5"
+                        className="px-4 py-2 bg-white/95 text-slate-800 font-extrabold rounded-xl text-sm shadow-lg cursor-pointer hover:bg-white transition-all flex items-center gap-1.5"
                       >
                         <FolderOpen size={13} className="text-slate-800 fill-slate-200" /> Chọn Ảnh Từ Thư Viện
                       </button>
@@ -7711,7 +7826,7 @@ export default function AdminDashboard(props: Props) {
               </div>
 
               {/* STATS ROW */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 pt-6 border-t border-slate-100 text-xs">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 pt-6 border-t border-slate-100 text-sm">
                 <div>
                   <label className="block font-black text-slate-700 uppercase tracking-wider mb-1.5">
                     ĐẾM SỐ LƯỢNG BÁC SĨ
@@ -7719,7 +7834,7 @@ export default function AdminDashboard(props: Props) {
                   <select
                     value={settingsData.about_doctor_count_type || 'auto'}
                     onChange={(e) => setSettingsData({ ...settingsData, about_doctor_count_type: e.target.value })}
-                    className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-xs font-bold text-slate-800 outline-none focus:border-[#004b87] cursor-pointer"
+                    className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-sm font-bold text-slate-800 outline-none focus:border-[#004b87] cursor-pointer"
                   >
                     <option value="auto">Tự động (Đếm theo số lượng bác sĩ thực tế: {doctors.length})</option>
                     <option value="manual">Nhập thủ công</option>
@@ -7733,7 +7848,7 @@ export default function AdminDashboard(props: Props) {
                   <select
                     value={settingsData.about_customer_count_type || 'auto'}
                     onChange={(e) => setSettingsData({ ...settingsData, about_customer_count_type: e.target.value })}
-                    className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-xs font-bold text-slate-800 outline-none focus:border-[#004b87] cursor-pointer"
+                    className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-sm font-bold text-slate-800 outline-none focus:border-[#004b87] cursor-pointer"
                   >
                     <option value="auto">Tự động CRM (Cơ sở + Số lượng khách đã liên hệ)</option>
                     <option value="manual">Nhập thủ công</option>
@@ -7748,7 +7863,7 @@ export default function AdminDashboard(props: Props) {
                     type="number"
                     value={settingsData.about_customer_base || '10000'}
                     onChange={(e) => setSettingsData({ ...settingsData, about_customer_base: e.target.value })}
-                    className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-xs text-slate-800 outline-none focus:border-[#004b87] font-bold"
+                    className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-sm text-slate-800 outline-none focus:border-[#004b87] font-bold"
                   />
                 </div>
 
@@ -7760,7 +7875,7 @@ export default function AdminDashboard(props: Props) {
                     type="text"
                     value={settingsData.about_customer_crm || '+1'}
                     onChange={(e) => setSettingsData({ ...settingsData, about_customer_crm: e.target.value })}
-                    className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-xs text-slate-800 outline-none focus:border-[#004b87] font-bold"
+                    className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-sm text-slate-800 outline-none focus:border-[#004b87] font-bold"
                   />
                 </div>
               </div>
@@ -7769,11 +7884,11 @@ export default function AdminDashboard(props: Props) {
 
             {/* 2. CÂU CHUYỆN NHÀ SÁNG LẬP (FOUNDER STORY) */}
             <div className="bg-white p-8 rounded-3xl border border-slate-200/80 shadow-xs space-y-6">
-              <h3 className="text-xs font-black text-[#b89a67] uppercase tracking-widest border-b border-slate-100 pb-3">
+              <h3 className="text-sm font-black text-[#b89a67] uppercase tracking-widest border-b border-slate-100 pb-3">
                 2. CÂU CHUYỆN NHÀ SÁNG LẬP (FOUNDER STORY)
               </h3>
 
-              <div className="space-y-4 text-xs">
+              <div className="space-y-4 text-sm">
                 <div>
                   <label className="block font-black text-slate-700 uppercase tracking-wider mb-1.5">
                     TIÊU ĐỀ CÂU CHUYỆN
@@ -7782,7 +7897,7 @@ export default function AdminDashboard(props: Props) {
                     type="text"
                     value={settingsData.about_founder_title || 'Triết Lý Làm Đẹp Chuẩn Y Khoa & Vẻ Đẹp Độc Bản'}
                     onChange={(e) => setSettingsData({ ...settingsData, about_founder_title: e.target.value })}
-                    className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3.5 text-xs text-slate-800 outline-none focus:border-[#004b87] font-extrabold"
+                    className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3.5 text-sm text-slate-800 outline-none focus:border-[#004b87] font-extrabold"
                   />
                 </div>
 
@@ -7795,7 +7910,7 @@ export default function AdminDashboard(props: Props) {
                       rows={4}
                       value={settingsData.about_founder_desc1 || ''}
                       onChange={(e) => setSettingsData({ ...settingsData, about_founder_desc1: e.target.value })}
-                      className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3.5 text-xs text-slate-800 outline-none focus:border-[#004b87] leading-relaxed resize-none"
+                      className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3.5 text-sm text-slate-800 outline-none focus:border-[#004b87] leading-relaxed resize-none"
                     />
                   </div>
 
@@ -7807,7 +7922,7 @@ export default function AdminDashboard(props: Props) {
                       rows={4}
                       value={settingsData.about_founder_desc2 || ''}
                       onChange={(e) => setSettingsData({ ...settingsData, about_founder_desc2: e.target.value })}
-                      className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3.5 text-xs text-slate-800 outline-none focus:border-[#004b87] leading-relaxed resize-none"
+                      className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3.5 text-sm text-slate-800 outline-none focus:border-[#004b87] leading-relaxed resize-none"
                     />
                   </div>
                 </div>
@@ -7821,7 +7936,7 @@ export default function AdminDashboard(props: Props) {
                       type="text"
                       value={settingsData.about_founder_quote || ''}
                       onChange={(e) => setSettingsData({ ...settingsData, about_founder_quote: e.target.value })}
-                      className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3.5 text-xs text-slate-800 outline-none focus:border-[#004b87] italic"
+                      className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3.5 text-sm text-slate-800 outline-none focus:border-[#004b87] italic"
                     />
                   </div>
 
@@ -7833,7 +7948,7 @@ export default function AdminDashboard(props: Props) {
                       type="text"
                       value={settingsData.about_founder_author || 'BSCKII Đoàn Khôi'}
                       onChange={(e) => setSettingsData({ ...settingsData, about_founder_author: e.target.value })}
-                      className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3.5 text-xs text-slate-800 outline-none focus:border-[#004b87] font-bold"
+                      className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3.5 text-sm text-slate-800 outline-none focus:border-[#004b87] font-bold"
                     />
                   </div>
                 </div>
@@ -7866,7 +7981,7 @@ export default function AdminDashboard(props: Props) {
                           <button
                             type="button"
                             onClick={() => handleOpenMediaPicker('about_story_img1')}
-                            className="px-3 py-1.5 bg-white text-slate-800 font-bold rounded-lg text-xs cursor-pointer flex items-center gap-1"
+                            className="px-3 py-1.5 bg-white text-slate-800 font-bold rounded-lg text-sm cursor-pointer flex items-center gap-1"
                           >
                             <FolderOpen size={11} className="text-slate-700 fill-slate-100" /> Đổi ảnh 1
                           </button>
@@ -7894,7 +8009,7 @@ export default function AdminDashboard(props: Props) {
                           <button
                             type="button"
                             onClick={() => handleOpenMediaPicker('about_story_img2')}
-                            className="px-3 py-1.5 bg-white text-slate-800 font-bold rounded-lg text-xs cursor-pointer flex items-center gap-1"
+                            className="px-3 py-1.5 bg-white text-slate-800 font-bold rounded-lg text-sm cursor-pointer flex items-center gap-1"
                           >
                             <FolderOpen size={11} className="text-slate-700 fill-slate-100" /> Đổi ảnh 2
                           </button>
@@ -7922,7 +8037,7 @@ export default function AdminDashboard(props: Props) {
                           <button
                             type="button"
                             onClick={() => handleOpenMediaPicker('about_story_img3')}
-                            className="px-3 py-1.5 bg-white text-slate-800 font-bold rounded-lg text-xs cursor-pointer flex items-center gap-1"
+                            className="px-3 py-1.5 bg-white text-slate-800 font-bold rounded-lg text-sm cursor-pointer flex items-center gap-1"
                           >
                             <FolderOpen size={11} className="text-slate-700 fill-slate-100" /> Đổi ảnh 3
                           </button>
@@ -7941,7 +8056,7 @@ export default function AdminDashboard(props: Props) {
             <div className="flex justify-end pt-2">
               <button
                 type="submit"
-                className="px-8 py-3.5 bg-[#b89a67] hover:bg-[#a38553] text-white font-extrabold text-xs uppercase tracking-wider rounded-xl shadow-lg cursor-pointer transition-all flex items-center gap-2"
+                className="px-8 py-3.5 bg-[#b89a67] hover:bg-[#a38553] text-white font-extrabold text-sm uppercase tracking-wider rounded-xl shadow-lg cursor-pointer transition-all flex items-center gap-2"
               >
                 <Save size={16} /> Lưu Cấu Hình Trang Giới Thiệu
               </button>
@@ -7956,7 +8071,7 @@ export default function AdminDashboard(props: Props) {
             <h2 className="text-xl font-extrabold text-[#004b87]">Quản Lý Nội Dung Trang Chính Sách</h2>
 
             {/* Sub-tabs horizontal Bar */}
-            <div className="flex items-center gap-2 border-b border-slate-200 pb-2 overflow-x-auto text-xs font-bold">
+            <div className="flex items-center gap-2 border-b border-slate-200 pb-2 overflow-x-auto text-sm font-bold">
               {[
                 { key: 'terms', label: '1. Điều khoản sử dụng' },
                 { key: 'privacy', label: '2. Chính sách bảo mật' },
@@ -7981,7 +8096,7 @@ export default function AdminDashboard(props: Props) {
 
             {/* Main Policy Box */}
             <div className="bg-white border border-slate-200/80 rounded-3xl p-8 shadow-xs space-y-5">
-              <h3 className="text-xs font-black text-slate-400 uppercase tracking-widest border-b border-slate-100 pb-3">
+              <h3 className="text-sm font-black text-slate-400 uppercase tracking-widest border-b border-slate-100 pb-3">
                 NỘI DUNG {
                   activePolicyTab === 'terms' ? 'ĐIỀU KHỎAN SỬ DỤNG' :
                   activePolicyTab === 'privacy' ? 'CHÍNH SÁCH BẢO MẬT' :
@@ -7992,7 +8107,7 @@ export default function AdminDashboard(props: Props) {
 
               {/* RICH TEXT EDITOR TOOLBAR */}
               <div className="border border-slate-200 rounded-2xl overflow-hidden bg-slate-50">
-                <div className="flex flex-wrap items-center gap-1 p-2 bg-white border-b border-slate-200 text-xs">
+                <div className="flex flex-wrap items-center gap-1 p-2 bg-white border-b border-slate-200 text-sm">
                   <button type="button" onClick={() => handleFormatPolicy('bold')} className="p-2 hover:bg-slate-100 rounded-lg font-black text-slate-800" title="In đậm (Bold)">B</button>
                   <button type="button" onClick={() => handleFormatPolicy('italic')} className="p-2 hover:bg-slate-100 rounded-lg italic font-serif text-slate-800" title="In nghiêng (Italic)">I</button>
                   <button type="button" onClick={() => handleFormatPolicy('underline')} className="p-2 hover:bg-slate-100 rounded-lg underline text-slate-800" title="Gạch chân (Underline)">U</button>
@@ -8027,7 +8142,7 @@ export default function AdminDashboard(props: Props) {
                     }
                   }}
                   dangerouslySetInnerHTML={{ __html: policyContent }}
-                  className="p-6 min-h-[350px] outline-none text-xs text-slate-800 leading-relaxed bg-white prose max-w-none"
+                  className="p-6 min-h-[350px] outline-none text-sm text-slate-800 leading-relaxed bg-white prose max-w-none"
                 />
               </div>
 
@@ -8044,7 +8159,7 @@ export default function AdminDashboard(props: Props) {
                     onSuccess: () => triggerNotification('Đã lưu nội dung chính sách thành công!')
                   });
                 }}
-                className="px-8 py-3.5 bg-[#b89a67] hover:bg-[#a38553] text-white font-extrabold text-xs uppercase tracking-wider rounded-xl shadow-lg cursor-pointer transition-all flex items-center gap-2"
+                className="px-8 py-3.5 bg-[#b89a67] hover:bg-[#a38553] text-white font-extrabold text-sm uppercase tracking-wider rounded-xl shadow-lg cursor-pointer transition-all flex items-center gap-2"
               >
                 <Save size={16} /> Lưu Thay Đổi Chính Sách
               </button>
@@ -8057,7 +8172,7 @@ export default function AdminDashboard(props: Props) {
           <form onSubmit={handleSaveSettings} className="space-y-6 w-full pb-12">
             <h2 className="text-xl font-extrabold text-[#004b87]">Cấu Hình Thông Tin Hệ Thống</h2>
 
-            <div className="bg-white border border-slate-200/80 rounded-3xl p-8 shadow-xs space-y-6 text-xs">
+            <div className="bg-white border border-slate-200/80 rounded-3xl p-8 shadow-xs space-y-6 text-sm">
               
               {/* CLINIC NAME */}
               <div>
@@ -8068,7 +8183,7 @@ export default function AdminDashboard(props: Props) {
                   type="text"
                   value={settingsData.clinic_name || ''}
                   onChange={(e) => setSettingsData({ ...settingsData, clinic_name: e.target.value })}
-                  className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3.5 text-xs text-slate-800 outline-none focus:border-[#004b87] focus:bg-white font-bold"
+                  className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3.5 text-sm text-slate-800 outline-none focus:border-[#004b87] focus:bg-white font-bold"
                 />
               </div>
 
@@ -8089,7 +8204,7 @@ export default function AdminDashboard(props: Props) {
                         hotline_1_clean: val.replace(/\s+/g, '') 
                       });
                     }}
-                    className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3.5 text-xs text-slate-800 outline-none focus:border-[#004b87] focus:bg-white font-bold font-mono"
+                    className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3.5 text-sm text-slate-800 outline-none focus:border-[#004b87] focus:bg-white font-bold font-mono"
                   />
                 </div>
 
@@ -8108,7 +8223,7 @@ export default function AdminDashboard(props: Props) {
                         hotline_2_clean: val.replace(/\s+/g, '') 
                       });
                     }}
-                    className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3.5 text-xs text-slate-800 outline-none focus:border-[#004b87] focus:bg-white font-bold font-mono"
+                    className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3.5 text-sm text-slate-800 outline-none focus:border-[#004b87] focus:bg-white font-bold font-mono"
                   />
                 </div>
               </div>
@@ -8122,7 +8237,7 @@ export default function AdminDashboard(props: Props) {
                     type="email"
                     value={settingsData.email || ''}
                     onChange={(e) => setSettingsData({ ...settingsData, email: e.target.value })}
-                    className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3.5 text-xs text-slate-800 outline-none focus:border-[#004b87] focus:bg-white font-bold"
+                    className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3.5 text-sm text-slate-800 outline-none focus:border-[#004b87] focus:bg-white font-bold"
                   />
                 </div>
 
@@ -8134,7 +8249,7 @@ export default function AdminDashboard(props: Props) {
                     type="text"
                     value={settingsData.working_hours || ''}
                     onChange={(e) => setSettingsData({ ...settingsData, working_hours: e.target.value })}
-                    className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3.5 text-xs text-slate-800 outline-none focus:border-[#004b87] focus:bg-white font-bold"
+                    className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3.5 text-sm text-slate-800 outline-none focus:border-[#004b87] focus:bg-white font-bold"
                   />
                 </div>
               </div>
@@ -8147,7 +8262,7 @@ export default function AdminDashboard(props: Props) {
                   type="text"
                   value={settingsData.address || ''}
                   onChange={(e) => setSettingsData({ ...settingsData, address: e.target.value })}
-                  className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3.5 text-xs text-slate-800 outline-none focus:border-[#004b87] focus:bg-white font-bold"
+                  className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3.5 text-sm text-slate-800 outline-none focus:border-[#004b87] focus:bg-white font-bold"
                 />
               </div>
 
@@ -8165,11 +8280,24 @@ export default function AdminDashboard(props: Props) {
                     <div className="h-36 rounded-2xl border border-slate-200 bg-slate-50 hover:bg-slate-100/80 transition-colors p-4 flex flex-col items-center justify-center text-center cursor-pointer group relative overflow-hidden"
                          onClick={() => handleOpenMediaPicker('logo_dark')}>
                       {settingsData.logo_dark ? (
-                        <img src={settingsData.logo_dark} alt="Logo tối" className="max-h-20 object-contain" />
+                        <>
+                          <img src={settingsData.logo_dark} alt="Logo tối" className="max-h-20 object-contain" onError={(e) => { (e.target as HTMLImageElement).src = '/assets/logo.png'; }} />
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setSettingsData({ ...settingsData, logo_dark: '' });
+                            }}
+                            className="absolute top-2 right-2 p-1.5 bg-rose-600 hover:bg-rose-700 text-white rounded-lg shadow-md cursor-pointer transition-all z-10"
+                            title="Xóa logo"
+                          >
+                            <Trash2 size={13} />
+                          </button>
+                        </>
                       ) : (
                         <div className="flex flex-col items-center gap-2 text-slate-400 group-hover:text-[#004b87]">
                           <ImageIcon size={24} />
-                          <span className="text-xs font-bold">Chọn logo từ thư viện</span>
+                          <span className="text-sm font-bold">Chọn logo từ thư viện</span>
                         </div>
                       )}
                     </div>
@@ -8183,11 +8311,24 @@ export default function AdminDashboard(props: Props) {
                     <div className="h-36 rounded-2xl border border-blue-200 bg-blue-50/60 hover:bg-blue-100/60 transition-colors p-4 flex flex-col items-center justify-center text-center cursor-pointer group relative overflow-hidden"
                          onClick={() => handleOpenMediaPicker('logo_light')}>
                       {settingsData.logo_light ? (
-                        <img src={settingsData.logo_light} alt="Logo sáng" className="max-h-20 object-contain" />
+                        <>
+                          <img src={settingsData.logo_light} alt="Logo sáng" className="max-h-20 object-contain" onError={(e) => { (e.target as HTMLImageElement).src = '/assets/logo.png'; }} />
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setSettingsData({ ...settingsData, logo_light: '' });
+                            }}
+                            className="absolute top-2 right-2 p-1.5 bg-rose-600 hover:bg-rose-700 text-white rounded-lg shadow-md cursor-pointer transition-all z-10"
+                            title="Xóa logo"
+                          >
+                            <Trash2 size={13} />
+                          </button>
+                        </>
                       ) : (
                         <div className="flex flex-col items-center gap-2 text-blue-600 group-hover:text-[#004b87]">
                           <ImageIcon size={24} />
-                          <span className="text-xs font-bold">Chọn logo từ thư viện</span>
+                          <span className="text-sm font-bold">Chọn logo từ thư viện</span>
                         </div>
                       )}
                     </div>
@@ -8201,11 +8342,24 @@ export default function AdminDashboard(props: Props) {
                     <div className="h-36 rounded-2xl border border-slate-200 bg-slate-50 hover:bg-slate-100/80 transition-colors p-4 flex flex-col items-center justify-center text-center cursor-pointer group relative overflow-hidden"
                          onClick={() => handleOpenMediaPicker('logo_favicon')}>
                       {settingsData.logo_favicon ? (
-                        <img src={settingsData.logo_favicon} alt="Favicon" className="max-h-16 object-contain" />
+                        <>
+                          <img src={settingsData.logo_favicon} alt="Favicon" className="max-h-16 object-contain" onError={(e) => { (e.target as HTMLImageElement).src = '/assets/logo.png'; }} />
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setSettingsData({ ...settingsData, logo_favicon: '' });
+                            }}
+                            className="absolute top-2 right-2 p-1.5 bg-rose-600 hover:bg-rose-700 text-white rounded-lg shadow-md cursor-pointer transition-all z-10"
+                            title="Xóa logo"
+                          >
+                            <Trash2 size={13} />
+                          </button>
+                        </>
                       ) : (
                         <div className="flex flex-col items-center gap-2 text-slate-400 group-hover:text-[#004b87]">
                           <ImageIcon size={24} />
-                          <span className="text-xs font-bold">Chọn logo từ thư viện</span>
+                          <span className="text-sm font-bold">Chọn logo từ thư viện</span>
                         </div>
                       )}
                     </div>
@@ -8219,11 +8373,24 @@ export default function AdminDashboard(props: Props) {
                     <div className="h-36 rounded-2xl border border-blue-200 bg-blue-50/60 hover:bg-blue-100/60 transition-colors p-4 flex flex-col items-center justify-center text-center cursor-pointer group relative overflow-hidden"
                          onClick={() => handleOpenMediaPicker('logo_favicon_light')}>
                       {settingsData.logo_favicon_light ? (
-                        <img src={settingsData.logo_favicon_light} alt="Favicon sáng" className="max-h-16 object-contain" />
+                        <>
+                          <img src={settingsData.logo_favicon_light} alt="Favicon sáng" className="max-h-16 object-contain" onError={(e) => { (e.target as HTMLImageElement).src = '/assets/logo.png'; }} />
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setSettingsData({ ...settingsData, logo_favicon_light: '' });
+                            }}
+                            className="absolute top-2 right-2 p-1.5 bg-rose-600 hover:bg-rose-700 text-white rounded-lg shadow-md cursor-pointer transition-all z-10"
+                            title="Xóa logo"
+                          >
+                            <Trash2 size={13} />
+                          </button>
+                        </>
                       ) : (
                         <div className="flex flex-col items-center gap-2 text-blue-600 group-hover:text-[#004b87]">
                           <ImageIcon size={24} />
-                          <span className="text-xs font-bold">Chọn logo từ thư viện</span>
+                          <span className="text-sm font-bold">Chọn logo từ thư viện</span>
                         </div>
                       )}
                     </div>
@@ -8243,7 +8410,7 @@ export default function AdminDashboard(props: Props) {
                       type="text"
                       value={settingsData.social_facebook || ''}
                       onChange={(e) => setSettingsData({ ...settingsData, social_facebook: e.target.value })}
-                      className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-xs text-slate-800 outline-none focus:border-[#004b87]"
+                      className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-sm text-slate-800 outline-none focus:border-[#004b87]"
                     />
                   </div>
 
@@ -8253,7 +8420,7 @@ export default function AdminDashboard(props: Props) {
                       type="text"
                       value={settingsData.zalo_link || ''}
                       onChange={(e) => setSettingsData({ ...settingsData, zalo_link: e.target.value })}
-                      className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-xs text-slate-800 outline-none focus:border-[#004b87]"
+                      className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-sm text-slate-800 outline-none focus:border-[#004b87]"
                     />
                   </div>
 
@@ -8263,7 +8430,7 @@ export default function AdminDashboard(props: Props) {
                       type="text"
                       value={settingsData.social_youtube || ''}
                       onChange={(e) => setSettingsData({ ...settingsData, social_youtube: e.target.value })}
-                      className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-xs text-slate-800 outline-none focus:border-[#004b87]"
+                      className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-sm text-slate-800 outline-none focus:border-[#004b87]"
                     />
                   </div>
                 </div>
@@ -8275,7 +8442,7 @@ export default function AdminDashboard(props: Props) {
             <div className="flex justify-end">
               <button
                 type="submit"
-                className="px-8 py-3.5 bg-[#b89a67] hover:bg-[#a38553] text-white font-extrabold text-xs uppercase tracking-wider rounded-xl shadow-lg cursor-pointer transition-all flex items-center gap-2"
+                className="px-8 py-3.5 bg-[#b89a67] hover:bg-[#a38553] text-white font-extrabold text-sm uppercase tracking-wider rounded-xl shadow-lg cursor-pointer transition-all flex items-center gap-2"
               >
                 <Save size={16} /> Lưu Cấu Hình
               </button>
@@ -8291,7 +8458,7 @@ export default function AdminDashboard(props: Props) {
             <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4 bg-white p-6 rounded-3xl border border-slate-200/80 shadow-xs">
               <div>
                 <h2 className="text-xl font-extrabold text-[#004b87]">Quản lý tệp</h2>
-                <p className="text-xs text-slate-500 mt-0.5">Quản lý kho tài nguyên hình ảnh hệ thống dùng chung cho bài viết, dịch vụ, bác sĩ & banner</p>
+                <p className="text-sm text-slate-500 mt-0.5">Quản lý kho tài nguyên hình ảnh hệ thống dùng chung cho bài viết, dịch vụ, bác sĩ & banner</p>
               </div>
 
               <div className="flex flex-wrap items-center gap-2.5 w-full lg:w-auto">
@@ -8303,7 +8470,7 @@ export default function AdminDashboard(props: Props) {
                     placeholder="Nhập tên tệp..."
                     value={mediaSearchQuery}
                     onChange={(e) => setMediaSearchQuery(e.target.value)}
-                    className="w-full bg-slate-50 border border-slate-200 rounded-xl py-2 pl-8 pr-3 text-xs text-slate-800 outline-none focus:border-[#004b87] focus:bg-white"
+                    className="w-full bg-slate-50 border border-slate-200 rounded-xl py-2 pl-8 pr-3 text-sm text-slate-800 outline-none focus:border-[#004b87] focus:bg-white"
                   />
                 </div>
 
@@ -8330,7 +8497,7 @@ export default function AdminDashboard(props: Props) {
                       }
                     }
                   }}
-                  className="px-4 py-2 bg-white border border-slate-300 hover:bg-slate-50 text-slate-700 font-extrabold text-xs rounded-xl shadow-2xs cursor-pointer transition-all uppercase tracking-wider flex items-center gap-1.5"
+                  className="px-4 py-2 bg-white border border-slate-300 hover:bg-slate-50 text-slate-700 font-extrabold text-sm rounded-xl shadow-2xs cursor-pointer transition-all uppercase tracking-wider flex items-center gap-1.5"
                 >
                   <Plus size={14} /> TẠO THƯ MỤC
                 </button>
@@ -8345,7 +8512,7 @@ export default function AdminDashboard(props: Props) {
                       setSelectedMediaIds(mediaFiles.map(m => m.id));
                     }
                   }}
-                  className="px-4 py-2 bg-white border border-slate-300 hover:bg-slate-50 text-slate-700 font-extrabold text-xs rounded-xl shadow-2xs cursor-pointer transition-all uppercase tracking-wider"
+                  className="px-4 py-2 bg-white border border-slate-300 hover:bg-slate-50 text-slate-700 font-extrabold text-sm rounded-xl shadow-2xs cursor-pointer transition-all uppercase tracking-wider"
                 >
                   {selectedMediaIds.length === mediaFiles.length && mediaFiles.length > 0 ? 'BỎ CHỌN TẤT CẢ' : 'CHỌN TẤT CẢ'}
                 </button>
@@ -8364,7 +8531,7 @@ export default function AdminDashboard(props: Props) {
                         });
                       }
                     }}
-                    className="px-4 py-2 bg-rose-600 hover:bg-rose-700 text-white font-extrabold text-xs rounded-xl shadow-xs cursor-pointer transition-all uppercase tracking-wider flex items-center gap-1.5"
+                    className="px-4 py-2 bg-rose-600 hover:bg-rose-700 text-white font-extrabold text-sm rounded-xl shadow-xs cursor-pointer transition-all uppercase tracking-wider flex items-center gap-1.5"
                   >
                     <Trash2 size={14} /> XÓA ({selectedMediaIds.length})
                   </button>
@@ -8377,7 +8544,7 @@ export default function AdminDashboard(props: Props) {
                     const el = document.getElementById('media-drag-upload-input');
                     if (el) el.click();
                   }}
-                  className="px-5 py-2 bg-[#f97316] hover:bg-[#ea580c] text-white font-extrabold text-xs rounded-xl shadow-md cursor-pointer transition-all uppercase tracking-wider flex items-center gap-1.5"
+                  className="px-5 py-2 bg-[#f97316] hover:bg-[#ea580c] text-white font-extrabold text-sm rounded-xl shadow-md cursor-pointer transition-all uppercase tracking-wider flex items-center gap-1.5"
                 >
                   ▲ CHỌN TỆP
                 </button>
@@ -8388,7 +8555,7 @@ export default function AdminDashboard(props: Props) {
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
               
               {/* LEFT SIDEBAR: FOLDER TREE */}
-              <div className="lg:col-span-3 bg-white border border-slate-200/80 rounded-3xl p-6 shadow-xs space-y-4 text-xs">
+              <div className="lg:col-span-3 bg-white border border-slate-200/80 rounded-3xl p-6 shadow-xs space-y-4 text-sm">
                 <div className="flex items-center justify-between border-b border-slate-100 pb-3">
                   <h3 className="font-black text-slate-700 uppercase tracking-wider flex items-center gap-2">
                     <FolderOpen size={16} className="text-[#004b87]" /> THƯ MỤC
@@ -8517,7 +8684,7 @@ export default function AdminDashboard(props: Props) {
                               setCollapsedFolders(prev => prev.filter(p => p !== fPath));
                             }
                           }}
-                          className={`flex-1 text-left px-2.5 py-2 rounded-2xl flex items-center justify-between transition-all cursor-pointer text-xs ${
+                          className={`flex-1 text-left px-2.5 py-2 rounded-2xl flex items-center justify-between transition-all cursor-pointer text-sm ${
                             currentFolderPath === fPath
                               ? 'bg-amber-100/70 text-amber-900 font-extrabold border border-amber-300 shadow-2xs'
                               : 'hover:bg-slate-50 text-slate-600 border border-transparent'
@@ -8548,7 +8715,7 @@ export default function AdminDashboard(props: Props) {
                           triggerNotification(`Đã xóa thư mục "${folderName}"!`);
                         }
                       }}
-                      className="w-full py-2 bg-rose-50 hover:bg-rose-100 text-rose-600 font-bold rounded-xl text-xs border border-rose-200 transition-colors flex items-center justify-center gap-1.5 cursor-pointer"
+                      className="w-full py-2 bg-rose-50 hover:bg-rose-100 text-rose-600 font-bold rounded-xl text-sm border border-rose-200 transition-colors flex items-center justify-center gap-1.5 cursor-pointer"
                     >
                       <Trash2 size={13} /> Xóa thư mục "{currentFolderPath.split('/').pop()}"
                     </button>
@@ -8588,7 +8755,7 @@ export default function AdminDashboard(props: Props) {
                 >
                   {/* BREADCRUMB NAVIGATION & UPLOAD PROMPT */}
                   <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 bg-slate-50 p-4 rounded-2xl border border-slate-200/80">
-                    <div className="flex flex-wrap items-center gap-2 text-xs font-bold text-slate-700">
+                    <div className="flex flex-wrap items-center gap-2 text-sm font-bold text-slate-700">
                       <button
                         type="button"
                         onClick={() => setCurrentFolderPath('root')}
@@ -8630,7 +8797,7 @@ export default function AdminDashboard(props: Props) {
 
                   {/* UPLOADING SPINNER INDICATOR */}
                   {isUploadingMedia && (
-                    <div className="p-4 bg-blue-50 border border-blue-200 rounded-2xl flex items-center justify-center gap-3 text-xs font-bold text-[#004b87]">
+                    <div className="p-4 bg-blue-50 border border-blue-200 rounded-2xl flex items-center justify-center gap-3 text-sm font-bold text-[#004b87]">
                       <div className="w-5 h-5 border-2 border-[#004b87] border-t-transparent rounded-full animate-spin" />
                       <span>Đang tải tệp hình ảnh lên máy chủ, vui lòng đợi...</span>
                     </div>
@@ -8689,7 +8856,7 @@ export default function AdminDashboard(props: Props) {
                                 >
                                   <FolderOpen size={32} className="text-amber-500 fill-amber-100 group-hover:scale-110 transition-transform shrink-0" />
                                   <div className="truncate flex-1">
-                                    <span className="text-xs font-bold text-slate-800 block truncate" title={folderName}>
+                                    <span className="text-sm font-bold text-slate-800 block truncate" title={folderName}>
                                       {folderName}
                                     </span>
                                     <span className="text-[10px] text-slate-400 font-mono">Thư mục con</span>
@@ -8714,7 +8881,7 @@ export default function AdminDashboard(props: Props) {
                     {mediaFiles.length === 0 ? (
                       <div className="py-16 text-center text-slate-400 space-y-3 bg-slate-50/50 rounded-2xl border border-slate-100">
                         <ImageIcon size={44} className="mx-auto text-slate-300" />
-                        <p className="font-bold text-xs text-slate-600">Chưa có tệp hình ảnh nào trong thư viện</p>
+                        <p className="font-bold text-sm text-slate-600">Chưa có tệp hình ảnh nào trong thư viện</p>
                         <p className="text-[11px] text-slate-400">Kéo & thả tập tin vào ô này hoặc bấm "CHỌN TỆP" để bắt đầu tải lên</p>
                       </div>
                     ) : (
@@ -8769,7 +8936,7 @@ export default function AdminDashboard(props: Props) {
                                     navigator.clipboard.writeText(media.url);
                                     triggerNotification('Đã sao chép đường dẫn hình ảnh!');
                                   }}
-                                  className="p-2 bg-white text-slate-800 rounded-xl text-xs font-bold shadow-md cursor-pointer hover:bg-slate-100 transition-transform active:scale-95"
+                                  className="p-2 bg-white text-slate-800 rounded-xl text-sm font-bold shadow-md cursor-pointer hover:bg-slate-100 transition-transform active:scale-95"
                                   title="Sao chép đường dẫn URL"
                                 >
                                   <Copy size={13} />
@@ -8778,7 +8945,7 @@ export default function AdminDashboard(props: Props) {
                                 <button
                                   type="button"
                                   onClick={() => window.open(media.url, '_blank')}
-                                  className="p-2 bg-blue-600 text-white rounded-xl text-xs font-bold shadow-md cursor-pointer hover:bg-blue-700 transition-transform active:scale-95"
+                                  className="p-2 bg-blue-600 text-white rounded-xl text-sm font-bold shadow-md cursor-pointer hover:bg-blue-700 transition-transform active:scale-95"
                                   title="Xem ảnh kích thước đầy đủ"
                                 >
                                   <Eye size={13} />
@@ -8793,7 +8960,7 @@ export default function AdminDashboard(props: Props) {
                                       });
                                     }
                                   }}
-                                  className="p-2 bg-rose-600 text-white rounded-xl text-xs font-bold shadow-md cursor-pointer hover:bg-rose-700 transition-transform active:scale-95"
+                                  className="p-2 bg-rose-600 text-white rounded-xl text-sm font-bold shadow-md cursor-pointer hover:bg-rose-700 transition-transform active:scale-95"
                                   title="Xóa tệp khỏi hệ thống"
                                 >
                                   <Trash2 size={13} />
@@ -8825,15 +8992,15 @@ export default function AdminDashboard(props: Props) {
           >
             <div>
               <h2 className="text-xl font-extrabold text-[#004b87]">Cấu Hình Trạng Thái</h2>
-              <p className="text-xs text-slate-500 mt-1">Thiết lập trạng thái hoạt động hoặc bảo trì của website hệ thống.</p>
+              <p className="text-sm text-slate-500 mt-1">Thiết lập trạng thái hoạt động hoặc bảo trì của website hệ thống.</p>
             </div>
 
             <div className="bg-white border border-slate-200/80 rounded-3xl p-8 shadow-xs space-y-6 max-w-2xl">
-              <h3 className="text-xs font-black text-slate-400 uppercase tracking-widest border-b border-slate-100 pb-3">
+              <h3 className="text-sm font-black text-slate-400 uppercase tracking-widest border-b border-slate-100 pb-3">
                 TRẠNG THÁI HỆ THỐNG
               </h3>
 
-              <div className="space-y-5 text-xs">
+              <div className="space-y-5 text-sm">
                 
                 {/* Radio Option 1 */}
                 <label className="flex items-start gap-3.5 p-4 rounded-2xl border border-slate-200 hover:border-blue-300 transition-colors cursor-pointer bg-slate-50/50">
@@ -8846,7 +9013,7 @@ export default function AdminDashboard(props: Props) {
                     className="mt-0.5 w-4 h-4 text-[#004b87] focus:ring-[#004b87] cursor-pointer"
                   />
                   <div>
-                    <span className="font-extrabold text-slate-800 text-xs block">Hoạt động bình thường</span>
+                    <span className="font-extrabold text-slate-800 text-sm block">Hoạt động bình thường</span>
                     <span className="text-slate-500 text-[11px] mt-0.5 block">Khách hàng truy cập và sử dụng dịch vụ bình thường.</span>
                   </div>
                 </label>
@@ -8862,7 +9029,7 @@ export default function AdminDashboard(props: Props) {
                     className="mt-0.5 w-4 h-4 text-[#004b87] focus:ring-[#004b87] cursor-pointer"
                   />
                   <div>
-                    <span className="font-extrabold text-slate-800 text-xs block">Bảo trì hệ thống</span>
+                    <span className="font-extrabold text-slate-800 text-sm block">Bảo trì hệ thống</span>
                     <span className="text-slate-500 text-[11px] mt-0.5 block">Khách truy cập sẽ thấy màn hình thông báo bảo trì. Chỉ admin mới truy cập được CMS.</span>
                   </div>
                 </label>
@@ -8878,7 +9045,7 @@ export default function AdminDashboard(props: Props) {
                     className="mt-0.5 w-4 h-4 text-[#004b87] focus:ring-[#004b87] cursor-pointer"
                   />
                   <div>
-                    <span className="font-extrabold text-slate-800 text-xs block">Theo thời gian (Sắp ra mắt)</span>
+                    <span className="font-extrabold text-slate-800 text-sm block">Theo thời gian (Sắp ra mắt)</span>
                     <span className="text-slate-500 text-[11px] mt-0.5 block">Đặt lịch bảo trì theo giờ định sẵn.</span>
                   </div>
                 </label>
@@ -8890,7 +9057,7 @@ export default function AdminDashboard(props: Props) {
             <div className="flex justify-start">
               <button
                 type="submit"
-                className="px-8 py-3.5 bg-[#b89a67] hover:bg-[#a38553] text-white font-extrabold text-xs uppercase tracking-wider rounded-xl shadow-lg cursor-pointer transition-all flex items-center gap-2"
+                className="px-8 py-3.5 bg-[#b89a67] hover:bg-[#a38553] text-white font-extrabold text-sm uppercase tracking-wider rounded-xl shadow-lg cursor-pointer transition-all flex items-center gap-2"
               >
                 <Save size={16} /> LƯU CÀI ĐẶT
               </button>
@@ -8902,16 +9069,16 @@ export default function AdminDashboard(props: Props) {
         {activeTab !== 'overview' && activeTab !== 'consultations' && activeTab !== 'appointments' && activeTab !== 'services' && activeTab !== 'articles' && activeTab !== 'authors' && activeTab !== 'media' && activeTab !== 'banners' && activeTab !== 'doctors' && activeTab !== 'results' && activeTab !== 'reviews' && activeTab !== 'schedules' && activeTab !== 'faqs' && activeTab !== 'about' && (
           <div className="bg-white p-8 rounded-2xl border border-slate-200/80 shadow-sm text-sm space-y-4 w-full">
             <h3 className="text-base font-bold text-[#004b87] border-b border-slate-100 pb-4 uppercase">
-              {sidebarItems.find(s => s.id === activeTab)?.label}
+              {sidebarGroups.flatMap(g => g.items).find(s => s.id === activeTab)?.label}
             </h3>
-            <p className="text-slate-500">Đang hiển thị danh mục quản lý <strong>{sidebarItems.find(s => s.id === activeTab)?.label}</strong> của trung tâm.</p>
+            <p className="text-slate-500">Đang hiển thị danh mục quản lý <strong>{sidebarGroups.flatMap(g => g.items).find(s => s.id === activeTab)?.label}</strong> của trung tâm.</p>
           </div>
         )}
 
       {/* MODAL EDIT / CREATE FAQ (CHUẨN HÌNH 3 MOCKUP) */}
       {showFaqModal && (
         <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-xs z-50 flex items-center justify-center p-4">
-          <div className="bg-white border border-slate-200 p-8 rounded-3xl max-w-xl w-full text-xs space-y-5 shadow-2xl relative">
+          <div className="bg-white border border-slate-200 p-8 rounded-3xl max-w-xl w-full text-sm space-y-5 shadow-2xl relative">
             <button
               onClick={() => setShowFaqModal(false)}
               className="absolute top-6 right-6 p-2 text-slate-400 hover:text-slate-700 cursor-pointer"
@@ -8933,7 +9100,7 @@ export default function AdminDashboard(props: Props) {
                   required
                   value={faqForm.data.question}
                   onChange={(e) => faqForm.setData('question', e.target.value)}
-                  className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3.5 text-xs text-slate-800 outline-none focus:border-[#004b87] focus:bg-white font-bold"
+                  className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3.5 text-sm text-slate-800 outline-none focus:border-[#004b87] focus:bg-white font-bold"
                 />
               </div>
 
@@ -8945,7 +9112,7 @@ export default function AdminDashboard(props: Props) {
                   type="number"
                   value={faqForm.data.order}
                   onChange={(e) => faqForm.setData('order', parseInt(e.target.value) || 0)}
-                  className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-xs text-slate-800 outline-none focus:border-[#004b87] focus:bg-white"
+                  className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-sm text-slate-800 outline-none focus:border-[#004b87] focus:bg-white"
                 />
               </div>
 
@@ -8958,7 +9125,7 @@ export default function AdminDashboard(props: Props) {
                   required
                   value={faqForm.data.answer}
                   onChange={(e) => faqForm.setData('answer', e.target.value)}
-                  className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3.5 text-xs text-slate-800 outline-none focus:border-[#004b87] focus:bg-white leading-relaxed resize-none"
+                  className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3.5 text-sm text-slate-800 outline-none focus:border-[#004b87] focus:bg-white leading-relaxed resize-none"
                 />
               </div>
 
@@ -8966,14 +9133,14 @@ export default function AdminDashboard(props: Props) {
                 <button
                   type="button"
                   onClick={() => setShowFaqModal(false)}
-                  className="px-5 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl text-xs cursor-pointer"
+                  className="px-5 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl text-sm cursor-pointer"
                 >
                   Hủy
                 </button>
                 <button
                   type="submit"
                   disabled={faqForm.processing}
-                  className="px-6 py-2.5 bg-[#b89a67] hover:bg-[#a38553] text-white font-extrabold rounded-xl text-xs shadow-md cursor-pointer"
+                  className="px-6 py-2.5 bg-[#b89a67] hover:bg-[#a38553] text-white font-extrabold rounded-xl text-sm shadow-md cursor-pointer"
                 >
                   Lưu lại
                 </button>
@@ -8988,7 +9155,7 @@ export default function AdminDashboard(props: Props) {
       {/* USE CASE 2 MODAL: RESCHEDULE APPOINTMENT */}
       {reschedulingAppointment && (
         <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-white border border-slate-200 p-8 rounded-3xl max-w-md w-full text-xs space-y-5 shadow-2xl relative">
+          <div className="bg-white border border-slate-200 p-8 rounded-3xl max-w-md w-full text-sm space-y-5 shadow-2xl relative">
             <button
               onClick={() => setReschedulingAppointment(null)}
               className="absolute top-6 right-6 p-2 text-slate-400 hover:text-slate-700 cursor-pointer"
@@ -9002,7 +9169,7 @@ export default function AdminDashboard(props: Props) {
               </div>
               <div>
                 <h3 className="text-base font-black text-[#004b87]">Dời / Điều Chỉnh Lịch Hẹn Khám</h3>
-                <p className="text-xs text-slate-500 mt-0.5">Bệnh nhân: <strong>{reschedulingAppointment.patient_name}</strong> ({reschedulingAppointment.phone})</p>
+                <p className="text-sm text-slate-500 mt-0.5">Bệnh nhân: <strong>{reschedulingAppointment.patient_name}</strong> ({reschedulingAppointment.phone})</p>
               </div>
             </div>
 
@@ -9014,7 +9181,7 @@ export default function AdminDashboard(props: Props) {
                   required
                   value={newRescheduleDate}
                   onChange={(e) => setNewRescheduleDate(e.target.value)}
-                  className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-xs text-slate-800 outline-none focus:border-[#004b87]"
+                  className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-sm text-slate-800 outline-none focus:border-[#004b87]"
                 />
               </div>
 
@@ -9023,7 +9190,7 @@ export default function AdminDashboard(props: Props) {
                 <select
                   value={newRescheduleTime}
                   onChange={(e) => setNewRescheduleTime(e.target.value)}
-                  className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-xs text-slate-800 outline-none focus:border-[#004b87]"
+                  className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-sm text-slate-800 outline-none focus:border-[#004b87]"
                 >
                   <option value="08:00">08:00 – Ca Sáng</option>
                   <option value="09:00">09:00 – Ca Sáng</option>
@@ -9061,7 +9228,7 @@ export default function AdminDashboard(props: Props) {
       {/* MODAL CHỈNH SỬA THÔNG TIN BỆNH NHÂN */}
       {editingPatientInfo && (
         <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-xs z-50 flex items-center justify-center p-4">
-          <div className="bg-white border border-slate-200 p-8 rounded-3xl max-w-lg w-full text-xs space-y-5 shadow-2xl relative">
+          <div className="bg-white border border-slate-200 p-8 rounded-3xl max-w-lg w-full text-sm space-y-5 shadow-2xl relative">
             <button
               onClick={() => setEditingPatientInfo(null)}
               className="absolute top-6 right-6 p-2 text-slate-400 hover:text-slate-700 cursor-pointer"
@@ -9075,7 +9242,7 @@ export default function AdminDashboard(props: Props) {
               </div>
               <div>
                 <h3 className="text-base font-black text-[#004b87]">Chỉnh Sửa Hồ Sơ Bệnh Nhân</h3>
-                <p className="text-xs text-slate-500 mt-0.5">Cập nhật họ tên, SĐT, gói dịch vụ & trạng thái xử lý ca khám</p>
+                <p className="text-sm text-slate-500 mt-0.5">Cập nhật họ tên, SĐT, gói dịch vụ & trạng thái xử lý ca khám</p>
               </div>
             </div>
 
@@ -9089,7 +9256,7 @@ export default function AdminDashboard(props: Props) {
                     required
                     value={patientEditForm.data.patient_name}
                     onChange={(e) => patientEditForm.setData('patient_name', e.target.value)}
-                    className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-xs text-slate-800 outline-none focus:border-[#004b87] focus:bg-white"
+                    className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-sm text-slate-800 outline-none focus:border-[#004b87] focus:bg-white"
                   />
                 </div>
                 <div>
@@ -9099,7 +9266,7 @@ export default function AdminDashboard(props: Props) {
                     required
                     value={patientEditForm.data.phone}
                     onChange={(e) => patientEditForm.setData('phone', e.target.value)}
-                    className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-xs text-slate-800 outline-none focus:border-[#004b87] focus:bg-white font-mono font-bold"
+                    className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-sm text-slate-800 outline-none focus:border-[#004b87] focus:bg-white font-mono font-bold"
                   />
                 </div>
               </div>
@@ -9113,7 +9280,7 @@ export default function AdminDashboard(props: Props) {
                     placeholder="khachhang@gmail.com"
                     value={patientEditForm.data.email}
                     onChange={(e) => patientEditForm.setData('email', e.target.value)}
-                    className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-xs text-slate-800 outline-none focus:border-[#004b87] focus:bg-white"
+                    className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-sm text-slate-800 outline-none focus:border-[#004b87] focus:bg-white"
                   />
                 </div>
                 <div>
@@ -9121,7 +9288,7 @@ export default function AdminDashboard(props: Props) {
                   <select
                     value={patientEditForm.data.facility}
                     onChange={(e) => patientEditForm.setData('facility', e.target.value)}
-                    className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-xs font-bold text-slate-800 outline-none focus:border-[#004b87] focus:bg-white cursor-pointer"
+                    className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-sm font-bold text-slate-800 outline-none focus:border-[#004b87] focus:bg-white cursor-pointer"
                   >
                     <option value="MediPlus HP Medical Centre - Hải Phòng">MediPlus HP Medical Centre - Hải Phòng</option>
                     <option value="MediPlus HP - Cơ sở 2 Hà Nội">MediPlus HP - Cơ sở 2 Hà Nội</option>
@@ -9136,7 +9303,7 @@ export default function AdminDashboard(props: Props) {
                   <select
                     value={patientEditForm.data.service_slug}
                     onChange={(e) => patientEditForm.setData('service_slug', e.target.value)}
-                    className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-xs font-bold text-slate-800 outline-none focus:border-[#004b87] focus:bg-white cursor-pointer"
+                    className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-sm font-bold text-slate-800 outline-none focus:border-[#004b87] focus:bg-white cursor-pointer"
                   >
                     <option value="Gói Khám Tim Mạch Tổng Quát">Gói Khám Tim Mạch Tổng Quát</option>
                     <option value="Tầm Soát Tăng Huyết Áp & Mạch Máu">Tầm Soát Tăng Huyết Áp & Mạch Máu</option>
@@ -9153,7 +9320,7 @@ export default function AdminDashboard(props: Props) {
                   <select
                     value={patientEditForm.data.doctor_name}
                     onChange={(e) => patientEditForm.setData('doctor_name', e.target.value)}
-                    className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-xs font-bold text-slate-800 outline-none focus:border-[#004b87] focus:bg-white cursor-pointer"
+                    className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-sm font-bold text-slate-800 outline-none focus:border-[#004b87] focus:bg-white cursor-pointer"
                   >
                     <option value="BSCKII Đoàn Khôi">BSCKII Đoàn Khôi (Phòng 101)</option>
                     <option value="BSCKI Nguyễn Văn A">BSCKI Nguyễn Văn A (Phòng 102)</option>
@@ -9168,7 +9335,7 @@ export default function AdminDashboard(props: Props) {
                   rows={2}
                   value={patientEditForm.data.notes}
                   onChange={(e) => patientEditForm.setData('notes', e.target.value)}
-                  className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-xs text-slate-800 outline-none focus:border-[#004b87] focus:bg-white resize-none"
+                  className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-sm text-slate-800 outline-none focus:border-[#004b87] focus:bg-white resize-none"
                 />
               </div>
 
@@ -9179,7 +9346,7 @@ export default function AdminDashboard(props: Props) {
                   rows={2}
                   value={patientEditForm.data.doctor_notes}
                   onChange={(e) => patientEditForm.setData('doctor_notes', e.target.value)}
-                  className="w-full bg-amber-50/60 border border-amber-200 rounded-xl p-3 text-xs text-slate-800 outline-none focus:border-[#004b87] focus:bg-white resize-none"
+                  className="w-full bg-amber-50/60 border border-amber-200 rounded-xl p-3 text-sm text-slate-800 outline-none focus:border-[#004b87] focus:bg-white resize-none"
                 />
               </div>
 
@@ -9189,7 +9356,7 @@ export default function AdminDashboard(props: Props) {
                 <select
                   value={patientEditForm.data.status}
                   onChange={(e) => patientEditForm.setData('status', e.target.value as any)}
-                  className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-xs font-bold text-slate-800 outline-none focus:border-[#004b87] focus:bg-white cursor-pointer"
+                  className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-sm font-bold text-slate-800 outline-none focus:border-[#004b87] focus:bg-white cursor-pointer"
                 >
                   <option value="pending">Chờ liên hệ</option>
                   <option value="confirmed">Đã xác nhận</option>
@@ -9202,14 +9369,14 @@ export default function AdminDashboard(props: Props) {
                 <button
                   type="button"
                   onClick={() => setEditingPatientInfo(null)}
-                  className="px-5 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl text-xs cursor-pointer"
+                  className="px-5 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl text-sm cursor-pointer"
                 >
                   Hủy
                 </button>
                 <button
                   type="submit"
                   disabled={patientEditForm.processing}
-                  className="px-6 py-2.5 bg-[#004b87] hover:bg-[#003866] text-white font-bold rounded-xl text-xs shadow-md cursor-pointer"
+                  className="px-6 py-2.5 bg-[#004b87] hover:bg-[#003866] text-white font-bold rounded-xl text-sm shadow-md cursor-pointer"
                 >
                   Cập Nhật Hồ Sơ Bệnh Nhân ➔
                 </button>
@@ -9239,7 +9406,7 @@ export default function AdminDashboard(props: Props) {
                 <p className="text-[10px] text-slate-500 font-bold mt-0.5">PHIẾU ĐĂNG KÝ KHÁM BỆNH VÀ THÂM KHÁM TIM MẠCH</p>
               </div>
 
-              <div className="space-y-2 text-xs">
+              <div className="space-y-2 text-sm">
                 <div className="flex justify-between">
                   <span className="text-slate-500">Mã Lịch Hẹn:</span>
                   <span className="font-mono font-bold text-slate-900">#MD-{printingAppointment.id}</span>
@@ -9274,7 +9441,7 @@ export default function AdminDashboard(props: Props) {
               <button
                 type="button"
                 onClick={() => setPrintingAppointment(null)}
-                className="px-4 py-2 bg-slate-100 text-slate-700 font-bold rounded-xl text-xs"
+                className="px-4 py-2 bg-slate-100 text-slate-700 font-bold rounded-xl text-sm"
               >
                 Hủy
               </button>
@@ -9284,7 +9451,7 @@ export default function AdminDashboard(props: Props) {
                   window.print();
                   setPrintingAppointment(null);
                 }}
-                className="flex items-center gap-1.5 px-5 py-2 bg-[#004b87] text-white font-bold rounded-xl text-xs shadow-md cursor-pointer"
+                className="flex items-center gap-1.5 px-5 py-2 bg-[#004b87] text-white font-bold rounded-xl text-sm shadow-md cursor-pointer"
               >
                 <Printer size={14} /> In Phiếu Nhập Khám ➔
               </button>
@@ -9296,7 +9463,7 @@ export default function AdminDashboard(props: Props) {
       {/* CREATE & EDIT SERVICE MODAL */}
       {showServiceModal && (
         <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-white border border-slate-200 p-8 rounded-3xl max-w-lg w-full text-xs space-y-5 shadow-2xl relative">
+          <div className="bg-white border border-slate-200 p-8 rounded-3xl max-w-lg w-full text-sm space-y-5 shadow-2xl relative">
             <button
               onClick={() => setShowServiceModal(false)}
               className="absolute top-6 right-6 p-2 text-slate-400 hover:text-slate-700 cursor-pointer"
@@ -9312,7 +9479,7 @@ export default function AdminDashboard(props: Props) {
                 <h3 className="text-base font-black text-[#004b87]">
                   {editingService ? 'Chỉnh Sửa Gói Dịch Vụ Y Khoa' : 'Tạo Mới Gói Dịch Vụ Y Khoa'}
                 </h3>
-                <p className="text-xs text-slate-500 mt-0.5">Nhập đầy đủ tên dịch vụ, giá niêm yết và phân nhóm trụ cột</p>
+                <p className="text-sm text-slate-500 mt-0.5">Nhập đầy đủ tên dịch vụ, giá niêm yết và phân nhóm trụ cột</p>
               </div>
             </div>
 
@@ -9325,36 +9492,23 @@ export default function AdminDashboard(props: Props) {
                   placeholder="VD: Gói Khám & Chẩn Đán Tim Mạnh Chuyên Sâu"
                   value={serviceForm.data.title}
                   onChange={(e) => serviceForm.setData('title', e.target.value)}
-                  className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-xs text-slate-800 outline-none focus:border-[#004b87] focus:bg-white"
+                  className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-sm text-slate-800 outline-none focus:border-[#004b87] focus:bg-white"
                 />
               </div>
 
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-slate-700 font-bold mb-1.5">Nhóm Danh Mục Dịch Vụ *</label>
-                  <select
-                    value={serviceForm.data.service_pillar_id}
-                    onChange={(e) => serviceForm.setData('service_pillar_id', parseInt(e.target.value))}
-                    className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-xs font-bold text-slate-700 outline-none focus:border-[#004b87] cursor-pointer"
-                  >
-                    {pillars.map((pillar) => (
-                      <option key={pillar.id} value={pillar.id}>
-                        {pillar.title}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-slate-700 font-bold mb-1.5">Giá niêm yết (VNĐ) *</label>
-                  <input
-                    type="text"
-                    required
-                    placeholder="VD: 500,000 VNĐ"
-                    value={serviceForm.data.price}
-                    onChange={(e) => serviceForm.setData('price', e.target.value)}
-                    className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-xs text-slate-800 outline-none focus:border-[#004b87] focus:bg-white font-mono font-bold"
-                  />
-                </div>
+              <div>
+                <label className="block text-slate-700 font-bold mb-1.5">Nhóm Danh Mục Dịch Vụ *</label>
+                <select
+                  value={serviceForm.data.service_pillar_id}
+                  onChange={(e) => serviceForm.setData('service_pillar_id', parseInt(e.target.value))}
+                  className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-sm font-bold text-slate-700 outline-none focus:border-[#004b87] cursor-pointer"
+                >
+                  {pillars.map((pillar) => (
+                    <option key={pillar.id} value={pillar.id}>
+                      {pillar.title}
+                    </option>
+                  ))}
+                </select>
               </div>
 
               <div>
@@ -9373,7 +9527,7 @@ export default function AdminDashboard(props: Props) {
                   placeholder="Mô tả danh mục hạng mục thăm khám có trong gói..."
                   value={serviceForm.data.description}
                   onChange={(e) => serviceForm.setData('description', e.target.value)}
-                  className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-xs text-slate-800 resize-none outline-none focus:border-[#004b87] focus:bg-white"
+                  className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-sm text-slate-800 resize-none outline-none focus:border-[#004b87] focus:bg-white"
                 />
               </div>
 
@@ -9385,7 +9539,7 @@ export default function AdminDashboard(props: Props) {
                   onChange={(e) => serviceForm.setData('is_featured', e.target.checked)}
                   className="w-4 h-4 rounded text-[#004b87] focus:ring-[#004b87] cursor-pointer"
                 />
-                <label htmlFor="is_featured" className="text-xs font-bold text-slate-700 cursor-pointer">
+                <label htmlFor="is_featured" className="text-sm font-bold text-slate-700 cursor-pointer">
                   Đánh dấu dịch vụ NỔI BẬT (Hiển thị ưu tiên trên trang chủ)
                 </label>
               </div>
@@ -9394,14 +9548,14 @@ export default function AdminDashboard(props: Props) {
                 <button
                   type="button"
                   onClick={() => setShowServiceModal(false)}
-                  className="px-5 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl text-xs cursor-pointer"
+                  className="px-5 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl text-sm cursor-pointer"
                 >
                   Hủy
                 </button>
                 <button
                   type="submit"
                   disabled={serviceForm.processing}
-                  className="px-6 py-2.5 bg-[#004b87] hover:bg-[#003866] text-white font-bold rounded-xl text-xs shadow-md cursor-pointer"
+                  className="px-6 py-2.5 bg-[#004b87] hover:bg-[#003866] text-white font-bold rounded-xl text-sm shadow-md cursor-pointer"
                 >
                   {editingService ? 'Cập Nhật Dịch Vụ' : 'Lưu Gói Dịch Vụ Mới'}
                 </button>
@@ -9414,7 +9568,7 @@ export default function AdminDashboard(props: Props) {
       {/* ENHANCED CRM PATIENT DETAIL & NOTES DRAWER / MODAL */}
       {selectedPatient && (
         <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-xs z-50 flex items-center justify-center p-4">
-          <div className="bg-white border border-slate-200 p-8 rounded-3xl max-w-xl w-full text-xs space-y-6 shadow-2xl relative">
+          <div className="bg-white border border-slate-200 p-8 rounded-3xl max-w-xl w-full text-sm space-y-6 shadow-2xl relative">
             <button
               onClick={() => setSelectedPatient(null)}
               className="absolute top-6 right-6 p-2 text-slate-400 hover:text-slate-700 cursor-pointer"
@@ -9429,14 +9583,14 @@ export default function AdminDashboard(props: Props) {
                 </div>
                 <div>
                   <h3 className="text-lg font-black text-[#004b87]">{selectedPatient.patient_name}</h3>
-                  <p className="text-xs text-[#00a896] font-bold mt-0.5">Hồ sơ CRM Mã KH: #{selectedPatient.id}</p>
+                  <p className="text-sm text-[#00a896] font-bold mt-0.5">Hồ sơ CRM Mã KH: #{selectedPatient.id}</p>
                 </div>
               </div>
 
               <div className="flex items-center gap-2">
                 <a
                   href={`tel:${selectedPatient.phone}`}
-                  className="flex items-center gap-1.5 px-3 py-2 bg-blue-50 text-blue-700 hover:bg-blue-100 rounded-xl text-xs font-bold transition-all"
+                  className="flex items-center gap-1.5 px-3 py-2 bg-blue-50 text-blue-700 hover:bg-blue-100 rounded-xl text-sm font-bold transition-all"
                 >
                   <Phone size={14} /> Gọi
                 </a>
@@ -9444,7 +9598,7 @@ export default function AdminDashboard(props: Props) {
                   href={`https://zalo.me/${selectedPatient.phone}`}
                   target="_blank"
                   rel="noreferrer"
-                  className="flex items-center gap-1.5 px-3 py-2 bg-emerald-50 text-emerald-700 hover:bg-emerald-100 rounded-xl text-xs font-bold transition-all"
+                  className="flex items-center gap-1.5 px-3 py-2 bg-emerald-50 text-emerald-700 hover:bg-emerald-100 rounded-xl text-sm font-bold transition-all"
                 >
                   <MessageCircle size={14} /> Zalo
                 </a>
@@ -9481,12 +9635,12 @@ export default function AdminDashboard(props: Props) {
                 placeholder="Nhập ghi chú tư vấn, thời gian hẹn khám với BSCKII Đoàn Khôi..."
                 value={patientNotesText}
                 onChange={(e) => setPatientNotesText(e.target.value)}
-                className="w-full bg-amber-50/50 border border-amber-200 rounded-2xl p-3 text-xs text-slate-800 outline-none focus:border-[#004b87] focus:bg-white resize-none"
+                className="w-full bg-amber-50/50 border border-amber-200 rounded-2xl p-3 text-sm text-slate-800 outline-none focus:border-[#004b87] focus:bg-white resize-none"
               />
               <div className="flex justify-end">
                 <button
                   type="submit"
-                  className="flex items-center gap-1.5 px-4 py-2 bg-[#004b87] hover:bg-[#003866] text-white font-bold rounded-xl text-xs shadow-sm cursor-pointer"
+                  className="flex items-center gap-1.5 px-4 py-2 bg-[#004b87] hover:bg-[#003866] text-white font-bold rounded-xl text-sm shadow-sm cursor-pointer"
                 >
                   <Save size={14} /> Lưu ghi chú CRM
                 </button>
@@ -9498,34 +9652,46 @@ export default function AdminDashboard(props: Props) {
               <div className="grid grid-cols-4 gap-2">
                 <button
                   onClick={() => updateAppointmentStatus(selectedPatient.id, 'pending')}
-                  className={`py-2 rounded-xl text-xs font-bold border transition-all cursor-pointer ${
-                    selectedPatient.status === 'pending' ? 'bg-blue-600 text-white border-blue-600 shadow-sm' : 'bg-blue-50 text-blue-700 border-blue-200 hover:bg-blue-100'
+                  className={`py-2 px-1 rounded-xl text-sm font-bold border transition-all cursor-pointer flex items-center justify-center gap-1 ${
+                    selectedPatient.status === 'pending'
+                      ? 'bg-blue-600 text-white border-blue-600 shadow-md ring-2 ring-blue-600/30'
+                      : 'bg-slate-50 text-slate-500 border-slate-200 hover:bg-slate-100 hover:text-slate-700'
                   }`}
                 >
+                  {selectedPatient.status === 'pending' && <Check size={14} className="shrink-0" />}
                   Chờ liên hệ
                 </button>
                 <button
                   onClick={() => updateAppointmentStatus(selectedPatient.id, 'confirmed')}
-                  className={`py-2 rounded-xl text-xs font-bold border transition-all cursor-pointer ${
-                    selectedPatient.status === 'confirmed' ? 'bg-emerald-600 text-white border-emerald-600 shadow-sm' : 'bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-100'
+                  className={`py-2 px-1 rounded-xl text-sm font-bold border transition-all cursor-pointer flex items-center justify-center gap-1 ${
+                    selectedPatient.status === 'confirmed'
+                      ? 'bg-emerald-600 text-white border-emerald-600 shadow-md ring-2 ring-emerald-600/30'
+                      : 'bg-slate-50 text-slate-500 border-slate-200 hover:bg-slate-100 hover:text-slate-700'
                   }`}
                 >
+                  {selectedPatient.status === 'confirmed' && <Check size={14} className="shrink-0" />}
                   Đã liên hệ
                 </button>
                 <button
                   onClick={() => updateAppointmentStatus(selectedPatient.id, 'completed')}
-                  className={`py-2 rounded-xl text-xs font-bold border transition-all cursor-pointer ${
-                    selectedPatient.status === 'completed' ? 'bg-purple-600 text-white border-purple-600 shadow-sm' : 'bg-purple-50 text-purple-700 border-purple-200 hover:bg-purple-100'
+                  className={`py-2 px-1 rounded-xl text-sm font-bold border transition-all cursor-pointer flex items-center justify-center gap-1 ${
+                    selectedPatient.status === 'completed'
+                      ? 'bg-purple-600 text-white border-purple-600 shadow-md ring-2 ring-purple-600/30'
+                      : 'bg-slate-50 text-slate-500 border-slate-200 hover:bg-slate-100 hover:text-slate-700'
                   }`}
                 >
+                  {selectedPatient.status === 'completed' && <Check size={14} className="shrink-0" />}
                   Đã khám xong
                 </button>
                 <button
                   onClick={() => updateAppointmentStatus(selectedPatient.id, 'cancelled')}
-                  className={`py-2 rounded-xl text-xs font-bold border transition-all cursor-pointer ${
-                    selectedPatient.status === 'cancelled' ? 'bg-rose-600 text-white border-rose-600 shadow-sm' : 'bg-rose-50 text-rose-700 border-rose-200 hover:bg-rose-100'
+                  className={`py-2 px-1 rounded-xl text-sm font-bold border transition-all cursor-pointer flex items-center justify-center gap-1 ${
+                    selectedPatient.status === 'cancelled'
+                      ? 'bg-rose-600 text-white border-rose-600 shadow-md ring-2 ring-rose-600/30'
+                      : 'bg-slate-50 text-slate-500 border-slate-200 hover:bg-slate-100 hover:text-slate-700'
                   }`}
                 >
+                  {selectedPatient.status === 'cancelled' && <Check size={14} className="shrink-0" />}
                   Đã hủy
                 </button>
               </div>
@@ -9534,7 +9700,7 @@ export default function AdminDashboard(props: Props) {
             <div className="flex justify-end pt-2 border-t border-slate-100">
               <button
                 onClick={() => setSelectedPatient(null)}
-                className="px-6 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl text-xs cursor-pointer"
+                className="px-6 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl text-sm cursor-pointer"
               >
                 Đóng hồ sơ
               </button>
@@ -9547,7 +9713,7 @@ export default function AdminDashboard(props: Props) {
       {/* MODAL TẠO LỊCH HẸN MỚI (MATCHING REFERENCE SCREENSHOT 100%) */}
       {showWalkinModal && (
         <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-xs z-50 flex items-center justify-center p-4">
-          <div className="bg-white border border-slate-200/80 p-8 rounded-3xl max-w-xl w-full text-xs space-y-6 shadow-2xl relative">
+          <div className="bg-white border border-slate-200/80 p-8 rounded-3xl max-w-xl w-full text-sm space-y-6 shadow-2xl relative">
             
             {/* Modal Header */}
             <div className="flex justify-between items-center pb-4 border-b border-slate-100">
@@ -9578,7 +9744,7 @@ export default function AdminDashboard(props: Props) {
                     placeholder="Nguyễn Văn A"
                     value={walkinForm.data.patient_name}
                     onChange={(e) => walkinForm.setData('patient_name', e.target.value)}
-                    className="w-full bg-white border border-slate-200/90 rounded-2xl px-4 py-3 text-xs text-slate-800 outline-none focus:border-[#004b87] focus:ring-2 focus:ring-[#004b87]/10 transition-all placeholder:text-slate-400"
+                    className="w-full bg-white border border-slate-200/90 rounded-2xl px-4 py-3 text-sm text-slate-800 outline-none focus:border-[#004b87] focus:ring-2 focus:ring-[#004b87]/10 transition-all placeholder:text-slate-400"
                   />
                 </div>
 
@@ -9590,7 +9756,7 @@ export default function AdminDashboard(props: Props) {
                     placeholder="0912345678"
                     value={walkinForm.data.phone}
                     onChange={(e) => walkinForm.setData('phone', e.target.value)}
-                    className="w-full bg-white border border-slate-200/90 rounded-2xl px-4 py-3 text-xs text-slate-800 outline-none focus:border-[#004b87] focus:ring-2 focus:ring-[#004b87]/10 transition-all placeholder:text-slate-400"
+                    className="w-full bg-white border border-slate-200/90 rounded-2xl px-4 py-3 text-sm text-slate-800 outline-none focus:border-[#004b87] focus:ring-2 focus:ring-[#004b87]/10 transition-all placeholder:text-slate-400"
                   />
                 </div>
               </div>
@@ -9604,7 +9770,7 @@ export default function AdminDashboard(props: Props) {
                     placeholder="khachhang@gmail.com"
                     value={walkinForm.data.email}
                     onChange={(e) => walkinForm.setData('email', e.target.value)}
-                    className="w-full bg-white border border-slate-200/90 rounded-2xl px-4 py-3 text-xs text-slate-800 outline-none focus:border-[#004b87] focus:ring-2 focus:ring-[#004b87]/10 transition-all placeholder:text-slate-400"
+                    className="w-full bg-white border border-slate-200/90 rounded-2xl px-4 py-3 text-sm text-slate-800 outline-none focus:border-[#004b87] focus:ring-2 focus:ring-[#004b87]/10 transition-all placeholder:text-slate-400"
                   />
                 </div>
 
@@ -9613,7 +9779,7 @@ export default function AdminDashboard(props: Props) {
                   <select
                     value={walkinForm.data.facility}
                     onChange={(e) => walkinForm.setData('facility', e.target.value)}
-                    className="w-full bg-white border border-slate-200/90 rounded-2xl px-4 py-3 text-xs font-semibold text-slate-700 outline-none focus:border-[#004b87] focus:ring-2 focus:ring-[#004b87]/10 cursor-pointer transition-all"
+                    className="w-full bg-white border border-slate-200/90 rounded-2xl px-4 py-3 text-sm font-semibold text-slate-700 outline-none focus:border-[#004b87] focus:ring-2 focus:ring-[#004b87]/10 cursor-pointer transition-all"
                   >
                     <option value="">-- Chọn cơ sở --</option>
                     <option value="MediPlus HP Medical Centre - Hải Phòng">MediPlus HP Medical Centre - Hải Phòng</option>
@@ -9629,14 +9795,14 @@ export default function AdminDashboard(props: Props) {
                   <select
                     value={walkinForm.data.service_slug}
                     onChange={(e) => walkinForm.setData('service_slug', e.target.value)}
-                    className="w-full bg-white border border-slate-200/90 rounded-2xl px-4 py-3 text-xs font-semibold text-slate-700 outline-none focus:border-[#004b87] focus:ring-2 focus:ring-[#004b87]/10 cursor-pointer transition-all"
+                    className="w-full bg-white border border-slate-200/90 rounded-2xl px-4 py-3 text-sm font-semibold text-slate-700 outline-none focus:border-[#004b87] focus:ring-2 focus:ring-[#004b87]/10 cursor-pointer transition-all"
                   >
                     <option value="">-- Chọn dịch vụ --</option>
                     {services.map(s => (
-                      <option key={s.id} value={s.title}>{s.title} ({s.price})</option>
+                      <option key={s.id} value={s.title}>{s.title}</option>
                     ))}
                     {services.length === 0 && (
-                      <option value="Gói Khám Tim Mạch Tổng Quát">Gói Khám Tim Mạch Tổng Quát (500,000 VNĐ)</option>
+                      <option value="Gói Khám Tim Mạch Tổng Quát">Gói Khám Tim Mạch Tổng Quát</option>
                     )}
                   </select>
                 </div>
@@ -9646,7 +9812,7 @@ export default function AdminDashboard(props: Props) {
                   <select
                     value={walkinForm.data.doctor_name}
                     onChange={(e) => walkinForm.setData('doctor_name', e.target.value)}
-                    className="w-full bg-white border border-slate-200/90 rounded-2xl px-4 py-3 text-xs font-semibold text-slate-700 outline-none focus:border-[#004b87] focus:ring-2 focus:ring-[#004b87]/10 cursor-pointer transition-all"
+                    className="w-full bg-white border border-slate-200/90 rounded-2xl px-4 py-3 text-sm font-semibold text-slate-700 outline-none focus:border-[#004b87] focus:ring-2 focus:ring-[#004b87]/10 cursor-pointer transition-all"
                   >
                     <option value="">-- Chọn bác sĩ --</option>
                     <option value="BSCKII Đoàn Khôi">BSCKII Đoàn Khôi (Nội Tim Mạch)</option>
@@ -9664,7 +9830,7 @@ export default function AdminDashboard(props: Props) {
                     required
                     value={walkinForm.data.appointment_date}
                     onChange={(e) => walkinForm.setData('appointment_date', e.target.value)}
-                    className="w-full bg-white border border-slate-200/90 rounded-2xl px-4 py-3 text-xs text-slate-800 outline-none focus:border-[#004b87] focus:ring-2 focus:ring-[#004b87]/10 transition-all font-mono font-semibold"
+                    className="w-full bg-white border border-slate-200/90 rounded-2xl px-4 py-3 text-sm text-slate-800 outline-none focus:border-[#004b87] focus:ring-2 focus:ring-[#004b87]/10 transition-all font-mono font-semibold"
                   />
                 </div>
 
@@ -9673,7 +9839,7 @@ export default function AdminDashboard(props: Props) {
                   <select
                     value={walkinForm.data.time_slot}
                     onChange={(e) => walkinForm.setData('time_slot', e.target.value)}
-                    className="w-full bg-white border border-slate-200/90 rounded-2xl px-4 py-3 text-xs font-semibold text-slate-700 outline-none focus:border-[#004b87] focus:ring-2 focus:ring-[#004b87]/10 cursor-pointer transition-all"
+                    className="w-full bg-white border border-slate-200/90 rounded-2xl px-4 py-3 text-sm font-semibold text-slate-700 outline-none focus:border-[#004b87] focus:ring-2 focus:ring-[#004b87]/10 cursor-pointer transition-all"
                   >
                     <option value="">-- Chọn khung giờ --</option>
                     <option value="08:00 - 09:00">08:00 - 09:00 (Ca Sáng)</option>
@@ -9694,7 +9860,7 @@ export default function AdminDashboard(props: Props) {
                   placeholder="Yêu cầu đặc biệt của khách hàng..."
                   value={walkinForm.data.notes}
                   onChange={(e) => walkinForm.setData('notes', e.target.value)}
-                  className="w-full bg-white border border-slate-200/90 rounded-2xl p-4 text-xs text-slate-800 resize-none outline-none focus:border-[#004b87] focus:ring-2 focus:ring-[#004b87]/10 transition-all placeholder:text-slate-400"
+                  className="w-full bg-white border border-slate-200/90 rounded-2xl p-4 text-sm text-slate-800 resize-none outline-none focus:border-[#004b87] focus:ring-2 focus:ring-[#004b87]/10 transition-all placeholder:text-slate-400"
                 />
               </div>
 
@@ -9703,14 +9869,14 @@ export default function AdminDashboard(props: Props) {
                 <button
                   type="button"
                   onClick={() => setShowWalkinModal(false)}
-                  className="px-6 py-3 bg-slate-100 hover:bg-slate-200 text-slate-600 font-bold rounded-2xl text-xs transition-all cursor-pointer"
+                  className="px-6 py-3 bg-slate-100 hover:bg-slate-200 text-slate-600 font-bold rounded-2xl text-sm transition-all cursor-pointer"
                 >
                   Hủy bỏ
                 </button>
                 <button
                   type="submit"
                   disabled={walkinForm.processing}
-                  className="px-8 py-3 bg-[#004b87] hover:bg-[#003866] text-white font-bold rounded-2xl text-xs shadow-md transition-all cursor-pointer"
+                  className="px-8 py-3 bg-[#004b87] hover:bg-[#003866] text-white font-bold rounded-2xl text-sm shadow-md transition-all cursor-pointer"
                 >
                   Tạo lịch hẹn
                 </button>
@@ -9734,7 +9900,7 @@ export default function AdminDashboard(props: Props) {
                 </div>
                 <div>
                   <h3 className="text-base font-black uppercase tracking-wider">CHẾ ĐỘ XEM TRƯỚC BÀI VIẾT (PATIENT PREVIEW)</h3>
-                  <p className="text-xs text-blue-100 mt-0.5">Mô phỏng 100% giao diện đọc bài viết thực tế của bệnh nhân trên trang Client</p>
+                  <p className="text-sm text-blue-100 mt-0.5">Mô phỏng 100% giao diện đọc bài viết thực tế của bệnh nhân trên trang Client</p>
                 </div>
               </div>
 
@@ -9751,7 +9917,7 @@ export default function AdminDashboard(props: Props) {
             <div className="p-8 max-w-3xl mx-auto bg-white rounded-3xl shadow-sm space-y-6 border border-slate-200/80 my-4">
               {/* Category & Title */}
               <div className="space-y-3 border-b border-slate-100 pb-6">
-                <span className="px-3 py-1 bg-emerald-50 text-emerald-700 font-extrabold rounded-lg text-xs border border-emerald-200">
+                <span className="px-3 py-1 bg-emerald-50 text-emerald-700 font-extrabold rounded-lg text-sm border border-emerald-200">
                   {articleForm.data.category}
                 </span>
 
@@ -9760,7 +9926,7 @@ export default function AdminDashboard(props: Props) {
                 </h1>
 
                 {/* Metadata Row */}
-                <div className="flex flex-wrap items-center gap-4 text-xs text-slate-500 font-semibold pt-1">
+                <div className="flex flex-wrap items-center gap-4 text-sm text-slate-500 font-semibold pt-1">
                   <div className="flex items-center gap-1.5 text-slate-800">
                     <User size={15} className="text-[#004b87]" />
                     <span>Tác giả: <strong>{articleForm.data.author}</strong></span>
@@ -9795,9 +9961,9 @@ export default function AdminDashboard(props: Props) {
               {/* Booking CTA Box */}
               <div className="mt-8 bg-gradient-to-r from-[#004b87] to-[#00a896] text-white p-6 rounded-3xl shadow-lg text-center space-y-3">
                 <h4 className="text-lg font-black uppercase">ĐẶT LỊCH THĂM KHÁM TIM MẠCH VỚI BSCKII ĐOÀN KHÔI</h4>
-                <p className="text-xs text-blue-100">Bảo vệ sức khỏe tim mạch cho bạn và gia đình ngay hôm nay</p>
+                <p className="text-sm text-blue-100">Bảo vệ sức khỏe tim mạch cho bạn và gia đình ngay hôm nay</p>
                 <div className="pt-2">
-                  <span className="px-6 py-2.5 bg-white text-[#004b87] font-black rounded-xl text-xs shadow-md inline-block">
+                  <span className="px-6 py-2.5 bg-white text-[#004b87] font-black rounded-xl text-sm shadow-md inline-block">
                     📞 HOTLINE ĐẶT LỊCH: {settingsData.hotline_1 || '0585 013 013'}
                   </span>
                 </div>
@@ -9806,13 +9972,13 @@ export default function AdminDashboard(props: Props) {
 
             {/* Modal Footer */}
             <div className="p-4 bg-white border-t border-slate-200 flex justify-between items-center px-8">
-              <span className="text-xs text-slate-500 font-mono">
+              <span className="text-sm text-slate-500 font-mono">
                 Xem trước giao diện • {getArticleWordCount(articleForm.data.content)} từ
               </span>
               <button
                 type="button"
                 onClick={() => setShowArticlePreviewModal(false)}
-                className="px-6 py-2.5 bg-[#004b87] text-white font-extrabold rounded-xl text-xs shadow-md cursor-pointer"
+                className="px-6 py-2.5 bg-[#004b87] text-white font-extrabold rounded-xl text-sm shadow-md cursor-pointer"
               >
                 Đóng Chế Độ Xem Trước
               </button>
@@ -9824,7 +9990,7 @@ export default function AdminDashboard(props: Props) {
       {/* UNIVERSAL MEDIA PICKER MODAL (WITH DRAG & DROP UPLOAD) */}
       {showMediaPickerModal && (
         <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-[70] flex items-center justify-center p-4">
-          <div className="bg-white border border-slate-200 p-6 rounded-3xl max-w-6xl w-full text-xs space-y-4 shadow-2xl relative max-h-[90vh] flex flex-col">
+          <div className="bg-white border border-slate-200 p-6 rounded-3xl max-w-6xl w-full text-sm space-y-4 shadow-2xl relative max-h-[90vh] flex flex-col">
             <button
               onClick={() => setShowMediaPickerModal(false)}
               className="absolute top-5 right-5 p-2 text-slate-400 hover:text-slate-700 cursor-pointer"
@@ -9840,7 +10006,7 @@ export default function AdminDashboard(props: Props) {
                 </div>
                 <div>
                   <h3 className="text-base font-black text-[#004b87] uppercase tracking-wide">CHỌN HÌNH ẢNH TỪ QUẢN LÝ TỆP</h3>
-                  <p className="text-xs text-slate-500 mt-0.5">Chọn hình có sẵn hoặc Kéo & thả tệp từ máy tính để tải lên</p>
+                  <p className="text-sm text-slate-500 mt-0.5">Chọn hình có sẵn hoặc Kéo & thả tệp từ máy tính để tải lên</p>
                 </div>
               </div>
 
@@ -9848,7 +10014,7 @@ export default function AdminDashboard(props: Props) {
                 <button
                   type="button"
                   onClick={() => fileInputRef.current?.click()}
-                  className="px-4 py-2.5 bg-[#004b87] hover:bg-[#003866] text-white font-extrabold rounded-xl text-xs flex items-center gap-2 cursor-pointer shadow-sm transition-all uppercase tracking-wider"
+                  className="px-4 py-2.5 bg-[#004b87] hover:bg-[#003866] text-white font-extrabold rounded-xl text-sm flex items-center gap-2 cursor-pointer shadow-sm transition-all uppercase tracking-wider"
                 >
                   <Upload size={14} /> Tải ảnh từ máy tính
                 </button>
@@ -9981,7 +10147,7 @@ export default function AdminDashboard(props: Props) {
                                 setCollapsedFolders(prev => prev.filter(p => p !== fPath));
                               }
                             }}
-                            className={`flex-1 text-left px-2 py-1.5 rounded-xl flex items-center justify-between transition-all cursor-pointer text-xs ${
+                            className={`flex-1 text-left px-2 py-1.5 rounded-xl flex items-center justify-between transition-all cursor-pointer text-sm ${
                               currentFolderPath === fPath
                                 ? 'bg-amber-100/60 text-amber-900 border border-amber-200 font-bold'
                                 : 'hover:bg-slate-200/30 text-slate-600'
@@ -10019,7 +10185,7 @@ export default function AdminDashboard(props: Props) {
                   
                   {/* Breadcrumbs & Search */}
                   <div className="flex flex-col sm:flex-row gap-3 justify-between items-stretch sm:items-center bg-slate-50 p-3 rounded-xl border border-slate-200 mb-3 shrink-0">
-                    <div className="flex items-center gap-1.5 text-xs font-bold text-slate-700 truncate">
+                    <div className="flex items-center gap-1.5 text-sm font-bold text-slate-700 truncate">
                       <button
                         type="button"
                         onClick={() => setCurrentFolderPath('root')}
@@ -10054,7 +10220,7 @@ export default function AdminDashboard(props: Props) {
                         placeholder="Tìm tên tệp hình ảnh..."
                         value={mediaSearchQuery}
                         onChange={(e) => setMediaSearchQuery(e.target.value)}
-                        className="w-full pl-7 pr-3 py-1.5 bg-white border border-slate-200 rounded-lg text-xs outline-none focus:border-[#004b87]"
+                        className="w-full pl-7 pr-3 py-1.5 bg-white border border-slate-200 rounded-lg text-sm outline-none focus:border-[#004b87]"
                       />
                     </div>
                   </div>
@@ -10165,7 +10331,7 @@ export default function AdminDashboard(props: Props) {
               <button
                 type="button"
                 onClick={() => setShowMediaPickerModal(false)}
-                className="px-5 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl text-xs cursor-pointer shadow-3xs"
+                className="px-5 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl text-sm cursor-pointer shadow-3xs"
               >
                 Đóng
               </button>
@@ -10186,7 +10352,7 @@ export default function AdminDashboard(props: Props) {
                 </div>
                 <div>
                   <h3 className="text-base font-black uppercase tracking-wider">CHẾ ĐỘ XEM TRƯỚC DỊCH VỤ Y KHOA</h3>
-                  <p className="text-xs text-blue-100 mt-0.5">Mô phỏng giao diện chi tiết dịch vụ như bệnh nhân xem trên website</p>
+                  <p className="text-sm text-blue-100 mt-0.5">Mô phỏng giao diện chi tiết dịch vụ như bệnh nhân xem trên website</p>
                 </div>
               </div>
 
@@ -10203,11 +10369,11 @@ export default function AdminDashboard(props: Props) {
             <div className="p-8 max-w-3xl mx-auto bg-white rounded-3xl shadow-sm space-y-6 border border-slate-200/80 my-4">
               <div className="space-y-3 border-b border-slate-100 pb-6">
                 <div className="flex items-center gap-2">
-                  <span className="px-3 py-1 bg-blue-50 text-[#004b87] font-extrabold rounded-lg text-xs border border-blue-200">
+                  <span className="px-3 py-1 bg-blue-50 text-[#004b87] font-extrabold rounded-lg text-sm border border-blue-200">
                     {showServicePreviewModal.pillar_title}
                   </span>
                   {showServicePreviewModal.is_featured && (
-                    <span className="px-3 py-1 bg-amber-50 text-amber-700 font-extrabold rounded-lg text-xs border border-amber-200 flex items-center gap-1">
+                    <span className="px-3 py-1 bg-amber-50 text-amber-700 font-extrabold rounded-lg text-sm border border-amber-200 flex items-center gap-1">
                       <Star size={12} fill="currentColor" /> Dịch Vụ Nổi Bật
                     </span>
                   )}
@@ -10223,18 +10389,7 @@ export default function AdminDashboard(props: Props) {
                   </p>
                 )}
 
-                <div className="flex items-center justify-between bg-slate-50 p-4 rounded-2xl border border-slate-200/60 font-mono mt-4">
-                  <div>
-                    <span className="text-xs text-slate-500 block font-sans">Chi phí niêm yết:</span>
-                    <span className="text-xl font-black text-slate-900">{showServicePreviewModal.price}</span>
-                  </div>
-                  {showServicePreviewModal.estimated_time && (
-                    <div className="text-right">
-                      <span className="text-xs text-slate-500 block font-sans">Thời gian khám:</span>
-                      <span className="text-sm font-bold text-slate-700">{showServicePreviewModal.estimated_time}</span>
-                    </div>
-                  )}
-                </div>
+
               </div>
 
               {/* Service Featured Image */}
@@ -10244,7 +10399,7 @@ export default function AdminDashboard(props: Props) {
                     src={showServicePreviewModal.image}
                     alt={showServicePreviewModal.title}
                     className="w-full h-full object-cover"
-                    onError={(e) => { (e.target as HTMLImageElement).src = '/assets/screening_service.png'; }}
+                    onError={(e) => { (e.target as HTMLImageElement).src = '/assets/logo_pk.png'; }}
                   />
                 </div>
               )}
@@ -10252,8 +10407,8 @@ export default function AdminDashboard(props: Props) {
               {/* Excerpt */}
               {showServicePreviewModal.description && (
                 <div className="space-y-2">
-                  <h4 className="text-xs font-black text-slate-700 uppercase tracking-wider">Mô tả tóm tắt:</h4>
-                  <p className="text-xs text-slate-600 leading-relaxed bg-blue-50/40 p-4 rounded-2xl border border-blue-100/70">
+                  <h4 className="text-sm font-black text-slate-700 uppercase tracking-wider">Mô tả tóm tắt:</h4>
+                  <p className="text-sm text-slate-600 leading-relaxed bg-blue-50/40 p-4 rounded-2xl border border-blue-100/70">
                     {showServicePreviewModal.description}
                   </p>
                 </div>
@@ -10262,10 +10417,10 @@ export default function AdminDashboard(props: Props) {
               {/* Includes Grid */}
               {showServicePreviewModal.includes && showServicePreviewModal.includes.length > 0 && (
                 <div className="space-y-3 pt-2">
-                  <h4 className="text-xs font-black text-[#004b87] uppercase tracking-wider">HẠNG MỤC KHÁM BAO GỒM:</h4>
+                  <h4 className="text-sm font-black text-[#004b87] uppercase tracking-wider">HẠNG MỤC KHÁM BAO GỒM:</h4>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                     {showServicePreviewModal.includes.map((inc, i) => (
-                      <div key={i} className="flex items-center gap-2 p-3 bg-slate-50 rounded-xl border border-slate-200/60 text-xs font-bold text-slate-800">
+                      <div key={i} className="flex items-center gap-2 p-3 bg-slate-50 rounded-xl border border-slate-200/60 text-sm font-bold text-slate-800">
                         <CheckCircle2 size={16} className="text-[#00a896] shrink-0" />
                         <span>{inc}</span>
                       </div>
@@ -10277,10 +10432,10 @@ export default function AdminDashboard(props: Props) {
               {/* Candidates Grid */}
               {showServicePreviewModal.candidates && showServicePreviewModal.candidates.length > 0 && (
                 <div className="space-y-3 pt-2">
-                  <h4 className="text-xs font-black text-amber-700 uppercase tracking-wider">ĐỐI TƯỢNG CHỈ ĐỊNH NÊN KHÁM:</h4>
+                  <h4 className="text-sm font-black text-amber-700 uppercase tracking-wider">ĐỐI TƯỢNG CHỈ ĐỊNH NÊN KHÁM:</h4>
                   <div className="space-y-1.5">
                     {showServicePreviewModal.candidates.map((cand, i) => (
-                      <div key={i} className="flex items-center gap-2 text-xs text-slate-700 font-medium">
+                      <div key={i} className="flex items-center gap-2 text-sm text-slate-700 font-medium">
                         <span className="w-2 h-2 rounded-full bg-amber-500 shrink-0" />
                         <span>{cand}</span>
                       </div>
@@ -10292,9 +10447,9 @@ export default function AdminDashboard(props: Props) {
               {/* Detailed Description HTML */}
               {showServicePreviewModal.detailed_description && (
                 <div className="space-y-3 pt-4 border-t border-slate-100">
-                  <h4 className="text-xs font-black text-slate-700 uppercase tracking-wider">QUY TRÌNH & PHÁC ĐỒ ĐIỀU TRỊ CHI TIẾT:</h4>
+                  <h4 className="text-sm font-black text-slate-700 uppercase tracking-wider">QUY TRÌNH & PHÁC ĐỒ ĐIỀU TRỊ CHI TIẾT:</h4>
                   <div
-                    className="prose prose-slate max-w-none text-xs text-slate-700 leading-relaxed [&_h4]:text-base [&_h4]:font-bold [&_h4]:text-[#004b87] [&_ul]:list-disc [&_ul]:pl-5"
+                    className="prose prose-slate max-w-none text-sm text-slate-700 leading-relaxed [&_h4]:text-base [&_h4]:font-bold [&_h4]:text-[#004b87] [&_ul]:list-disc [&_ul]:pl-5"
                     dangerouslySetInnerHTML={{ __html: showServicePreviewModal.detailed_description }}
                   />
                 </div>
@@ -10303,9 +10458,9 @@ export default function AdminDashboard(props: Props) {
               {/* Booking CTA Button */}
               <div className="mt-8 bg-gradient-to-r from-[#004b87] to-[#00a896] text-white p-6 rounded-3xl shadow-lg text-center space-y-3">
                 <h4 className="text-base font-black uppercase">ĐẶT LỊCH HẸN KHÁM GÓI DỊCH VỤ NÀY</h4>
-                <p className="text-xs text-blue-100">Được trực tiếp BSCKII Đoàn Khôi thăm khám và tư vấn</p>
+                <p className="text-sm text-blue-100">Được trực tiếp BSCKII Đoàn Khôi thăm khám và tư vấn</p>
                 <div className="pt-2">
-                  <span className="px-6 py-2.5 bg-white text-[#004b87] font-black rounded-xl text-xs shadow-md inline-block">
+                  <span className="px-6 py-2.5 bg-white text-[#004b87] font-black rounded-xl text-sm shadow-md inline-block">
                     Đặt Lịch Ngay Qua Hotline: {settingsData.hotline_1 || '0585 013 013'}
                   </span>
                 </div>
@@ -10314,13 +10469,13 @@ export default function AdminDashboard(props: Props) {
 
             {/* Modal Footer */}
             <div className="p-4 bg-white border-t border-slate-200 flex justify-between items-center px-8">
-              <span className="text-xs text-slate-500 font-mono">
+              <span className="text-sm text-slate-500 font-mono">
                 Xem trước giao diện dịch vụ khách hàng
               </span>
               <button
                 type="button"
                 onClick={() => setShowServicePreviewModal(null)}
-                className="px-6 py-2.5 bg-[#004b87] text-white font-extrabold rounded-xl text-xs shadow-md cursor-pointer"
+                className="px-6 py-2.5 bg-[#004b87] text-white font-extrabold rounded-xl text-sm shadow-md cursor-pointer"
               >
                 Đóng Chế Độ Xem Trước
               </button>
@@ -10340,7 +10495,7 @@ export default function AdminDashboard(props: Props) {
                 </div>
                 <div>
                   <h3 className="text-base font-black uppercase tracking-wider">XEM TRƯỚC HỒ SƠ BÁC SĨ</h3>
-                  <p className="text-xs text-blue-100 mt-0.5">Mô phỏng trang chi tiết bác sĩ hiển thị cho bệnh nhân</p>
+                  <p className="text-sm text-blue-100 mt-0.5">Mô phỏng trang chi tiết bác sĩ hiển thị cho bệnh nhân</p>
                 </div>
               </div>
 
@@ -10361,22 +10516,22 @@ export default function AdminDashboard(props: Props) {
               <div>
                 <h1 className="text-2xl font-black text-[#004b87]">{showDoctorPreviewModal.name}</h1>
                 <p className="text-sm font-bold text-emerald-700 mt-1">{showDoctorPreviewModal.specialty}</p>
-                <span className="inline-block mt-2 px-3 py-1 bg-blue-50 text-[#004b87] font-bold rounded-lg text-xs border border-blue-200">
+                <span className="inline-block mt-2 px-3 py-1 bg-blue-50 text-[#004b87] font-bold rounded-lg text-sm border border-blue-200">
                   {showDoctorPreviewModal.experience}
                 </span>
               </div>
 
               {showDoctorPreviewModal.bio && (
-                <p className="text-xs text-slate-600 leading-relaxed bg-blue-50/40 p-4 rounded-2xl border border-blue-100 text-left">
+                <p className="text-sm text-slate-600 leading-relaxed bg-blue-50/40 p-4 rounded-2xl border border-blue-100 text-left">
                   {showDoctorPreviewModal.bio}
                 </p>
               )}
 
               {showDoctorPreviewModal.detailed_bio && (
                 <div className="space-y-3 pt-4 border-t border-slate-100 text-left">
-                  <h4 className="text-xs font-black text-slate-700 uppercase tracking-wider">QUÁ TRÌNH ĐÀO TẠO & HỒ SƠ CHUYÊN MÔN:</h4>
+                  <h4 className="text-sm font-black text-slate-700 uppercase tracking-wider">QUÁ TRÌNH ĐÀO TẠO & HỒ SƠ CHUYÊN MÔN:</h4>
                   <div
-                    className="prose prose-slate max-w-none text-xs text-slate-700 leading-relaxed [&_h4]:text-base [&_h4]:font-bold [&_h4]:text-[#004b87] [&_ul]:list-disc [&_ul]:pl-5"
+                    className="prose prose-slate max-w-none text-sm text-slate-700 leading-relaxed [&_h4]:text-base [&_h4]:font-bold [&_h4]:text-[#004b87] [&_ul]:list-disc [&_ul]:pl-5"
                     dangerouslySetInnerHTML={{ __html: showDoctorPreviewModal.detailed_bio }}
                   />
                 </div>
@@ -10387,7 +10542,7 @@ export default function AdminDashboard(props: Props) {
               <button
                 type="button"
                 onClick={() => setShowDoctorPreviewModal(null)}
-                className="px-6 py-2.5 bg-[#004b87] text-white font-extrabold rounded-xl text-xs shadow-md cursor-pointer"
+                className="px-6 py-2.5 bg-[#004b87] text-white font-extrabold rounded-xl text-sm shadow-md cursor-pointer"
               >
                 Đóng Chế Độ Xem Trước
               </button>
@@ -10407,7 +10562,7 @@ export default function AdminDashboard(props: Props) {
                 </div>
                 <div>
                   <h3 className="text-base font-black uppercase tracking-wider">XEM TRƯỚC CA ĐIỀU TRỊ THỰC TẾ</h3>
-                  <p className="text-xs text-blue-100 mt-0.5">Mô phỏng ca lâm sàng thực tế hiển thị cho bệnh nhân</p>
+                  <p className="text-sm text-blue-100 mt-0.5">Mô phỏng ca lâm sàng thực tế hiển thị cho bệnh nhân</p>
                 </div>
               </div>
 
@@ -10422,7 +10577,7 @@ export default function AdminDashboard(props: Props) {
 
             <div className="p-8 max-w-2xl mx-auto bg-white rounded-3xl shadow-sm space-y-6 border border-slate-200/80 my-4">
               <div className="border-b border-slate-100 pb-4 space-y-2">
-                <span className="px-3 py-1 bg-emerald-50 text-emerald-700 font-extrabold rounded-lg text-xs border border-emerald-200">
+                <span className="px-3 py-1 bg-emerald-50 text-emerald-700 font-extrabold rounded-lg text-sm border border-emerald-200">
                   {showResultPreviewModal.diagnosis}
                 </span>
                 <h1 className="text-2xl font-black text-[#004b87]">{showResultPreviewModal.patient_title}</h1>
@@ -10445,8 +10600,8 @@ export default function AdminDashboard(props: Props) {
 
               {showResultPreviewModal.outcome && (
                 <div className="space-y-2">
-                  <h4 className="text-xs font-black text-slate-700 uppercase tracking-wider">TÓM TẮT KẾT QUẢ ĐIỀU TRỊ:</h4>
-                  <p className="text-xs text-slate-600 leading-relaxed bg-emerald-50/50 p-4 rounded-2xl border border-emerald-100">
+                  <h4 className="text-sm font-black text-slate-700 uppercase tracking-wider">TÓM TẮT KẾT QUẢ ĐIỀU TRỊ:</h4>
+                  <p className="text-sm text-slate-600 leading-relaxed bg-emerald-50/50 p-4 rounded-2xl border border-emerald-100">
                     {showResultPreviewModal.outcome}
                   </p>
                 </div>
@@ -10454,9 +10609,9 @@ export default function AdminDashboard(props: Props) {
 
               {showResultPreviewModal.detailed_case && (
                 <div className="space-y-3 pt-4 border-t border-slate-100 text-left">
-                  <h4 className="text-xs font-black text-slate-700 uppercase tracking-wider">DIỄN TIẾN CA LÂM SÀNG CHI TIẾT:</h4>
+                  <h4 className="text-sm font-black text-slate-700 uppercase tracking-wider">DIỄN TIẾN CA LÂM SÀNG CHI TIẾT:</h4>
                   <div
-                    className="prose prose-slate max-w-none text-xs text-slate-700 leading-relaxed [&_h4]:text-base [&_h4]:font-bold [&_h4]:text-[#004b87] [&_ul]:list-disc [&_ul]:pl-5"
+                    className="prose prose-slate max-w-none text-sm text-slate-700 leading-relaxed [&_h4]:text-base [&_h4]:font-bold [&_h4]:text-[#004b87] [&_ul]:list-disc [&_ul]:pl-5"
                     dangerouslySetInnerHTML={{ __html: showResultPreviewModal.detailed_case }}
                   />
                 </div>
@@ -10467,7 +10622,7 @@ export default function AdminDashboard(props: Props) {
               <button
                 type="button"
                 onClick={() => setShowResultPreviewModal(null)}
-                className="px-6 py-2.5 bg-[#004b87] text-white font-extrabold rounded-xl text-xs shadow-md cursor-pointer"
+                className="px-6 py-2.5 bg-[#004b87] text-white font-extrabold rounded-xl text-sm shadow-md cursor-pointer"
               >
                 Đóng Chế Độ Xem Trước
               </button>
@@ -10479,7 +10634,7 @@ export default function AdminDashboard(props: Props) {
       {/* CREATE & EDIT REVIEW MODAL */}
       {showReviewModal && (
         <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-white border border-slate-200 p-8 rounded-3xl max-w-lg w-full text-xs space-y-5 shadow-2xl relative">
+          <div className="bg-white border border-slate-200 p-8 rounded-3xl max-w-lg w-full text-sm space-y-5 shadow-2xl relative">
             <button
               onClick={() => setShowReviewModal(false)}
               className="absolute top-6 right-6 p-2 text-slate-400 hover:text-slate-700 cursor-pointer"
@@ -10495,7 +10650,7 @@ export default function AdminDashboard(props: Props) {
                 <h3 className="text-base font-black text-[#004b87]">
                   {editingReview ? 'Chỉnh Sửa Đánh Giá Bệnh Nhân' : 'Thêm Mới Đánh Giá Bệnh Nhân'}
                 </h3>
-                <p className="text-xs text-slate-500 mt-0.5">Nhập đầy đủ tên bệnh nhân, dịch vụ, số sao và nội dung nhận xét</p>
+                <p className="text-sm text-slate-500 mt-0.5">Nhập đầy đủ tên bệnh nhân, dịch vụ, số sao và nội dung nhận xét</p>
               </div>
             </div>
 
@@ -10508,7 +10663,7 @@ export default function AdminDashboard(props: Props) {
                   placeholder="VD: Bác Trần Văn Hùng (68 tuổi)"
                   value={reviewForm.data.patient_name}
                   onChange={(e) => reviewForm.setData('patient_name', e.target.value)}
-                  className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-xs text-slate-800 outline-none focus:border-[#004b87] focus:bg-white font-bold"
+                  className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-sm text-slate-800 outline-none focus:border-[#004b87] focus:bg-white font-bold"
                 />
               </div>
 
@@ -10519,7 +10674,7 @@ export default function AdminDashboard(props: Props) {
                   placeholder="VD: Tầm soát tăng huyết áp & Holter 24h"
                   value={reviewForm.data.service_name}
                   onChange={(e) => reviewForm.setData('service_name', e.target.value)}
-                  className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-xs text-slate-800 outline-none focus:border-[#004b87] focus:bg-white"
+                  className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-sm text-slate-800 outline-none focus:border-[#004b87] focus:bg-white"
                 />
               </div>
 
@@ -10551,13 +10706,13 @@ export default function AdminDashboard(props: Props) {
                   placeholder="Nhập nội dung nhận xét chi tiết của bệnh nhân..."
                   value={reviewForm.data.comment}
                   onChange={(e) => reviewForm.setData('comment', e.target.value)}
-                  className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-xs text-slate-800 outline-none focus:border-[#004b87] focus:bg-white resize-none leading-relaxed"
+                  className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-sm text-slate-800 outline-none focus:border-[#004b87] focus:bg-white resize-none leading-relaxed"
                 />
               </div>
 
               <div className="flex items-center justify-between p-3 bg-blue-50/50 rounded-xl border border-blue-100">
                 <div>
-                  <span className="block font-bold text-slate-800 text-xs">Trạng thái Phê Duyệt</span>
+                  <span className="block font-bold text-slate-800 text-sm">Trạng thái Phê Duyệt</span>
                   <span className="text-[11px] text-slate-500">Cho phép hiển thị nhận xét này lên trang chủ website</span>
                 </div>
                 <label className="relative inline-flex items-center cursor-pointer">
@@ -10575,14 +10730,14 @@ export default function AdminDashboard(props: Props) {
                 <button
                   type="button"
                   onClick={() => setShowReviewModal(false)}
-                  className="px-4 py-2 bg-slate-100 text-slate-700 font-bold rounded-xl text-xs hover:bg-slate-200"
+                  className="px-4 py-2 bg-slate-100 text-slate-700 font-bold rounded-xl text-sm hover:bg-slate-200"
                 >
                   Hủy bỏ
                 </button>
                 <button
                   type="submit"
                   disabled={reviewForm.processing}
-                  className="px-6 py-2 bg-[#004b87] hover:bg-[#003866] text-white font-extrabold rounded-xl text-xs shadow-md transition-all uppercase tracking-wider"
+                  className="px-6 py-2 bg-[#004b87] hover:bg-[#003866] text-white font-extrabold rounded-xl text-sm shadow-md transition-all uppercase tracking-wider"
                 >
                   {editingReview ? 'LƯU CẬP NHẬT' : 'THÊM ĐÁNH GIÁ'}
                 </button>
@@ -10595,7 +10750,7 @@ export default function AdminDashboard(props: Props) {
       {/* CREATE & EDIT BANNER MODAL (EXACT MATCH USER MOCKUP) */}
       {showBannerModal && (
         <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-xs z-50 flex items-center justify-center p-4 overflow-y-auto">
-          <div className="bg-white border border-slate-200 p-8 rounded-3xl max-w-3xl w-full text-xs space-y-6 shadow-2xl relative my-8 text-slate-800">
+          <div className="bg-white border border-slate-200 p-8 rounded-3xl max-w-3xl w-full text-sm space-y-6 shadow-2xl relative my-8 text-slate-800">
             <div className="flex justify-between items-center border-b border-slate-100 pb-4">
               <h3 className="text-base font-extrabold text-[#004b87]">
                 {editingBanner ? 'Chỉnh sửa slide banner' : 'Thêm mới slide banner'}
@@ -10621,7 +10776,7 @@ export default function AdminDashboard(props: Props) {
                     placeholder="KT Beauty Medical Centre"
                     value={bannerForm.data.eyebrow}
                     onChange={(e) => bannerForm.setData('eyebrow', e.target.value)}
-                    className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-xs text-slate-800 outline-none focus:border-[#004b87] focus:bg-white"
+                    className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-sm text-slate-800 outline-none focus:border-[#004b87] focus:bg-white"
                   />
                 </div>
 
@@ -10635,7 +10790,7 @@ export default function AdminDashboard(props: Props) {
                     placeholder="Kiến tạo"
                     value={bannerForm.data.title}
                     onChange={(e) => bannerForm.setData('title', e.target.value)}
-                    className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-xs text-slate-800 outline-none focus:border-[#004b87] focus:bg-white font-bold"
+                    className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-sm text-slate-800 outline-none focus:border-[#004b87] focus:bg-white font-bold"
                   />
                 </div>
               </div>
@@ -10651,7 +10806,7 @@ export default function AdminDashboard(props: Props) {
                     placeholder="Vẻ đẹp độc bản"
                     value={bannerForm.data.subtitle}
                     onChange={(e) => bannerForm.setData('subtitle', e.target.value)}
-                    className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-xs text-slate-800 outline-none focus:border-[#004b87] focus:bg-white"
+                    className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-sm text-slate-800 outline-none focus:border-[#004b87] focus:bg-white"
                   />
                 </div>
 
@@ -10664,7 +10819,7 @@ export default function AdminDashboard(props: Props) {
                     placeholder="KT Beauty Medical Centre mang đến dịch vụ thẩm mỹ chuẩn..."
                     value={bannerForm.data.subheading}
                     onChange={(e) => bannerForm.setData('subheading', e.target.value)}
-                    className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-xs text-slate-800 outline-none focus:border-[#004b87] focus:bg-white"
+                    className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-sm text-slate-800 outline-none focus:border-[#004b87] focus:bg-white"
                   />
                 </div>
               </div>
@@ -10686,7 +10841,7 @@ export default function AdminDashboard(props: Props) {
                     ) : (
                       <div className="w-full h-full flex flex-col items-center justify-center text-slate-400 space-y-2 p-4 text-center">
                         <FolderOpen size={36} className="text-slate-400" />
-                        <span className="text-xs font-bold text-slate-500">Chưa chọn ảnh desktop</span>
+                        <span className="text-sm font-bold text-slate-500">Chưa chọn ảnh desktop</span>
                       </div>
                     )}
 
@@ -10731,7 +10886,7 @@ export default function AdminDashboard(props: Props) {
                     ) : (
                       <div className="w-full h-full flex flex-col items-center justify-center text-slate-400 space-y-2 p-4 text-center">
                         <FolderOpen size={36} className="text-slate-400" />
-                        <span className="text-xs font-bold text-slate-500">Dùng chung ảnh Desktop nếu bỏ trống</span>
+                        <span className="text-sm font-bold text-slate-500">Dùng chung ảnh Desktop nếu bỏ trống</span>
                       </div>
                     )}
 
@@ -10777,7 +10932,7 @@ export default function AdminDashboard(props: Props) {
                       placeholder="Đặt Lịch Khám Ngay"
                       value={bannerForm.data.primary_button_text}
                       onChange={(e) => bannerForm.setData('primary_button_text', e.target.value)}
-                      className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-xs text-slate-800 outline-none focus:border-[#004b87] focus:bg-white"
+                      className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-sm text-slate-800 outline-none focus:border-[#004b87] focus:bg-white"
                     />
                   </div>
 
@@ -10790,7 +10945,7 @@ export default function AdminDashboard(props: Props) {
                       placeholder="/dat-lich"
                       value={bannerForm.data.primary_button_link}
                       onChange={(e) => bannerForm.setData('primary_button_link', e.target.value)}
-                      className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-xs text-slate-800 outline-none focus:border-[#004b87] focus:bg-white font-mono"
+                      className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-sm text-slate-800 outline-none focus:border-[#004b87] focus:bg-white font-mono"
                     />
                   </div>
                 </div>
@@ -10811,7 +10966,7 @@ export default function AdminDashboard(props: Props) {
                       placeholder="Tìm Hiểu Dịch Vụ"
                       value={bannerForm.data.secondary_button_text}
                       onChange={(e) => bannerForm.setData('secondary_button_text', e.target.value)}
-                      className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-xs text-slate-800 outline-none focus:border-[#004b87] focus:bg-white"
+                      className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-sm text-slate-800 outline-none focus:border-[#004b87] focus:bg-white"
                     />
                   </div>
 
@@ -10824,7 +10979,7 @@ export default function AdminDashboard(props: Props) {
                       placeholder="#services"
                       value={bannerForm.data.secondary_button_link}
                       onChange={(e) => bannerForm.setData('secondary_button_link', e.target.value)}
-                      className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-xs text-slate-800 outline-none focus:border-[#004b87] focus:bg-white font-mono"
+                      className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-sm text-slate-800 outline-none focus:border-[#004b87] focus:bg-white font-mono"
                     />
                   </div>
                 </div>
@@ -10840,7 +10995,7 @@ export default function AdminDashboard(props: Props) {
                     type="number"
                     value={bannerForm.data.order}
                     onChange={(e) => bannerForm.setData('order', Number(e.target.value))}
-                    className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-xs text-slate-800 outline-none focus:border-[#004b87] focus:bg-white font-mono font-bold"
+                    className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-sm text-slate-800 outline-none focus:border-[#004b87] focus:bg-white font-mono font-bold"
                   />
                 </div>
 
@@ -10851,7 +11006,7 @@ export default function AdminDashboard(props: Props) {
                   <select
                     value={bannerForm.data.is_active ? 'active' : 'inactive'}
                     onChange={(e) => bannerForm.setData('is_active', e.target.value === 'active')}
-                    className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-xs text-slate-800 font-bold outline-none focus:border-[#004b87] cursor-pointer"
+                    className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-sm text-slate-800 font-bold outline-none focus:border-[#004b87] cursor-pointer"
                   >
                     <option value="active">Kích hoạt</option>
                     <option value="inactive">Tạm ẩn</option>
@@ -10864,14 +11019,14 @@ export default function AdminDashboard(props: Props) {
                 <button
                   type="button"
                   onClick={() => setShowBannerModal(false)}
-                  className="px-6 py-2.5 bg-slate-100 text-slate-700 font-bold rounded-xl text-xs hover:bg-slate-200 cursor-pointer transition-all"
+                  className="px-6 py-2.5 bg-slate-100 text-slate-700 font-bold rounded-xl text-sm hover:bg-slate-200 cursor-pointer transition-all"
                 >
                   Hủy
                 </button>
                 <button
                   type="submit"
                   disabled={bannerForm.processing}
-                  className="px-8 py-2.5 bg-[#b89a67] hover:bg-[#a38654] text-white font-extrabold rounded-xl text-xs shadow-md cursor-pointer transition-all uppercase tracking-wider"
+                  className="px-8 py-2.5 bg-[#b89a67] hover:bg-[#a38654] text-white font-extrabold rounded-xl text-sm shadow-md cursor-pointer transition-all uppercase tracking-wider"
                 >
                   Lưu lại
                 </button>

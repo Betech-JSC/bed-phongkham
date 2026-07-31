@@ -189,7 +189,10 @@ class MediPlusSeeder extends Seeder
         ];
 
         foreach ($servicesP1 as $srv) {
-            Service::updateOrCreate(['slug' => $srv['slug']], array_merge($srv, ['service_pillar_id' => $pillar1->id]));
+            Service::updateOrCreate(['slug' => $srv['slug']], array_merge($srv, [
+                'service_pillar_id' => $pillar1->id,
+                'pillar_title' => $pillar1->title,
+            ]));
         }
 
         // Pillar 2
@@ -296,7 +299,10 @@ class MediPlusSeeder extends Seeder
         ];
 
         foreach ($servicesP2 as $srv) {
-            Service::updateOrCreate(['slug' => $srv['slug']], array_merge($srv, ['service_pillar_id' => $pillar2->id]));
+            Service::updateOrCreate(['slug' => $srv['slug']], array_merge($srv, [
+                'service_pillar_id' => $pillar2->id,
+                'pillar_title' => $pillar2->title,
+            ]));
         }
 
         // Pillar 3
@@ -383,7 +389,10 @@ class MediPlusSeeder extends Seeder
         ];
 
         foreach ($servicesP3 as $srv) {
-            Service::updateOrCreate(['slug' => $srv['slug']], array_merge($srv, ['service_pillar_id' => $pillar3->id]));
+            Service::updateOrCreate(['slug' => $srv['slug']], array_merge($srv, [
+                'service_pillar_id' => $pillar3->id,
+                'pillar_title' => $pillar3->title,
+            ]));
         }
 
         // 3. Authors
@@ -437,13 +446,14 @@ class MediPlusSeeder extends Seeder
         );
 
         // 6. Doctors & Schedule
-        $doc = Doctor::firstOrCreate(
+        $doc = Doctor::updateOrCreate(
             ['name' => 'BSCKII Đoàn Khôi'],
             [
-                'specialty' => 'Chuyên khoa II Nội Tim mạch',
+                'specialty' => 'Bác sĩ Nội khoa – Chuyên sâu Tim mạch',
                 'experience' => '25+ Năm kinh nghiệm',
-                'avatar' => '/assets/doctor.png',
+                'avatar' => '/assets/doctor_khoi.png',
                 'bio' => 'Trưởng khoa Tim mạch uy tín tại Hải Phòng, chuyên môn cao về Tăng huyết áp và Suy tim.',
+                'detailed_bio' => '<p>BSCKII Đoàn Khôi được đào tạo bài bản, chuyên sâu tại Đại học Y Hà Nội, có gần 20 năm kinh nghiệm trong lĩnh vực Nội khoa – Tim mạch. Bác sĩ từng đảm nhiệm các vị trí lãnh đạo khoa, phòng tại Bệnh viện Đa khoa tỉnh Hải Dương và Sở Y tế Hải Dương, có nhiều năm trực tiếp khám, điều trị và quản lý người bệnh tim mạch.</p><p>Thế mạnh chuyên môn là khám, điều trị và quản lý tăng huyết áp, rối loạn nhịp tim, rung nhĩ, bệnh mạch vành, suy tim, rối loạn lipid máu và các bệnh tim mạch mạn tính, giúp rất nhiều người bệnh phát hiện sớm, kiểm soát bệnh hiệu quả và giảm nguy các bệnh tim mạch, nhồi máu cơ tim, đột quỵ.</p><p>Bác sĩ trực tiếp thực hiện siêu âm tim, điện tâm đồ, Holter điện tim và Holter huyết áp và các kỹ thuật chẩn đoán bệnh lý tim mạch khác. Điểm khác biệt trong phương châm điều trị của bác sĩ là xây dựng mô hình chăm sóc tim mạch hiện đại với phát hiện sớm – theo dõi liên tục – kết nối chuyên gia tim mạch tuyến Trung ương – quản lý sức khỏe lâu dài, mang đến giải pháp chăm sóc tim mạch toàn diện ngay tại địa phương.</p><div class="border-l-4 border-secondary bg-slate-50 p-4 rounded-r-xl italic text-primary font-medium text-sm sm:text-base my-1">&ldquo;Không chỉ điều trị bệnh tim mạch, bác sĩ đồng hành cùng người bệnh để bảo vệ sức khỏe trái tim lâu dài.&rdquo;</div>',
                 'order' => 1
             ]
         );

@@ -280,9 +280,17 @@ class DashboardController extends Controller
             'status' => 'required|string|in:pending,confirmed,completed,cancelled',
             'doctor_notes' => 'nullable|string',
             'notes' => 'nullable|string',
+            'created_at' => 'nullable|string',
         ]);
 
-        $appointment->update(array_filter($validated, fn($v) => !is_null($v)));
+        $data = array_filter($validated, fn($v) => !is_null($v));
+
+        if (!empty($validated['created_at'])) {
+            $appointment->created_at = \Carbon\Carbon::parse($validated['created_at']);
+            unset($data['created_at']);
+        }
+
+        $appointment->fill($data)->save();
 
         return back()->with('success', 'Đã cập nhật hồ sơ bệnh nhân CRM!');
     }
@@ -576,7 +584,7 @@ class DashboardController extends Controller
             'title' => 'required|string|max:255',
             'slug' => 'nullable|string|max:255',
             'service_pillar_id' => 'required|integer|exists:service_pillars,id',
-            'price' => 'required|string|max:100',
+            'price' => 'nullable|string|max:100',
             'estimated_time' => 'nullable|string|max:100',
             'tagline' => 'nullable|string|max:255',
             'description' => 'nullable|string',
@@ -593,13 +601,14 @@ class DashboardController extends Controller
         $pillar = ServicePillar::findOrFail($validated['service_pillar_id']);
         $validated['pillar_title'] = $pillar->title;
         $validated['is_featured'] = $request->boolean('is_featured');
+        $validated['price'] = isset($validated['price']) ? trim($validated['price']) : '';
         $validated['tagline'] = $validated['tagline'] ?? '';
         $validated['description'] = $validated['description'] ?? '';
         $validated['detailed_description'] = $validated['detailed_description'] ?? '';
         $validated['estimated_time'] = $validated['estimated_time'] ?? '60 phút';
         $validated['includes'] = $validated['includes'] ?? [];
         $validated['candidates'] = $validated['candidates'] ?? [];
-        $validated['image'] = $validated['image'] ?? '/assets/screening_service.png';
+        $validated['image'] = $validated['image'] ?? '/assets/logo_pk.png';
 
         Service::create($validated);
 
@@ -612,7 +621,7 @@ class DashboardController extends Controller
             'title' => 'required|string|max:255',
             'slug' => 'nullable|string|max:255',
             'service_pillar_id' => 'required|integer|exists:service_pillars,id',
-            'price' => 'required|string|max:100',
+            'price' => 'nullable|string|max:100',
             'estimated_time' => 'nullable|string|max:100',
             'tagline' => 'nullable|string|max:255',
             'description' => 'nullable|string',
@@ -634,6 +643,7 @@ class DashboardController extends Controller
         $pillar = ServicePillar::findOrFail($validated['service_pillar_id']);
         $validated['pillar_title'] = $pillar->title;
         $validated['is_featured'] = $request->boolean('is_featured');
+        $validated['price'] = isset($validated['price']) ? trim($validated['price']) : '';
 
         $service->update($validated);
 

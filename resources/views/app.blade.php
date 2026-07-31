@@ -7,8 +7,17 @@
         <title inertia>Phòng Khám Chuyên Khoa Nội - BSCKII Đoàn Khôi</title>
 
         @php
-            $favicon = \App\Models\SiteSetting::where('key', 'logo_favicon')->value('value')
-                ?: (\App\Models\SiteSetting::where('key', 'logo_dark')->value('value') ?: '/assets/logo.png');
+            $faviconSetting = \App\Models\SiteSetting::where('key', 'logo_favicon')->value('value');
+            if ($faviconSetting && (str_starts_with($faviconSetting, 'http') || file_exists(public_path(ltrim($faviconSetting, '/'))))) {
+                $favicon = $faviconSetting;
+            } else {
+                $logoDarkSetting = \App\Models\SiteSetting::where('key', 'logo_dark')->value('value');
+                if ($logoDarkSetting && (str_starts_with($logoDarkSetting, 'http') || file_exists(public_path(ltrim($logoDarkSetting, '/'))))) {
+                    $favicon = $logoDarkSetting;
+                } else {
+                    $favicon = '/assets/logo.png';
+                }
+            }
         @endphp
         <link rel="icon" type="image/png" href="{{ $favicon }}">
         <link rel="shortcut icon" type="image/png" href="{{ $favicon }}">

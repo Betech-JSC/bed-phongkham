@@ -37,9 +37,12 @@ export default function Footer() {
             <Link href="/" className="flex flex-col items-start gap-3 group">
               <div className="relative w-20 h-20 flex items-center justify-center shrink-0">
                 <img
-                  src="/assets/logo.png"
+                  src={settings.logo_dark || "/assets/logo.png"}
                   alt="Phòng khám BSCKII Đoàn Khôi Logo"
                   className="w-full h-full object-contain group-hover:scale-105 transition-transform"
+                  onError={(e) => {
+                    (e.target as HTMLImageElement).src = '/assets/logo.png';
+                  }}
                 />
               </div>
               <div className="flex flex-col">

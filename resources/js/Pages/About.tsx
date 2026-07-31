@@ -30,6 +30,7 @@ interface Doctor {
   experience: string;
   avatar: string;
   bio?: string;
+  detailed_bio?: string;
 }
 
 interface Faq {
@@ -153,8 +154,8 @@ export default function About({ settings = {}, doctors = [], faqs = [] }: Props)
                 <div className="w-full lg:w-80 shrink-0 flex flex-col gap-4 items-center lg:items-start text-center lg:text-left">
                   <div className="relative w-full aspect-[3/4] max-w-[320px] rounded-2xl overflow-hidden shadow-xs bg-slate-100">
                     <img
-                      src="/assets/doctor_khoi.png"
-                      alt="BSCKII. Đoàn Văn Khôi"
+                      src={doctors[0]?.avatar || "/assets/doctor_khoi.png"}
+                      alt={doctors[0]?.name || "BSCKII. Đoàn Văn Khôi"}
                       className="w-full h-full object-cover"
                     />
                   </div>
@@ -169,29 +170,38 @@ export default function About({ settings = {}, doctors = [], faqs = [] }: Props)
                       {doctors[0]?.name || "BSCKII. Đoàn Văn Khôi"}
                     </h3>
                     <p className="text-sm font-bold text-secondary uppercase tracking-wider mt-1">
-                      Bác sĩ Nội khoa – Chuyên sâu Tim mạch
+                      {doctors[0]?.specialty || "Bác sĩ Nội khoa – Chuyên sâu Tim mạch"}
                     </p>
                   </div>
 
-                  {/* Paragraph 1 */}
-                  <p className="text-slate-700 text-sm sm:text-base leading-relaxed">
-                    BSCKII Đoàn Khôi được đào tạo bài bản, chuyên sâu tại Đại học Y Hà Nội, có gần 20 năm kinh nghiệm trong lĩnh vực Nội khoa – Tim mạch. Bác sĩ từng đảm nhiệm các vị trí lãnh đạo khoa, phòng tại Bệnh viện Đa khoa tỉnh Hải Dương và Sở Y tế Hải Dương, có nhiều năm trực tiếp khám, điều trị và quản lý người bệnh tim mạch.
-                  </p>
+                  {doctors[0]?.detailed_bio ? (
+                    <div 
+                      className="space-y-4"
+                      dangerouslySetInnerHTML={{ __html: doctors[0].detailed_bio }}
+                    />
+                  ) : (
+                    <>
+                      {/* Paragraph 1 */}
+                      <p className="text-slate-700 text-sm sm:text-base leading-relaxed">
+                        BSCKII Đoàn Khôi được đào tạo bài bản, chuyên sâu tại Đại học Y Hà Nội, có gần 20 năm kinh nghiệm trong lĩnh vực Nội khoa – Tim mạch. Bác sĩ từng đảm nhiệm các vị trí lãnh đạo khoa, phòng tại Bệnh viện Đa khoa tỉnh Hải Dương và Sở Y tế Hải Dương, có nhiều năm trực tiếp khám, điều trị và quản lý người bệnh tim mạch.
+                      </p>
 
-                  {/* Paragraph 2 */}
-                  <p className="text-slate-700 text-sm sm:text-base leading-relaxed">
-                    Thế mạnh chuyên môn là khám, điều trị và quản lý tăng huyết áp, rối loạn nhịp tim, rung nhĩ, bệnh mạch vành, suy tim, rối loạn lipid máu và các bệnh tim mạch mạn tính, giúp rất nhiều người bệnh phát hiện sớm, kiểm soát bệnh hiệu quả và giảm nguy các bệnh tim mạch, nhồi máu cơ tim, đột quỵ.
-                  </p>
+                      {/* Paragraph 2 */}
+                      <p className="text-slate-700 text-sm sm:text-base leading-relaxed">
+                        Thế mạnh chuyên môn là khám, điều trị và quản lý tăng huyết áp, rối loạn nhịp tim, rung nhĩ, bệnh mạch vành, suy tim, rối loạn lipid máu và các bệnh tim mạch mạn tính, giúp rất nhiều người bệnh phát hiện sớm, kiểm soát bệnh hiệu quả và giảm nguy các bệnh tim mạch, nhồi máu cơ tim, đột quỵ.
+                      </p>
 
-                  {/* Paragraph 3 */}
-                  <p className="text-slate-700 text-sm sm:text-base leading-relaxed">
-                    Bác sĩ trực tiếp thực hiện siêu âm tim, điện tâm đồ, Holter điện tim và Holter huyết áp và các kỹ thuật chẩn đoán bệnh lý tim mạch khác. Điểm khác biệt trong phương châm điều trị của bác sĩ là xây dựng mô hình chăm sóc tim mạch hiện đại với phát hiện sớm – theo dõi liên tục – kết nối chuyên gia tim mạch tuyến Trung ương – quản lý sức khỏe lâu dài, mang đến giải pháp chăm sóc tim mạch toàn diện ngay tại địa phương.
-                  </p>
+                      {/* Paragraph 3 */}
+                      <p className="text-slate-700 text-sm sm:text-base leading-relaxed">
+                        Bác sĩ trực tiếp thực hiện siêu âm tim, điện tâm đồ, Holter điện tim và Holter huyết áp và các kỹ thuật chẩn đoán bệnh lý tim mạch khác. Điểm khác biệt trong phương châm điều trị của bác sĩ là xây dựng mô hình chăm sóc tim mạch hiện đại với phát hiện sớm – theo dõi liên tục – kết nối chuyên gia tim mạch tuyến Trung ương – quản lý sức khỏe lâu dài, mang đến giải pháp chăm sóc tim mạch toàn diện ngay tại địa phương.
+                      </p>
 
-                  {/* Quote */}
-                  <div className="border-l-4 border-secondary bg-slate-50 p-4 rounded-r-xl italic text-primary font-medium text-sm sm:text-base my-1">
-                    &ldquo;Không chỉ điều trị bệnh tim mạch, bác sĩ đồng hành cùng người bệnh để bảo vệ sức khỏe trái tim lâu dài.&rdquo;
-                  </div>
+                      {/* Quote */}
+                      <div className="border-l-4 border-secondary bg-slate-50 p-4 rounded-r-xl italic text-primary font-medium text-sm sm:text-base my-1">
+                        &ldquo;Không chỉ điều trị bệnh tim mạch, bác sĩ đồng hành cùng người bệnh để bảo vệ sức khỏe trái tim lâu dài.&rdquo;
+                      </div>
+                    </>
+                  )}
 
                 </div>
 
