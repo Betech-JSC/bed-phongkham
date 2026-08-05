@@ -715,7 +715,7 @@ export default function AdminDashboard(props: Props) {
       }
     } else if (mediaPickerTarget === 'result') {
       resultForm.setData('before_image', cleanUrl);
-    } else if (mediaPickerTarget && (mediaPickerTarget === 'about_main_image' || mediaPickerTarget === 'about_story_img1' || mediaPickerTarget === 'about_story_img2' || mediaPickerTarget === 'about_story_img3' || mediaPickerTarget.startsWith('logo_'))) {
+    } else if (mediaPickerTarget && (mediaPickerTarget.startsWith('about_') || mediaPickerTarget.startsWith('logo_'))) {
       const targetKey = mediaPickerTarget;
       setSettingsData(prev => ({ ...prev, [targetKey]: cleanUrl }));
     } else if (mediaPickerTarget === 'policy_editor') {
