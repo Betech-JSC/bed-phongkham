@@ -18,7 +18,6 @@ import {
   Users,
   Smartphone,
   HeartPulse,
-  HeartHandshake,
   MonitorCheck
 } from "lucide-react";
 import MainLayout from "@/Layouts/MainLayout";
@@ -49,64 +48,70 @@ export default function About({ settings = {}, doctors = [], faqs = [] }: Props)
   const missionStandards = [
     {
       step: "01",
-      title: "Phát hiện sớm bệnh lý",
-      desc: "Khám chuyên khoa, xét nghiệm, ECG, Holter, siêu âm kết hợp phân tích AI giúp phát hiện yếu tố nguy cơ tim mạch ở giai đoạn sớm nhất."
+      title: "Phát hiện sớm bệnh lý tim mạch",
+      desc: "Khám chuyên khoa, xét nghiệm, ECG, Holter điện tim dài ngày và siêu âm giúp phát hiện yếu tố nguy cơ tim mạch ở giai đoạn sớm nhất."
     },
     {
       step: "02",
-      title: "Theo dõi & Điều trị liên tục",
-      desc: "Đội ngũ bác sĩ chuyên môn giỏi, áp dụng quy trình chuẩn y khoa, minh bạch phác đồ và đồng hành kiểm soát bệnh lâu dài."
+      title: "Điều trị đúng và kịp thời",
+      desc: "Đội ngũ bác sĩ chuyên môn giỏi, áp dụng y học chứng cứ, quy trình chuẩn y khoa và minh bạch phác đồ điều trị."
     },
     {
       step: "03",
-      title: "Quản lý sức khỏe ngoài bệnh viện",
-      desc: "Chăm sóc sức khỏe tim mạch chủ động tại gia đình và cộng đồng, giảm thiểu nguy cơ biến chứng và tái nhập viện."
+      title: "Theo dõi liên tục ngoài bệnh viện",
+      desc: "Holter điện tim CAI-300 theo dõi liên tục đến 14 ngày, Holter huyết áp và thiết bị theo dõi tại nhà để quản lý lâu dài bệnh mạn tính."
     },
     {
       step: "04",
       title: "Kết nối chuyên gia tuyến Trung ương",
-      desc: "Hợp tác trực tiếp với các chuyên gia đầu ngành từ Viện Tim mạch Quốc gia, BV 108, BV Tim Hà Nội, Vinmec Times City."
+      desc: "Hợp tác hội chẩn với các chuyên gia tim mạch và nội khoa tại các bệnh viện tuyến Trung ương; hỗ trợ kết nối và theo dõi sau chuyển tuyến."
     },
     {
       step: "05",
-      title: "Ứng dụng trí tuệ nhân tạo (AI) & Số hóa",
-      desc: "Đưa trí tuệ nhân tạo và dữ liệu số vào phân tích chỉ số, hỗ trợ chẩn đoán chính xác tuyệt đối và tối ưu lộ trình điều trị."
+      title: "Đồng hành lâu dài cùng người bệnh",
+      desc: "Nhắc tái khám định kỳ, tư vấn dinh dưỡng, thay đổi lối sống và đồng hành xuyên suốt hành trình bảo vệ sức khỏe tim mạch."
     }
   ];
 
-  const commitments = [
-    { title: "Phát hiện sớm bệnh tim mạch", desc: "Tầm soát & phân tích dữ liệu chuyên sâu với AI" },
-    { title: "Điều trị đúng – Đáng tin cậy", desc: "Quy trình chuẩn y khoa & minh bạch phác đồ" },
-    { title: "Kết nối tuyến Trung ương", desc: "Tham vấn trực tiếp chuyên gia từ viện lớn" },
-    { title: "Phối hợp điều trị liên tục", desc: "Liền mạch giữa phòng khám & bệnh viện tuyến trên" },
-    { title: "Theo dõi lâu dài tại địa phương", desc: "Kiểm soát nguy cơ tái phát & theo dõi định kỳ" },
-    { title: "Tận tâm – An toàn – Bảo mật", desc: "Đặt lợi ích & sự an toàn người bệnh lên hàng đầu" }
+  const careModels = [
+    { title: "Khám và đánh giá toàn diện", desc: "Thăm khám chuyên khoa đầy đủ, không bỏ sót các yếu tố nguy cơ tiềm ẩn." },
+    { title: "Phát hiện sớm các yếu tố nguy cơ", desc: "Tầm soát và cảnh báo sớm trước khi các bệnh lý tim mạch tiến triển nặng." },
+    { title: "Theo dõi bằng phương tiện hiện đại", desc: "Trang bị Holter ECG CAI-300 (đến 14 ngày), Holter huyết áp và thiết bị theo dõi tại nhà." },
+    { title: "Quản lý lâu dài các bệnh mạn tính", desc: "Đồng hành kiểm soát bệnh liên tục, lập hồ sơ số hóa và nhắc lịch tái khám định kỳ." },
+    { title: "Nhắc tái khám định kỳ", desc: "Hệ thống nhắc lịch tự động giúp người bệnh duy trì lộ trình điều trị đúng và đủ." },
+    { title: "Tư vấn ăn uống dinh dưỡng & lối sống", desc: "Hướng dẫn chi tiết chế độ ăn, tập luyện và thay đổi thói quen bảo vệ tim mạch." },
+    { title: "Kết nối chuyên gia khi cần", desc: "Hội chẩn trực tiếp với các chuyên gia tuyến Trung ương và hỗ trợ chuyển tuyến kịp thời." },
+    { title: "Đồng hành trong suốt quá trình", desc: "Không chỉ khám hôm nay mà theo dõi, tư vấn và chăm sóc sức khỏe lâu dài." }
   ];
 
   const facilities = [
     {
-      title: "Holter điện tâm đồ 24h - 48h (ECG)",
-      desc: "Thiết bị đeo ngực thế hệ mới nhỏ gọn, không thấm nước, ghi lại từng nhịp đập của tim suốt ngày đêm để phát hiện rối loạn nhịp âm thầm và thiếu máu cơ tim."
+      title: "Siêu âm tim Doppler màu chuyên sâu",
+      desc: "Đánh giá cấu trúc, chức năng tim, phân xuất tống máu (EF), phát hiện sớm các bệnh lý van tim và cơ tim."
+    },
+    {
+      title: "Siêu âm mạch máu",
+      desc: "Khảo sát hệ thống mạch máu ngoại biên, phát hiện sớm xơ vữa động mạch, hẹp tắc mạch và biến chứng."
+    },
+    {
+      title: "Điện tâm đồ (ECG)",
+      desc: "Ghi nhận hoạt động điện của tim, phát hiện rối loạn nhịp tim, thiếu máu cơ tim và các bất thường cấu trúc."
+    },
+    {
+      title: "Holter điện tim dài ngày CAI-300 (Đến 14 ngày)",
+      desc: "Công nghệ tiên phong theo dõi điện tim liên tục lên đến 14 ngày, phát hiện rối loạn nhịp tim xuất hiện không thường xuyên hoặc vào ban đêm."
     },
     {
       title: "Holter huyết áp theo dõi 24h (ABPM)",
-      desc: "Theo dõi sự biến thiên huyết áp liên tục trong 24 giờ, giúp chẩn đoán chính xác tăng huyết áp áo choàng trắng, tăng huyết áp ẩn dấu và tăng huyết áp thai kỳ."
+      desc: "Theo dõi sự biến thiên huyết áp liên tục trong 24 giờ, chẩn đoán chính xác tăng huyết áp ẩn dấu và áo choàng trắng."
     },
     {
-      title: "Siêu âm tim Doppler màu chuyên sâu",
-      desc: "Hệ thống siêu âm hiện đại giúp dựng hình ảnh cấu trúc van tim, đánh giá chính xác lực bóp phân xuất tống máu (EF) và vận động vùng cơ tim."
+      title: "Thiết bị theo dõi điện tim tại nhà",
+      desc: "Hỗ trợ người bệnh theo dõi chỉ số tim mạch ngay tại nhà và gửi dữ liệu số hóa trực tiếp cho bác sĩ phân tích từ xa."
     },
     {
-      title: "Máy điện tim & Phân tích chẩn đoán AI",
-      desc: "Hệ thống ECG thế hệ mới kết hợp phần mềm AI phân tích sóng tim, hỗ trợ phát hiện sớm nguy cơ rung nhĩ, nhồi máu cơ tim và đột quỵ."
-    },
-    {
-      title: "Siêu âm & Thiết bị thăm khám cộng đồng",
-      desc: "Trang thiết bị y tế xách tay hiện đại phục vụ khám, điện tim và tầm soát tận nơi cho người cao tuổi, người khó khăn trong di chuyển."
-    },
-    {
-      title: "Hệ thống số hóa dữ liệu bệnh án & Từ xa",
-      desc: "Lưu trữ hồ sơ điện tử, kết nối trực tiếp với chuyên gia tuyến Trung ương và hỗ trợ theo dõi chỉ số tim mạch từ xa qua ứng dụng."
+      title: "Hệ thống xét nghiệm & Lấy mẫu tại nhà",
+      desc: "Hệ thống xét nghiệm chuyên nghiệp đánh giá nguy cơ tim mạch, mỡ máu, tiểu đường và dịch vụ lấy mẫu tại nhà khi cần."
     }
   ];
 
@@ -125,10 +130,10 @@ export default function About({ settings = {}, doctors = [], faqs = [] }: Props)
           <div className="absolute inset-0 bg-gradient-to-r from-primary/30 to-slate-950/50 pointer-events-none" />
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center relative z-10 flex flex-col items-center gap-4">
             <span className="text-sm sm:text-base md:text-lg font-bold tracking-wider text-white bg-white/20 px-6 py-2 rounded-full border border-white/30 shadow-sm backdrop-blur-xs">
-              Phòng khám Chuyên khoa Nội - BSCK. II Đoàn Khôi
+              {settings.about_eyebrow || "Phòng khám Chuyên khoa Nội - BSCK. II Đoàn Khôi"}
             </span>
-            <h1 className="text-2xl sm:text-4xl md:text-5xl font-extrabold tracking-tight">
-              TRUNG TÂM TIM MẠCH SỐ & QUẢN LÝ TIM MẠCH CỘNG ĐỒNG
+            <h1 className="text-2xl sm:text-4xl md:text-5xl font-extrabold tracking-tight uppercase">
+              {settings.about_title || "TRUNG TÂM TIM MẠCH SỐ & QUẢN LÝ TIM MẠCH CỘNG ĐỒNG"}
             </h1>
           </div>
         </section>
@@ -183,22 +188,22 @@ export default function About({ settings = {}, doctors = [], faqs = [] }: Props)
                     <>
                       {/* Paragraph 1 */}
                       <p className="text-slate-700 text-sm sm:text-base leading-relaxed">
-                        BSCKII Đoàn Khôi được đào tạo bài bản, chuyên sâu tại Đại học Y Hà Nội, có gần 20 năm kinh nghiệm trong lĩnh vực Nội khoa – Tim mạch. Bác sĩ từng đảm nhiệm các vị trí lãnh đạo khoa, phòng tại Bệnh viện Đa khoa tỉnh Hải Dương và Sở Y tế Hải Dương, có nhiều năm trực tiếp khám, điều trị và quản lý người bệnh tim mạch.
+                        BSCKII Đoàn Khôi được đào tạo bài bản tại Trường Đại học Y Hà Nội, có gần 20 năm kinh nghiệm trong lĩnh vực Nội khoa – Tim mạch. Không chỉ trực tiếp khám và điều trị người bệnh, bác sĩ còn có nhiều năm đảm nhiệm các vị trí lãnh đạo chuyên môn tại bệnh viện tuyến tỉnh và Sở Y tế, tham gia quản lý chất lượng khám chữa bệnh, phát triển hệ thống y tế cơ sở và triển khai các chương trình phòng chống bệnh không lây nhiễm.
                       </p>
 
                       {/* Paragraph 2 */}
                       <p className="text-slate-700 text-sm sm:text-base leading-relaxed">
-                        Thế mạnh chuyên môn là khám, điều trị và quản lý tăng huyết áp, rối loạn nhịp tim, rung nhĩ, bệnh mạch vành, suy tim, rối loạn lipid máu và các bệnh tim mạch mạn tính, giúp rất nhiều người bệnh phát hiện sớm, kiểm soát bệnh hiệu quả và giảm nguy các bệnh tim mạch, nhồi máu cơ tim, đột quỵ.
+                        Sự kết hợp giữa kinh nghiệm lâm sàng, quản lý y tế và kết nối chuyên môn là nền tảng để xây dựng mô hình chăm sóc tim mạch cộng đồng hiện đại. Trung tâm đồng thời duy trì hợp tác chuyên môn với các chuyên gia tim mạch và nội khoa tại nhiều cơ sở y tế tuyến Trung ương, tạo điều kiện để người bệnh được tiếp cận với các ý kiến chuyên môn khi cần thiết.
                       </p>
 
                       {/* Paragraph 3 */}
                       <p className="text-slate-700 text-sm sm:text-base leading-relaxed">
-                        Bác sĩ trực tiếp thực hiện siêu âm tim, điện tâm đồ, Holter điện tim và Holter huyết áp và các kỹ thuật chẩn đoán bệnh lý tim mạch khác. Điểm khác biệt trong phương châm điều trị của bác sĩ là xây dựng mô hình chăm sóc tim mạch hiện đại với phát hiện sớm – theo dõi liên tục – kết nối chuyên gia tim mạch tuyến Trung ương – quản lý sức khỏe lâu dài, mang đến giải pháp chăm sóc tim mạch toàn diện ngay tại địa phương.
+                        Trung tâm tập trung phát triển chuyên sâu trong các lĩnh vực: Tăng huyết áp, Rối loạn nhịp tim, Rung nhĩ, Bệnh mạch vành, Suy tim, Đau ngực, Khó thở, Theo dõi sau đặt stent và sau điều trị tại bệnh viện; Đánh giá nguy cơ đột quỵ; Quản lý các yếu tố nguy cơ tim mạch, Rối loạn lipid máu, Đái tháo đường, Thừa cân béo phì và các bệnh mạn tính ở người cao tuổi.
                       </p>
 
                       {/* Quote */}
-                      <div className="border-l-4 border-secondary bg-slate-50 p-4 rounded-r-xl italic text-primary font-medium text-sm sm:text-base my-1">
-                        &ldquo;Không chỉ điều trị bệnh tim mạch, bác sĩ đồng hành cùng người bệnh để bảo vệ sức khỏe trái tim lâu dài.&rdquo;
+                      <div className="border-l-4 border-secondary bg-slate-50 p-4 rounded-r-xl italic text-primary font-bold text-sm sm:text-base my-1">
+                        &ldquo;Trái tim chỉ có một - Hãy chủ động bảo vệ từ hôm nay.&rdquo;
                       </div>
                     </>
                   )}
@@ -247,14 +252,14 @@ export default function About({ settings = {}, doctors = [], faqs = [] }: Props)
                       <Stethoscope size={20} className="text-secondary" />
                       PHƯƠNG CHÂM LÀM VIỆC
                     </h3>
-                    <p className="text-base sm:text-lg font-bold text-primary italic leading-relaxed bg-slate-50 p-5 rounded-2xl border-l-4 border-secondary shadow-2xs">
-                      &ldquo;Phát hiện sớm – Theo dõi liên tục<br/>Can thiệp kịp thời – Đồng hành lâu dài.&rdquo;
+                    <p className="text-base sm:text-lg font-bold text-primary italic leading-relaxed bg-slate-50 p-5 rounded-2xl border-l-4 border-secondary shadow-2xs whitespace-pre-line">
+                      {settings.about_founder_quote ? settings.about_founder_quote : "Phát hiện sớm – Theo dõi liên tục\nCan thiệp kịp thời – Đồng hành lâu dài."}
                     </p>
                   </div>
 
                   <div className="md:col-span-6 w-full h-56 sm:h-64 rounded-2xl overflow-hidden shadow-xs bg-slate-100">
                     <img
-                      src="/assets/heart_ultrasound.png"
+                      src={settings.about_story_img1 || "/assets/heart_ultrasound.png"}
                       alt="Hình ảnh siêu âm tim bác sĩ thực hiện"
                       className="w-full h-full object-cover"
                     />
@@ -286,12 +291,6 @@ export default function About({ settings = {}, doctors = [], faqs = [] }: Props)
 
             {/* Sứ mệnh - 5 Tiêu chuẩn cốt lõi Grid */}
             <div className="flex flex-col gap-6">
-              <div className="flex items-center gap-3 border-b border-slate-200 pb-3">
-                <HeartHandshake className="text-secondary shrink-0" size={24} />
-                <h3 className="text-xl font-bold text-primary tracking-tight">
-                  SỨ MỆNH: 5 Tiêu Chuẩn Cốt Lõi
-                </h3>
-              </div>
 
               <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-5">
                 {missionStandards.map((item, index) => (
@@ -327,7 +326,7 @@ export default function About({ settings = {}, doctors = [], faqs = [] }: Props)
                   TRỞ THÀNH &ldquo;HUB TIM MẠCH CỘNG ĐỒNG KHU VỰC&rdquo;
                 </h3>
                 <p className="text-sm sm:text-base text-slate-100 leading-relaxed font-light">
-                  Trung tâm điều phối chủ chốt kết nối người dân, bác sĩ chuyên gia tuyến Trung ương và các chương trình chăm sóc sức khỏe tim mạch toàn diện – Mang y tế chất lượng cao đến gần hơn với cộng đồng.
+                  Xây dựng trung tâm tim mạch chuyên sâu uy tín tại khu vực Hải Phòng; tiên phong trong ứng dụng công nghệ số, theo dõi tim mạch từ xa và quản lý bệnh mạn tính. Từng bước trở thành trung tâm kết nối chuyên môn giữa y tế cơ sở và các chuyên gia tim mạch tuyến Trung ương.
                 </p>
               </div>
 
@@ -342,28 +341,34 @@ export default function About({ settings = {}, doctors = [], faqs = [] }: Props)
               </div>
             </div>
 
-            {/* 6 Cam kết cốt lõi - LAYOUT TRÁI PHẢI */}
+            {/* MÔ HÌNH CHĂM SÓC KHÁC BIỆT - LAYOUT TRÁI PHẢI */}
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 items-center pt-4">
               {/* Bên trái: Hình ảnh bác sĩ chăm sóc bệnh nhân */}
-              <div className="lg:col-span-5 rounded-2xl overflow-hidden shadow-sm bg-slate-100 min-h-[380px] h-full">
+              <div className="lg:col-span-5 rounded-2xl overflow-hidden shadow-sm bg-slate-100 min-h-[420px] h-full">
                 <img
-                  src="/assets/doctor_caring_patient.png"
+                  src={settings.about_care_image || "/assets/doctor_caring_patient.png"}
                   alt="Bác sĩ thăm khám bệnh nhân"
                   className="w-full h-full object-cover"
+                  onError={(e) => { (e.target as HTMLImageElement).src = '/assets/doctor_caring_patient.png'; }}
                 />
               </div>
 
-              {/* Bên phải: Tiêu đề to + Danh sách cam kết xếp chung (Không icon, spacing thu nhỏ) */}
+              {/* Bên phải: Tiêu đề MÔ HÌNH CHĂM SÓC KHÁC BIỆT + 8 điểm */}
               <div className="lg:col-span-7 flex flex-col justify-center gap-4">
-                <h3 className="text-xl sm:text-2xl font-extrabold text-primary tracking-tight pb-1 border-b-2 border-secondary/30">
-                  CAM KẾT DỊCH VỤ CỦA CHÚNG TÔI
-                </h3>
+                <div>
+                  <h3 className="text-xl sm:text-2xl font-extrabold text-primary tracking-tight pb-1 border-b-2 border-secondary/30 uppercase">
+                    {settings.about_care_title || "MÔ HÌNH CHĂM SÓC KHÁC BIỆT"}
+                  </h3>
+                  <p className="text-xs sm:text-sm text-slate-600 leading-relaxed mt-2 italic">
+                    {settings.about_care_desc || "Khác với mô hình khám bệnh truyền thống, Trung tâm hướng tới xây dựng hệ thống quản lý sức khỏe tim mạch liên tục, lấy người bệnh làm trung tâm và đồng hành trong suốt hành trình bảo vệ trái tim."}
+                  </p>
+                </div>
 
-                <div className="flex flex-col gap-3">
-                  {commitments.map((c, i) => (
-                    <div key={i} className="flex flex-col gap-0.5 border-b border-slate-100 pb-2.5 last:border-b-0 last:pb-0">
-                      <h4 className="text-sm sm:text-base font-bold text-primary">{c.title}</h4>
-                      <p className="text-sm text-slate-600 leading-relaxed">{c.desc}</p>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
+                  {careModels.map((c, i) => (
+                    <div key={i} className="flex flex-col gap-1 bg-white p-3.5 rounded-xl border border-slate-100 shadow-2xs hover:border-secondary/40 transition-colors">
+                      <h4 className="text-sm font-bold text-primary">{c.title}</h4>
+                      <p className="text-xs text-slate-600 leading-relaxed">{c.desc}</p>
                     </div>
                   ))}
                 </div>
@@ -373,31 +378,44 @@ export default function About({ settings = {}, doctors = [], faqs = [] }: Props)
           </div>
         </section>
 
-        {/* Facilities & Equipment Section (UPDATE & THÊM THÔNG TIN MỚI) */}
-        <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
-          <div className="text-center max-w-3xl mx-auto mb-16 flex flex-col gap-3">
-            <span className="text-sm font-bold uppercase tracking-wider text-secondary">Trang thiết bị y tế</span>
-            <h2 className="text-2xl sm:text-3xl font-bold text-primary tracking-tight">
-              CƠ SỞ VẬT CHẤT & THIẾT BỊ HIỆN ĐẠI
+        {/* Facilities & Equipment Section (BASIC LIST BÊN TRÁI - HÌNH ẢNH BÊN PHẢI) */}
+        <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 md:py-20">
+          <div className="text-center max-w-3xl mx-auto mb-12 flex flex-col items-center gap-3">
+            <h2 className="text-2xl sm:text-3xl font-extrabold text-primary tracking-tight uppercase">
+              {settings.about_tech_title || "HỆ THỐNG KỸ THUẬT"}
             </h2>
             <div className="w-16 h-1 bg-secondary mx-auto rounded-full" />
-            <p className="text-sm sm:text-base text-text-light mt-2">
-              Phòng khám được đầu tư đồng bộ với các công nghệ chẩn đoán tim mạch tiên tiến, kết hợp dữ liệu số và AI hỗ trợ chẩn đoán chính xác tuyệt đối.
-            </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {facilities.map((item, idx) => (
-              <div key={idx} className="bg-white p-7 rounded-2xl shadow-sm border border-slate-100 flex flex-col gap-4 hover:shadow-md transition-all hover:-translate-y-1">
-                <div className="w-12 h-12 bg-primary/5 rounded-xl flex items-center justify-center text-primary shrink-0">
-                  <Building2 size={24} />
-                </div>
-                <div>
-                  <h3 className="font-bold text-primary text-base mb-2">{item.title}</h3>
-                  <p className="text-sm text-text-light leading-relaxed">{item.desc}</p>
-                </div>
-              </div>
-            ))}
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 items-center">
+            
+            {/* CỘT TRÁI (7 COLUMNS): Nội dung Textarea thuần túy */}
+            <div className="lg:col-span-7 flex flex-col gap-4 text-sm sm:text-base text-slate-700 leading-relaxed font-medium whitespace-pre-line">
+              {settings.about_tech_content || `Trung tâm có hệ thống trang thiết bị hiện đại phục vụ chẩn đoán và theo dõi bệnh tim mạch:
+• Siêu âm tim
+• Siêu âm mạch máu
+• Điện tâm đồ
+• Holter điện tim dài ngày
+• Holter huyết áp
+• Thiết bị theo dõi điện tim tại nhà
+• Hệ thống xét nghiệm chuyên nghiệp
+• Dịch vụ lấy mẫu xét nghiệm tại nhà khi cần.
+
+Đặc biệt, Trung tâm triển khai Holter điện tim dài ngày CAI-300, có khả năng theo dõi điện tim liên tục đến 14 ngày, góp phần nâng cao khả năng phát hiện các rối loạn nhịp tim xuất hiện không thường xuyên.
+
+Các phương tiện chẩn đoán được kết nối với hệ thống lưu trữ dữ liệu số, hỗ trợ theo dõi lâu dài, đánh giá diễn biến bệnh theo thời gian và tạo thuận lợi cho việc hội chẩn các chuyên gia khi cần thiết.`}
+            </div>
+
+            {/* CỘT PHẢI (5 COLUMNS): Single Equipment Image */}
+            <div className="lg:col-span-5 w-full h-[360px] md:h-[420px] rounded-2xl overflow-hidden shadow-md border border-slate-200 bg-slate-100 relative group">
+              <img
+                src={settings.about_tech_image || "/assets/heart_care.png"}
+                alt="Trang thiết bị máy móc y tế phòng khám"
+                className="w-full h-full object-cover group-hover:scale-103 transition-transform duration-500"
+                onError={(e) => { (e.target as HTMLImageElement).src = '/assets/heart_care.png'; }}
+              />
+            </div>
+
           </div>
         </section>
 

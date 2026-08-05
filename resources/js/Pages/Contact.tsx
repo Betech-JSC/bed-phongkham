@@ -125,11 +125,25 @@ export default function Contact({ allServices = [], settings = {}, prefillServic
                   </motion.li>
                   <motion.li whileHover={{ x: 4 }} transition={{ type: "spring", stiffness: 400 }} className="flex items-start gap-3 p-2 rounded-xl hover:bg-slate-50 transition-colors">
                     <Clock className="text-secondary shrink-0 mt-0.5" size={20} />
-                    <div>
-                      <h4 className="font-bold text-text-primary">Giờ làm việc:</h4>
-                      <p className="text-text-light mt-0.5 font-medium">Thứ 2 – Thứ 6: 17h15 – 20h00</p>
-                      <p className="text-text-light mt-0.5 font-medium">Thứ 7, CN: Sáng 7h15 – 11h15 | Chiều 13h30 – 20h30</p>
-                      <p className="text-xs text-slate-500 italic mt-1">* Tư vấn cấp cứu & điều trị toàn thời gian các ngày trong tuần</p>
+                    <div className="flex flex-col gap-2">
+                      <div>
+                        <h4 className="font-bold text-text-primary">1. Phòng khám Chuyên khoa Nội - BSCKII Đoàn Khôi:</h4>
+                        {settings.working_hours ? (
+                          <p className="text-text-light mt-0.5 font-medium">{settings.working_hours}</p>
+                        ) : (
+                          <>
+                            <p className="text-text-light mt-0.5 font-medium">Thứ 2 – Thứ 6: 17h15 – 20h00</p>
+                            <p className="text-text-light mt-0.5 font-medium">Thứ 7, CN: Sáng 7h15 – 11h15 | Chiều 14h00 – 20h00</p>
+                          </>
+                        )}
+                        <p className="text-xs text-slate-500 italic mt-0.5">* Tư vấn cấp cứu, dự phòng & điều trị toàn thời gian các ngày trong tuần</p>
+                      </div>
+
+                      <div className="pt-2 border-t border-slate-100">
+                        <h4 className="font-bold text-text-primary">2. Trung tâm xét nghiệm Mediplus HP:</h4>
+                        <p className="text-text-light mt-0.5 font-medium">Thứ 2 – Thứ 6: Sáng 7h15 – 11h15 | Chiều 17h00 – 20h00</p>
+                        <p className="text-text-light mt-0.5 font-medium">Thứ 7, CN: Sáng 7h15 – 11h15 | Chiều 14h00 – 20h00</p>
+                      </div>
                     </div>
                   </motion.li>
                 </ul>

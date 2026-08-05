@@ -111,19 +111,23 @@ export default function Footer() {
               Thời gian khám bệnh
             </h4>
             <div className="flex flex-col gap-3.5 text-sm">
-              <div className="flex flex-col gap-2.5">
-                <div>
-                  <p className="font-bold text-primary">Từ thứ 2 đến thứ 6:</p>
-                  <p className="text-sm text-text-light mt-0.5">17h15 - 20h00</p>
+              {settings.working_hours ? (
+                <p className="text-sm text-text-light leading-relaxed">{settings.working_hours}</p>
+              ) : (
+                <div className="flex flex-col gap-2.5">
+                  <div>
+                    <p className="font-bold text-primary">Từ thứ 2 đến thứ 6:</p>
+                    <p className="text-sm text-text-light mt-0.5">17h15 - 20h00</p>
+                  </div>
+                  <div>
+                    <p className="font-bold text-primary">Thứ 7, CN:</p>
+                    <p className="text-sm text-text-light mt-0.5">Sáng: 7h15 - 11h15</p>
+                    <p className="text-sm text-text-light mt-0.5">Chiều: 14h00 - 20h00</p>
+                  </div>
                 </div>
-                <div>
-                  <p className="font-bold text-primary">Thứ 7, CN:</p>
-                  <p className="text-sm text-text-light mt-0.5">Sáng: 7h15 - 11h15</p>
-                  <p className="text-sm text-text-light mt-0.5">Chiều: 13h30 - 20h30</p>
-                </div>
-              </div>
-              <p className="text-sm text-slate-600 font-medium leading-relaxed pt-1">
-                * Tư vấn về cấp cứu, dự phòng, điều trị bệnh toàn thời gian các ngày trong tuần.
+              )}
+              <p className="text-xs text-slate-500 font-medium leading-relaxed pt-1 italic">
+                * Tư vấn cấp cứu, dự phòng & điều trị toàn thời gian các ngày trong tuần.
               </p>
             </div>
           </div>

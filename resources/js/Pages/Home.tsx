@@ -27,6 +27,7 @@ interface ServiceDetail {
   candidates: string[];
   price: string;
   estimated_time: string;
+  image?: string;
 }
 
 interface ServicePillar {
@@ -88,7 +89,7 @@ interface Props {
   reviews?: Review[];
 }
 
-export default function Home({ servicePillars, latestNews, banners = [], reviews = [] }: Props) {
+export default function Home({ servicePillars, latestNews, featuredServices = [], banners = [], reviews = [] }: Props) {
   const [currentSlideIndex, setCurrentSlideIndex] = React.useState(0);
 
   const activeBanners = banners.length > 0 ? banners : [
@@ -108,6 +109,51 @@ export default function Home({ servicePillars, latestNews, banners = [], reviews
       secondary_button_link: '/dich-vu',
       order: 1,
       is_active: true
+    }
+  ];
+
+  const displayFeaturedServices = featuredServices.length > 0 ? featuredServices : [
+    {
+      id: 1,
+      slug: 'kham-tim-mach-tong-quat',
+      title: 'Tầm Soát Tim Mạch Toàn Diện',
+      pillar_title: 'Trụ cột I: Tầm soát & Phát hiện sớm',
+      tagline: 'Đánh giá sức khỏe trái tim toàn diện',
+      description: 'Gói khám sức khỏe tim mạch chuyên sâu giúp phát hiện sớm các nguy cơ xơ vữa động mạch, suy tim, bệnh mạch vành tiềm ẩn.',
+      detailed_description: '',
+      includes: [],
+      candidates: [],
+      price: '',
+      estimated_time: '',
+      image: '/assets/screening_service.png'
+    },
+    {
+      id: 2,
+      slug: 'holter-dien-tim-24h-48h',
+      title: 'Đo Holter Điện Tâm Đồ 24h/48h',
+      pillar_title: 'Trụ cột II: Điều trị & Quản lý liên tục',
+      tagline: 'Phát hiện sớm các cơn loạn nhịp tim',
+      description: 'Đeo thiết bị ghi nhịp tim liên tục suốt ngày đêm giúp chẩn đoán chính xác các cơn loạn nhịp tim thầm lặng, nguy cơ đột quỵ.',
+      detailed_description: '',
+      includes: [],
+      candidates: [],
+      price: '',
+      estimated_time: '',
+      image: '/assets/holter_service.png'
+    },
+    {
+      id: 3,
+      slug: 'theo-doi-tim-mach-tu-xa',
+      title: 'Quản Lý Huyết Áp Từ Xa AI',
+      pillar_title: 'Trụ cột III: Theo dõi & Bệnh án điện tử',
+      tagline: 'Số hóa và kết nối liên tục với bác sĩ',
+      description: 'Số hóa chỉ số đo huyết áp định kỳ tại nhà kết hợp phân tích AI và kết nối trực tuyến liên tục với bác sĩ chuyên khoa.',
+      detailed_description: '',
+      includes: [],
+      candidates: [],
+      price: '',
+      estimated_time: '',
+      image: '/assets/telehealth_service.png'
     }
   ];
 
@@ -250,83 +296,36 @@ export default function Home({ servicePillars, latestNews, banners = [], reviews
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            {/* Card 1 */}
-            <div className="bg-gradient-to-b from-[#FCFCFC] to-[#E9F5F5] p-6 rounded-card flex flex-col justify-between group shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300">
-              <div>
-                <div className="relative w-full aspect-[16/10] rounded-xl overflow-hidden mb-6 shadow-sm bg-slate-100">
-                  <img 
-                    src="/assets/screening_service.png" 
-                    alt="Tầm soát tim mạch toàn diện" 
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                  />
-                </div>
-                <h3 className="text-lg font-bold text-primary mb-3 group-hover:text-primary-dark transition-colors">
-                  Tầm Soát Tim Mạch Toàn Diện
-                </h3>
-                <p className="text-xs text-text-light leading-relaxed mb-6">
-                  Gói khám sức khỏe tim mạch chuyên sâu giúp phát hiện sớm các nguy cơ xơ vữa động mạch, suy tim, bệnh mạch vành tiềm ẩn.
-                </p>
-              </div>
-              <Link 
-                href="/dich-vu/kham-tim-mach-tong-quat" 
-                className="flex items-center justify-center gap-2 border border-primary/20 hover:border-primary bg-white hover:bg-primary text-primary hover:text-white text-sm font-bold py-2.5 px-5 rounded-full shadow-sm hover:shadow-md hover:scale-[1.02] transition-all duration-300 cursor-pointer w-full text-center"
+            {displayFeaturedServices.map((service) => (
+              <div 
+                key={service.id} 
+                className="bg-gradient-to-b from-[#FCFCFC] to-[#E9F5F5] p-6 rounded-card flex flex-col justify-between group shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300"
               >
-                Tìm hiểu thêm
-                <ArrowRight size={16} />
-              </Link>
-            </div>
-
-            {/* Card 2 */}
-            <div className="bg-gradient-to-b from-[#FCFCFC] to-[#E9F5F5] p-6 rounded-card flex flex-col justify-between group shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300">
-              <div>
-                <div className="relative w-full aspect-[16/10] rounded-xl overflow-hidden mb-6 shadow-sm bg-slate-100">
-                  <img 
-                    src="/assets/holter_service.png" 
-                    alt="Đo Holter Điện Tâm Đồ 24h" 
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                  />
+                <div>
+                  <div className="relative w-full aspect-[16/10] rounded-xl overflow-hidden mb-6 shadow-sm bg-slate-100">
+                    <img 
+                      src={service.image || '/assets/screening_service.png'} 
+                      alt={service.title} 
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                      onError={(e) => { (e.target as HTMLImageElement).src = '/assets/screening_service.png'; }}
+                    />
+                  </div>
+                  <h3 className="text-lg font-bold text-primary mb-3 group-hover:text-primary-dark transition-colors">
+                    {service.title}
+                  </h3>
+                  <p className="text-xs text-text-light leading-relaxed mb-6 line-clamp-3">
+                    {service.description || service.tagline}
+                  </p>
                 </div>
-                <h3 className="text-lg font-bold text-primary mb-3 group-hover:text-primary-dark transition-colors">
-                  Đo Holter Điện Tâm Đồ 24h/48h
-                </h3>
-                <p className="text-xs text-text-light leading-relaxed mb-6">
-                  Đeo thiết bị ghi nhịp tim liên tục suốt ngày đêm giúp chẩn đoán chính xác các cơn loạn nhịp tim thầm lặng, nguy cơ đột quỵ.
-                </p>
+                <Link 
+                  href={`/dich-vu/${service.slug}`} 
+                  className="flex items-center justify-center gap-2 border border-primary/20 hover:border-primary bg-white hover:bg-primary text-primary hover:text-white text-sm font-bold py-2.5 px-5 rounded-full shadow-sm hover:shadow-md hover:scale-[1.02] transition-all duration-300 cursor-pointer w-full text-center"
+                >
+                  Tìm hiểu thêm
+                  <ArrowRight size={16} />
+                </Link>
               </div>
-              <Link 
-                href="/dich-vu/holter-dien-tim-24h-48h" 
-                className="flex items-center justify-center gap-2 border border-primary/20 hover:border-primary bg-white hover:bg-primary text-primary hover:text-white text-sm font-bold py-2.5 px-5 rounded-full shadow-sm hover:shadow-md hover:scale-[1.02] transition-all duration-300 cursor-pointer w-full text-center"
-              >
-                Tìm hiểu thêm
-                <ArrowRight size={16} />
-              </Link>
-            </div>
-
-            {/* Card 3 */}
-            <div className="bg-gradient-to-b from-[#FCFCFC] to-[#E9F5F5] p-6 rounded-card flex flex-col justify-between group shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300">
-              <div>
-                <div className="relative w-full aspect-[16/10] rounded-xl overflow-hidden mb-6 shadow-sm bg-slate-100">
-                  <img 
-                    src="/assets/telehealth_service.png" 
-                    alt="Quản lý Huyết áp từ xa AI" 
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                  />
-                </div>
-                <h3 className="text-lg font-bold text-primary mb-3 group-hover:text-primary-dark transition-colors">
-                  Quản Lý Huyết Áp Từ Xa AI
-                </h3>
-                <p className="text-xs text-text-light leading-relaxed mb-6">
-                  Số hóa chỉ số đo huyết áp định kỳ tại nhà kết hợp phân tích AI và kết nối trực tuyến liên tục với bác sĩ chuyên khoa.
-                </p>
-              </div>
-              <Link 
-                href="/dich-vu/theo-doi-tim-mach-tu-xa" 
-                className="flex items-center justify-center gap-2 border border-primary/20 hover:border-primary bg-white hover:bg-primary text-primary hover:text-white text-sm font-bold py-2.5 px-5 rounded-full shadow-sm hover:shadow-md hover:scale-[1.02] transition-all duration-300 cursor-pointer w-full text-center"
-              >
-                Tìm hiểu thêm
-                <ArrowRight size={16} />
-              </Link>
-            </div>
+            ))}
           </div>
 
         </div>

@@ -1288,23 +1288,17 @@ export default function AdminDashboard(props: Props) {
   const [settingsData, setSettingsData] = useState<Record<string, string>>({
     site_name: settings.site_name || 'MEDIPLUS HP MEDICAL CENTRE',
     about_eyebrow: settings.about_eyebrow || 'Về Chúng Tôi',
-    about_title: settings.about_title || 'MEDIPLUS HP MEDICAL CENTRE',
+    about_title: settings.about_title || 'TRUNG TÂM TIM MẠCH SỐ & QUẢN LÝ TIM MẠCH CỘNG ĐỒNG',
     about_main_image: settings.about_main_image || '/assets/about_banner.jpg',
-    about_desc1: settings.about_desc1 || 'Tọa lạc tại vị trí đắc địa ở Hải Phòng, MediPlus HP Medical Centre tự hào là một trong những trung tâm y khoa kỹ thuật cao hàng đầu cung cấp trọn gói các dịch vụ chăm sóc sức khỏe tim mạch, nội khoa và khám chuyên sâu...',
-    about_desc2: settings.about_desc2 || 'Với triết lý làm đẹp & khám chữa bệnh chuẩn y khoa, tôn vinh nét riêng của từng cá nhân, đội ngũ Bác sĩ, chuyên gia đầu ngành tại MediPlus HP cam kết đồng hành cùng quý khách hàng trên hành trình khám phá và hoàn thiện bản sắc đẹp hoàn hảo nhất...',
-    about_doctor_count_type: settings.about_doctor_count_type || 'auto',
-    about_customer_count_type: settings.about_customer_count_type || 'auto',
-    about_customer_base: settings.about_customer_base || '10000',
-    about_customer_crm: settings.about_customer_crm || '+1',
+    about_founder_quote: settings.about_founder_quote || 'Phát hiện sớm – Theo dõi liên tục\nCan thiệp kịp thời – Đồng hành lâu dài.',
+    about_story_img1: settings.about_story_img1 || '/assets/heart_ultrasound.png',
 
-    about_founder_title: settings.about_founder_title || 'Triết Lý Làm Đẹp Chuẩn Y Khoa & Vẻ Đẹp Độc Bản',
-    about_founder_desc1: settings.about_founder_desc1 || 'Tại MediPlus HP Medical Centre, chúng tôi tin rằng mỗi người đều sở hữu một vẻ đẹp và sức khỏe độc bản riêng biệt. Sự tự tin của bạn là món quà quý giá nhất, và sứ mệnh của chúng tôi là giúp bạn giữ gìn nét riêng đó...',
-    about_founder_desc2: settings.about_founder_desc2 || 'Được thành lập bởi đội ngũ bác sĩ chuyên khoa I, II, MediPlus HP đã không ngừng nâng cấp hệ thống phòng khám, chuyển giao độc quyền các công nghệ y khoa tiên tiến...',
-    about_founder_quote: settings.about_founder_quote || 'Chúng tôi không thay đổi diện mạo của bạn, chúng tôi tôn vinh và khôi phục những nét đẹp độc bản',
-    about_founder_author: settings.about_founder_author || 'BSCKII Đoàn Khôi',
-    about_story_img1: settings.about_story_img1 || '/assets/screening_service.png',
-    about_story_img2: settings.about_story_img2 || '/assets/telehealth_service.png',
-    about_story_img3: settings.about_story_img3 || '/assets/heart_care.png',
+    about_care_title: settings.about_care_title || 'MÔ HÌNH CHĂM SÓC KHÁC BIỆT',
+    about_care_desc: settings.about_care_desc || 'Khác với mô hình khám bệnh truyền thống, Trung tâm hướng tới xây dựng hệ thống quản lý sức khỏe tim mạch liên tục, lấy người bệnh làm trung tâm và đồng hành trong suốt hành trình bảo vệ trái tim.',
+    about_care_image: settings.about_care_image || '/assets/doctor_caring_patient.png',
+    about_tech_title: settings.about_tech_title || 'HỆ THỐNG KỸ THUẬT',
+    about_tech_content: settings.about_tech_content || 'Trung tâm có hệ thống trang thiết bị hiện đại phục vụ chẩn đoán và theo dõi bệnh tim mạch:\n• Siêu âm tim\n• Siêu âm mạch máu\n• Điện tâm đồ\n• Holter điện tim dài ngày\n• Holter huyết áp\n• Thiết bị theo dõi điện tim tại nhà\n• Hệ thống xét nghiệm chuyên nghiệp\n• Dịch vụ lấy mẫu xét nghiệm tại nhà khi cần.\n\nĐặc biệt, Trung tâm triển khai Holter điện tim dài ngày CAI-300, có khả năng theo dõi điện tim liên tục đến 14 ngày, góp phần nâng cao khả năng phát hiện các rối loạn nhịp tim xuất hiện không thường xuyên.\n\nCác phương tiện chẩn đoán được kết nối với hệ thống lưu trữ dữ liệu số, hỗ trợ theo dõi lâu dài, đánh giá diễn biến bệnh theo thời gian và tạo thuận lợi cho việc hội chẩn các chuyên gia khi cần thiết.',
+    about_tech_image: settings.about_tech_image || '/assets/heart_care.png',
 
     clinic_name: settings.clinic_name || 'Phòng Khám Chuyên Khoa Nội - BSCKII Đoàn Khôi',
     hotline_1: settings.hotline_1 || '0585 013 013',
@@ -1313,7 +1307,7 @@ export default function AdminDashboard(props: Props) {
     hotline_2_clean: settings.hotline_2_clean || '0328699799',
     email: settings.email || 'doankhoiclinic@gmail.com',
     address: settings.address || '348 Nguyễn Lương Bằng, Lê Thanh Nghị, Hải Phòng',
-    working_hours: settings.working_hours || 'Sáng: 07:30 – 11:30 | Chiều: 13:30 – 18:30 (Thứ 2 - Chủ Nhật)',
+    working_hours: settings.working_hours || 'T2 - T6: 17h15 – 20h00 | T7, CN: Sáng 7h15 – 11h15, Chiều 14h00 – 20h00',
     logo_dark: settings.logo_dark || '',
     logo_light: settings.logo_light || '',
     logo_favicon: settings.logo_favicon || '',
@@ -7727,10 +7721,10 @@ export default function AdminDashboard(props: Props) {
               <h2 className="text-xl font-extrabold text-[#004b87]">Quản Lý Trang Giới Thiệu & Triết Lý</h2>
             </div>
 
-            {/* 1. KHỐI GIỚI THIỆU CHÍNH (GIỚI THIỆU & TRIẾT LÝ) */}
+            {/* 1. KHỐI GIỚI THIỆU CHÍNH (BANER & TIÊU ĐỀ HERO) */}
             <div className="bg-white p-8 rounded-3xl border border-slate-200/80 shadow-xs space-y-6">
               <h3 className="text-sm font-black text-[#b89a67] uppercase tracking-widest border-b border-slate-100 pb-3">
-                1. KHỐI GIỚI THIỆU CHÍNH (GIỚI THIỆU & TRIẾT LÝ)
+                1. BANNER & TIÊU ĐỀ HERO
               </h3>
 
               <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
@@ -7740,72 +7734,51 @@ export default function AdminDashboard(props: Props) {
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
                       <label className="block font-black text-slate-700 uppercase tracking-wider mb-1.5">
-                        NHÃN PHỤ GIỚI THIỆU (EYEBROW)
+                        NHÃN PHỤ HERO (EYEBROW)
                       </label>
                       <input
                         type="text"
-                        value={settingsData.about_eyebrow || 'Về Chúng Tôi'}
+                        value={settingsData.about_eyebrow || ''}
                         onChange={(e) => setSettingsData({ ...settingsData, about_eyebrow: e.target.value })}
                         className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3.5 text-sm text-slate-800 outline-none focus:border-[#004b87] focus:bg-white font-bold"
+                        placeholder="VD: Phòng khám Chuyên khoa Nội - BSCK. II Đoàn Khôi"
                       />
                     </div>
 
                     <div>
                       <label className="block font-black text-slate-700 uppercase tracking-wider mb-1.5">
-                        TIÊU ĐỀ CHÍNH (TITLE)
+                        TIÊU ĐỀ CHÍNH HERO (TITLE)
                       </label>
                       <input
                         type="text"
-                        value={settingsData.about_title || 'MEDIPLUS HP MEDICAL CENTRE'}
+                        value={settingsData.about_title || ''}
                         onChange={(e) => setSettingsData({ ...settingsData, about_title: e.target.value })}
                         className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3.5 text-sm text-slate-800 outline-none focus:border-[#004b87] focus:bg-white font-black"
+                        placeholder="VD: TRUNG TÂM TIM MẠCH SỐ & QUẢN LÝ TIM MẠCH CỘNG ĐỒNG"
                       />
                     </div>
                   </div>
-
-                  <div>
-                    <label className="block font-black text-slate-700 uppercase tracking-wider mb-1.5">
-                      ĐOẠN MÔ TẢ GIỚI THIỆU 1
-                    </label>
-                    <textarea
-                      rows={3}
-                      value={settingsData.about_desc1 || ''}
-                      onChange={(e) => setSettingsData({ ...settingsData, about_desc1: e.target.value })}
-                      className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3.5 text-sm text-slate-800 outline-none focus:border-[#004b87] focus:bg-white leading-relaxed resize-none"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block font-black text-slate-700 uppercase tracking-wider mb-1.5">
-                      ĐOẠN MÔ TẢ GIỚI THIỆU 2
-                    </label>
-                    <textarea
-                      rows={3}
-                      value={settingsData.about_desc2 || ''}
-                      onChange={(e) => setSettingsData({ ...settingsData, about_desc2: e.target.value })}
-                      className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3.5 text-sm text-slate-800 outline-none focus:border-[#004b87] focus:bg-white leading-relaxed resize-none"
-                    />
-                  </div>
                 </div>
 
-                {/* RIGHT 4 COLUMNS: ẢNH ĐẠI DIỆN PHẦN GIỚI THIỆU */}
+                {/* RIGHT 4 COLUMNS: ẢNH BANNER TRANG GIỚI THIỆU */}
                 <div className="lg:col-span-4 space-y-2 text-sm">
                   <label className="block font-black text-slate-700 uppercase tracking-wider mb-1.5">
-                    ẢNH ĐẠI DIỆN PHẦN GIỚI THIỆU (ẢNH LỚN TRANG CHỦ)
+                    ẢNH BANNER TRANG GIỚI THIỆU
                   </label>
 
-                  <div className="relative rounded-2xl overflow-hidden border border-slate-200 bg-slate-900 h-64 group shadow-sm flex items-center justify-center">
+                  <div className="relative rounded-2xl overflow-hidden border border-slate-200 bg-slate-900 h-44 group shadow-sm flex items-center justify-center">
                     <img
                       src={settingsData.about_main_image || '/assets/about_banner.jpg'}
                       alt="About main"
                       className="w-full h-full object-cover group-hover:scale-105 transition-transform"
+                      onError={(e) => { (e.target as HTMLImageElement).src = '/assets/about_banner.jpg'; }}
                     />
                     
                     {/* Delete overlay button */}
                     <button
                       type="button"
                       onClick={() => setSettingsData({ ...settingsData, about_main_image: '' })}
-                      className="absolute top-3 right-3 p-2 bg-rose-600 hover:bg-rose-700 text-white rounded-xl shadow-md cursor-pointer transition-all"
+                      className="absolute top-3 right-3 p-2 bg-rose-600 hover:bg-rose-700 text-white rounded-xl shadow-md cursor-pointer transition-all z-10"
                       title="Xóa ảnh"
                     >
                       <Trash2 size={16} />
@@ -7824,232 +7797,210 @@ export default function AdminDashboard(props: Props) {
                 </div>
 
               </div>
-
-              {/* STATS ROW */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 pt-6 border-t border-slate-100 text-sm">
-                <div>
-                  <label className="block font-black text-slate-700 uppercase tracking-wider mb-1.5">
-                    ĐẾM SỐ LƯỢNG BÁC SĨ
-                  </label>
-                  <select
-                    value={settingsData.about_doctor_count_type || 'auto'}
-                    onChange={(e) => setSettingsData({ ...settingsData, about_doctor_count_type: e.target.value })}
-                    className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-sm font-bold text-slate-800 outline-none focus:border-[#004b87] cursor-pointer"
-                  >
-                    <option value="auto">Tự động (Đếm theo số lượng bác sĩ thực tế: {doctors.length})</option>
-                    <option value="manual">Nhập thủ công</option>
-                  </select>
-                </div>
-
-                <div>
-                  <label className="block font-black text-slate-700 uppercase tracking-wider mb-1.5">
-                    ĐẾM SỐ LƯỢNG KHÁCH HÀNG
-                  </label>
-                  <select
-                    value={settingsData.about_customer_count_type || 'auto'}
-                    onChange={(e) => setSettingsData({ ...settingsData, about_customer_count_type: e.target.value })}
-                    className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-sm font-bold text-slate-800 outline-none focus:border-[#004b87] cursor-pointer"
-                  >
-                    <option value="auto">Tự động CRM (Cơ sở + Số lượng khách đã liên hệ)</option>
-                    <option value="manual">Nhập thủ công</option>
-                  </select>
-                </div>
-
-                <div>
-                  <label className="block font-black text-slate-700 uppercase tracking-wider mb-1.5">
-                    SỐ CƠ SỞ (BASE)
-                  </label>
-                  <input
-                    type="number"
-                    value={settingsData.about_customer_base || '10000'}
-                    onChange={(e) => setSettingsData({ ...settingsData, about_customer_base: e.target.value })}
-                    className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-sm text-slate-800 outline-none focus:border-[#004b87] font-bold"
-                  />
-                </div>
-
-                <div>
-                  <label className="block font-black text-slate-700 uppercase tracking-wider mb-1.5">
-                    ĐÃ LIÊN HỆ (CRM)
-                  </label>
-                  <input
-                    type="text"
-                    value={settingsData.about_customer_crm || '+1'}
-                    onChange={(e) => setSettingsData({ ...settingsData, about_customer_crm: e.target.value })}
-                    className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-sm text-slate-800 outline-none focus:border-[#004b87] font-bold"
-                  />
-                </div>
-              </div>
-
             </div>
 
-            {/* 2. CÂU CHUYỆN NHÀ SÁNG LẬP (FOUNDER STORY) */}
+            {/* 2. CẤU HÌNH PHƯƠNG CHÂM LÀM VIỆC */}
             <div className="bg-white p-8 rounded-3xl border border-slate-200/80 shadow-xs space-y-6">
               <h3 className="text-sm font-black text-[#b89a67] uppercase tracking-widest border-b border-slate-100 pb-3">
-                2. CÂU CHUYỆN NHÀ SÁNG LẬP (FOUNDER STORY)
+                2. PHƯƠNG CHÂM LÀM VIỆC
               </h3>
 
-              <div className="space-y-4 text-sm">
-                <div>
-                  <label className="block font-black text-slate-700 uppercase tracking-wider mb-1.5">
-                    TIÊU ĐỀ CÂU CHUYỆN
-                  </label>
-                  <input
-                    type="text"
-                    value={settingsData.about_founder_title || 'Triết Lý Làm Đẹp Chuẩn Y Khoa & Vẻ Đẹp Độc Bản'}
-                    onChange={(e) => setSettingsData({ ...settingsData, about_founder_title: e.target.value })}
-                    className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3.5 text-sm text-slate-800 outline-none focus:border-[#004b87] font-extrabold"
-                  />
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+                {/* LEFT 8 COLUMNS: QUOTE TEXT */}
+                <div className="lg:col-span-8 space-y-4 text-sm">
                   <div>
                     <label className="block font-black text-slate-700 uppercase tracking-wider mb-1.5">
-                      ĐOẠN MÔ TẢ CÂU CHUYỆN 1
+                      CÂU TRÍCH DẪN PHƯƠNG CHÂM (QUOTE)
                     </label>
                     <textarea
                       rows={4}
-                      value={settingsData.about_founder_desc1 || ''}
-                      onChange={(e) => setSettingsData({ ...settingsData, about_founder_desc1: e.target.value })}
-                      className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3.5 text-sm text-slate-800 outline-none focus:border-[#004b87] leading-relaxed resize-none"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block font-black text-slate-700 uppercase tracking-wider mb-1.5">
-                      ĐOẠN MÔ TẢ CÂU CHUYỆN 2
-                    </label>
-                    <textarea
-                      rows={4}
-                      value={settingsData.about_founder_desc2 || ''}
-                      onChange={(e) => setSettingsData({ ...settingsData, about_founder_desc2: e.target.value })}
-                      className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3.5 text-sm text-slate-800 outline-none focus:border-[#004b87] leading-relaxed resize-none"
-                    />
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <label className="block font-black text-slate-700 uppercase tracking-wider mb-1.5">
-                      CÂU TRÍCH DẪN (QUOTE)
-                    </label>
-                    <input
-                      type="text"
                       value={settingsData.about_founder_quote || ''}
                       onChange={(e) => setSettingsData({ ...settingsData, about_founder_quote: e.target.value })}
-                      className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3.5 text-sm text-slate-800 outline-none focus:border-[#004b87] italic"
+                      className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3.5 text-sm text-slate-800 outline-none focus:border-[#004b87] leading-relaxed resize-none font-bold"
+                      placeholder="Nhập phương châm làm việc..."
+                    />
+                  </div>
+                </div>
+
+                {/* RIGHT 4 COLUMNS: IMAGE */}
+                <div className="lg:col-span-4 space-y-2 text-sm">
+                  <label className="block font-black text-slate-700 uppercase tracking-wider mb-1.5">
+                    ẢNH PHƯƠNG CHÂM (BÊN PHẢI)
+                  </label>
+
+                  <div className="relative rounded-2xl overflow-hidden border border-slate-200 bg-slate-900 h-44 group shadow-sm flex items-center justify-center">
+                    <img
+                      src={settingsData.about_story_img1 || '/assets/heart_ultrasound.png'}
+                      alt="Motto image"
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform"
+                      onError={(e) => { (e.target as HTMLImageElement).src = '/assets/heart_ultrasound.png'; }}
+                    />
+                    
+                    <button
+                      type="button"
+                      onClick={() => setSettingsData({ ...settingsData, about_story_img1: '' })}
+                      className="absolute top-2 right-2 p-1.5 bg-rose-600 text-white rounded-lg cursor-pointer z-10"
+                      title="Xóa ảnh"
+                    >
+                      <Trash2 size={14} />
+                    </button>
+
+                    <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
+                      <button
+                        type="button"
+                        onClick={() => handleOpenMediaPicker('about_story_img1')}
+                        className="px-3 py-1.5 bg-white text-slate-800 font-bold rounded-lg text-sm cursor-pointer flex items-center gap-1"
+                      >
+                        <FolderOpen size={11} className="text-slate-700 fill-slate-100" /> Chọn ảnh
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* 3. CẤU HÌNH MÔ HÌNH CHĂM SÓC KHÁC BIỆT */}
+            <div className="bg-white p-8 rounded-3xl border border-slate-200/80 shadow-xs space-y-6">
+              <h3 className="text-sm font-black text-[#b89a67] uppercase tracking-widest border-b border-slate-100 pb-3">
+                3. MÔ HÌNH CHĂM SÓC KHÁC BIỆT
+              </h3>
+
+              <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+                <div className="lg:col-span-8 space-y-4 text-sm">
+                  <div>
+                    <label className="block font-black text-slate-700 uppercase tracking-wider mb-1.5">
+                      TIÊU ĐỀ MÔ HÌNH CHĂM SÓC
+                    </label>
+                    <input
+                      type="text"
+                      value={settingsData.about_care_title || ''}
+                      onChange={(e) => setSettingsData({ ...settingsData, about_care_title: e.target.value })}
+                      className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3.5 text-sm text-slate-800 outline-none focus:border-[#004b87] focus:bg-white font-extrabold"
+                      placeholder="VD: MÔ HÌNH CHĂM SÓC KHÁC BIỆT"
                     />
                   </div>
 
                   <div>
                     <label className="block font-black text-slate-700 uppercase tracking-wider mb-1.5">
-                      NGƯỜI TRÍCH DẪN (TÁC GIẢ)
+                      ĐOẠN MÔ TẢ NGẮN
                     </label>
-                    <input
-                      type="text"
-                      value={settingsData.about_founder_author || 'BSCKII Đoàn Khôi'}
-                      onChange={(e) => setSettingsData({ ...settingsData, about_founder_author: e.target.value })}
-                      className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3.5 text-sm text-slate-800 outline-none focus:border-[#004b87] font-bold"
+                    <textarea
+                      rows={3}
+                      value={settingsData.about_care_desc || ''}
+                      onChange={(e) => setSettingsData({ ...settingsData, about_care_desc: e.target.value })}
+                      className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3.5 text-sm text-slate-800 outline-none focus:border-[#004b87] focus:bg-white leading-relaxed resize-none"
+                      placeholder="Nhập đoạn mô tả ngắn cho mô hình chăm sóc..."
                     />
                   </div>
                 </div>
 
-                {/* BỘ BA HÌNH ÁNH CÂU CHUYỆN */}
-                <div className="space-y-2 pt-2">
-                  <label className="block font-black text-slate-700 uppercase tracking-wider mb-1">
-                    BỘ BA HÌNH ÁNH CÂU CHUYỆN
+                <div className="lg:col-span-4 space-y-2 text-sm">
+                  <label className="block font-black text-slate-700 uppercase tracking-wider mb-1.5">
+                    ẢNH MÔ HÌNH CHĂM SÓC (BÊN TRÁI)
                   </label>
 
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                  <div className="relative rounded-2xl overflow-hidden border border-slate-200 bg-slate-900 h-44 group shadow-sm flex items-center justify-center">
+                    <img
+                      src={settingsData.about_care_image || '/assets/doctor_caring_patient.png'}
+                      alt="Care model image"
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform"
+                      onError={(e) => { (e.target as HTMLImageElement).src = '/assets/doctor_caring_patient.png'; }}
+                    />
                     
-                    {/* IMAGE 1 */}
-                    <div className="space-y-1">
-                      <span className="text-[10px] font-bold text-slate-400 block uppercase">ẢNH 1: HỘI THẢO (DỌC/NGANG NHỎ)</span>
-                      <div className="relative rounded-2xl overflow-hidden border border-slate-200 bg-slate-900 h-44 group shadow-sm flex items-center justify-center">
-                        <img
-                          src={settingsData.about_story_img1 || '/assets/screening_service.png'}
-                          alt="Story 1"
-                          className="w-full h-full object-cover group-hover:scale-105 transition-transform"
-                        />
-                        <button
-                          type="button"
-                          onClick={() => setSettingsData({ ...settingsData, about_story_img1: '' })}
-                          className="absolute top-2 right-2 p-1.5 bg-rose-600 text-white rounded-lg cursor-pointer"
-                        >
-                          <Trash2 size={14} />
-                        </button>
-                        <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
-                          <button
-                            type="button"
-                            onClick={() => handleOpenMediaPicker('about_story_img1')}
-                            className="px-3 py-1.5 bg-white text-slate-800 font-bold rounded-lg text-sm cursor-pointer flex items-center gap-1"
-                          >
-                            <FolderOpen size={11} className="text-slate-700 fill-slate-100" /> Đổi ảnh 1
-                          </button>
-                        </div>
-                      </div>
-                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setSettingsData({ ...settingsData, about_care_image: '' })}
+                      className="absolute top-2 right-2 p-1.5 bg-rose-600 text-white rounded-lg cursor-pointer z-10"
+                      title="Xóa ảnh"
+                    >
+                      <Trash2 size={14} />
+                    </button>
 
-                    {/* IMAGE 2 */}
-                    <div className="space-y-1">
-                      <span className="text-[10px] font-bold text-slate-400 block uppercase">ẢNH 2: NHỎ/CHỨNG NHẬN</span>
-                      <div className="relative rounded-2xl overflow-hidden border border-slate-200 bg-slate-900 h-44 group shadow-sm flex items-center justify-center">
-                        <img
-                          src={settingsData.about_story_img2 || '/assets/telehealth_service.png'}
-                          alt="Story 2"
-                          className="w-full h-full object-cover group-hover:scale-105 transition-transform"
-                        />
-                        <button
-                          type="button"
-                          onClick={() => setSettingsData({ ...settingsData, about_story_img2: '' })}
-                          className="absolute top-2 right-2 p-1.5 bg-rose-600 text-white rounded-lg cursor-pointer"
-                        >
-                          <Trash2 size={14} />
-                        </button>
-                        <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
-                          <button
-                            type="button"
-                            onClick={() => handleOpenMediaPicker('about_story_img2')}
-                            className="px-3 py-1.5 bg-white text-slate-800 font-bold rounded-lg text-sm cursor-pointer flex items-center gap-1"
-                          >
-                            <FolderOpen size={11} className="text-slate-700 fill-slate-100" /> Đổi ảnh 2
-                          </button>
-                        </div>
-                      </div>
+                    <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
+                      <button
+                        type="button"
+                        onClick={() => handleOpenMediaPicker('about_care_image')}
+                        className="px-3 py-1.5 bg-white text-slate-800 font-bold rounded-lg text-sm cursor-pointer flex items-center gap-1"
+                      >
+                        <FolderOpen size={11} className="text-slate-700 fill-slate-100" /> Chọn ảnh
+                      </button>
                     </div>
+                  </div>
+                </div>
+              </div>
+            </div>
 
-                    {/* IMAGE 3 */}
-                    <div className="space-y-1">
-                      <span className="text-[10px] font-bold text-slate-400 block uppercase">ẢNH 3: TOÀN CẢNH (NGANG TO)</span>
-                      <div className="relative rounded-2xl overflow-hidden border border-slate-200 bg-slate-900 h-44 group shadow-sm flex items-center justify-center">
-                        <img
-                          src={settingsData.about_story_img3 || '/assets/heart_care.png'}
-                          alt="Story 3"
-                          className="w-full h-full object-cover group-hover:scale-105 transition-transform"
-                        />
-                        <button
-                          type="button"
-                          onClick={() => setSettingsData({ ...settingsData, about_story_img3: '' })}
-                          className="absolute top-2 right-2 p-1.5 bg-rose-600 text-white rounded-lg cursor-pointer"
-                        >
-                          <Trash2 size={14} />
-                        </button>
-                        <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
-                          <button
-                            type="button"
-                            onClick={() => handleOpenMediaPicker('about_story_img3')}
-                            className="px-3 py-1.5 bg-white text-slate-800 font-bold rounded-lg text-sm cursor-pointer flex items-center gap-1"
-                          >
-                            <FolderOpen size={11} className="text-slate-700 fill-slate-100" /> Đổi ảnh 3
-                          </button>
-                        </div>
-                      </div>
-                    </div>
+            {/* 4. CẤU HÌNH HỆ THỐNG KỸ THUẬT */}
+            <div className="bg-white p-8 rounded-3xl border border-slate-200/80 shadow-xs space-y-6">
+              <h3 className="text-sm font-black text-[#b89a67] uppercase tracking-widest border-b border-slate-100 pb-3">
+                4. HỆ THỐNG KỸ THUẬT & XÉT NGHIỆM
+              </h3>
 
+              <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+                {/* LEFT 8 COLUMNS: TITLE & TEXTAREA CONTENT */}
+                <div className="lg:col-span-8 space-y-4 text-sm">
+                  <div>
+                    <label className="block font-black text-slate-700 uppercase tracking-wider mb-1.5">
+                      TIÊU ĐỀ SECTION
+                    </label>
+                    <input
+                      type="text"
+                      value={settingsData.about_tech_title || ''}
+                      onChange={(e) => setSettingsData({ ...settingsData, about_tech_title: e.target.value })}
+                      className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3.5 text-sm text-slate-800 outline-none focus:border-[#004b87] focus:bg-white font-extrabold"
+                      placeholder="VD: HỆ THỐNG KỸ THUẬT"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block font-black text-slate-700 uppercase tracking-wider mb-1.5">
+                      NỘI DUNG HỆ THỐNG KỸ THUẬT (TEXTAREA CÓ THỂ ĐỔI VĂN BẢN VÀ XUỐNG DÒNG)
+                    </label>
+                    <textarea
+                      rows={8}
+                      value={settingsData.about_tech_content || ''}
+                      onChange={(e) => setSettingsData({ ...settingsData, about_tech_content: e.target.value })}
+                      className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3.5 text-sm text-slate-800 outline-none focus:border-[#004b87] focus:bg-white leading-relaxed resize-y font-medium"
+                      placeholder="Nhập nội dung hệ thống kỹ thuật..."
+                    />
                   </div>
                 </div>
 
-              </div>
+                {/* RIGHT 4 COLUMNS: IMAGE */}
+                <div className="lg:col-span-4 space-y-2 text-sm">
+                  <label className="block font-black text-slate-700 uppercase tracking-wider mb-1.5">
+                    ẢNH MÁY MÓC / THIẾT BỊ (BÊN PHẢI)
+                  </label>
 
+                  <div className="relative rounded-2xl overflow-hidden border border-slate-200 bg-slate-900 h-48 group shadow-sm flex items-center justify-center">
+                    <img
+                      src={settingsData.about_tech_image || '/assets/heart_care.png'}
+                      alt="Tech image"
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform"
+                      onError={(e) => { (e.target as HTMLImageElement).src = '/assets/heart_care.png'; }}
+                    />
+                    
+                    <button
+                      type="button"
+                      onClick={() => setSettingsData({ ...settingsData, about_tech_image: '' })}
+                      className="absolute top-2 right-2 p-1.5 bg-rose-600 text-white rounded-lg cursor-pointer z-10"
+                      title="Xóa ảnh"
+                    >
+                      <Trash2 size={14} />
+                    </button>
+
+                    <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
+                      <button
+                        type="button"
+                        onClick={() => handleOpenMediaPicker('about_tech_image')}
+                        className="px-3 py-1.5 bg-white text-slate-800 font-bold rounded-lg text-sm cursor-pointer flex items-center gap-1"
+                      >
+                        <FolderOpen size={11} className="text-slate-700 fill-slate-100" /> Chọn ảnh
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
             </div>
 
             {/* SAVE BUTTON */}
