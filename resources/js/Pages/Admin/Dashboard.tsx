@@ -3350,86 +3350,70 @@ export default function AdminDashboard(props: Props) {
                     </div>
                   </div>
 
-                  {/* 5. HẠNG MỤC BAO GỒM TRONG GÓI KHÁM (INCLUDES LIST MANAGER) */}
+                  {/* 5. HẠNG MỤC BAO GỒM TRONG GÓI KHÁM */}
                   <div className="bg-white p-6 rounded-2xl border border-slate-200/80 shadow-xs space-y-4">
                     <label className="block text-sm font-black text-slate-700 uppercase tracking-wider">
-                      HẠNG MỤC KHÁM BAO GỒM (INCLUDES LIST)
+                      HẠNG MỤC KHÁM BAO GỒM
                     </label>
 
-                    <div className="flex gap-2">
-                      <input
-                        type="text"
-                        placeholder="Nhập hạng mục khám (VD: Siêu âm tim Doppler màu, Đo ECG 12 kênh...)"
-                        value={newIncludeInput}
-                        onChange={(e) => setNewIncludeInput(e.target.value)}
-                        onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); handleAddInclude(); } }}
-                        className="flex-1 bg-slate-50 border border-slate-200 rounded-xl p-3 text-sm font-semibold text-slate-800 outline-none focus:border-[#004b87]"
-                      />
-                      <button
-                        type="button"
-                        onClick={handleAddInclude}
-                        className="px-4 py-2 bg-[#004b87] hover:bg-[#003866] text-white font-bold text-sm rounded-xl cursor-pointer transition-all"
-                      >
-                        <Plus size={16} /> Thêm
-                      </button>
-                    </div>
+                    <textarea
+                      rows={5}
+                      placeholder="Nhập các hạng mục khám, mỗi hạng mục trên 1 dòng (ấn Enter xuống dòng để tạo icon)..."
+                      value={(serviceForm.data.includes || []).join('\n')}
+                      onChange={(e) => {
+                        const lines = e.target.value.split('\n');
+                        serviceForm.setData('includes', lines);
+                      }}
+                      className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3.5 text-sm font-medium text-slate-800 outline-none focus:border-[#004b87] leading-relaxed resize-y"
+                    />
 
-                    <div className="flex flex-wrap gap-2 pt-2">
-                      {(serviceForm.data.includes || []).map((item, idx) => (
-                        <span key={idx} className="inline-flex items-center gap-2 px-3 py-1.5 bg-blue-50 text-[#004b87] border border-blue-200/70 font-bold rounded-xl text-sm">
-                          <CheckCircle2 size={13} className="text-[#00a896]" />
-                          <span>{item}</span>
-                          <button
-                            type="button"
-                            onClick={() => handleRemoveInclude(idx)}
-                            className="text-slate-400 hover:text-rose-600 font-black ml-1 cursor-pointer"
-                          >
-                            ×
-                          </button>
-                        </span>
-                      ))}
-                    </div>
+                    {/* Live Icon Preview */}
+                    {(serviceForm.data.includes || []).filter(item => item.trim() !== '').length > 0 && (
+                      <div className="space-y-2 pt-1 border-t border-slate-100">
+                        <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400">Xem trước danh sách (Tự động hiển thị icon):</span>
+                        <div className="flex flex-wrap gap-2">
+                          {(serviceForm.data.includes || []).filter(item => item.trim() !== '').map((item, idx) => (
+                            <span key={idx} className="inline-flex items-center gap-2 px-3 py-1.5 bg-blue-50 text-[#004b87] border border-blue-200/70 font-bold rounded-xl text-sm shadow-2xs">
+                              <CheckCircle2 size={14} className="text-[#00a896] shrink-0" />
+                              <span>{item.trim()}</span>
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                    )}
                   </div>
 
-                  {/* 6. ĐỐI TƯỢNG CHỈ ĐỊNH KHÁM (CANDIDATES LIST MANAGER) */}
+                  {/* 6. ĐỐI TƯỢNG CHỈ ĐỊNH KHÁM */}
                   <div className="bg-white p-6 rounded-2xl border border-slate-200/80 shadow-xs space-y-4">
                     <label className="block text-sm font-black text-slate-700 uppercase tracking-wider">
-                      ĐỐI TƯỢNG CHỈ ĐỊNH KHÁM (TARGET AUDIENCE)
+                      ĐỐI TƯỢNG CHỈ ĐỊNH KHÁM
                     </label>
 
-                    <div className="flex gap-2">
-                      <input
-                        type="text"
-                        placeholder="Nhập đối tượng chỉ định (VD: Người trên 40 tuổi, Người có triệu chứng tức ngực...)"
-                        value={newCandidateInput}
-                        onChange={(e) => setNewCandidateInput(e.target.value)}
-                        onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); handleAddCandidate(); } }}
-                        className="flex-1 bg-slate-50 border border-slate-200 rounded-xl p-3 text-sm font-semibold text-slate-800 outline-none focus:border-[#004b87]"
-                      />
-                      <button
-                        type="button"
-                        onClick={handleAddCandidate}
-                        className="px-4 py-2 bg-[#00a896] hover:bg-[#009081] text-white font-bold text-sm rounded-xl cursor-pointer transition-all"
-                      >
-                        <Plus size={16} /> Thêm
-                      </button>
-                    </div>
+                    <textarea
+                      rows={5}
+                      placeholder="Nhập đối tượng chỉ định, mỗi đối tượng trên 1 dòng (ấn Enter xuống dòng để tạo icon)..."
+                      value={(serviceForm.data.candidates || []).join('\n')}
+                      onChange={(e) => {
+                        const lines = e.target.value.split('\n');
+                        serviceForm.setData('candidates', lines);
+                      }}
+                      className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3.5 text-sm font-medium text-slate-800 outline-none focus:border-[#004b87] leading-relaxed resize-y"
+                    />
 
-                    <div className="flex flex-wrap gap-2 pt-2">
-                      {(serviceForm.data.candidates || []).map((item, idx) => (
-                        <span key={idx} className="inline-flex items-center gap-2 px-3 py-1.5 bg-amber-50 text-amber-900 border border-amber-200/70 font-bold rounded-xl text-sm">
-                          <User size={13} className="text-amber-600" />
-                          <span>{item}</span>
-                          <button
-                            type="button"
-                            onClick={() => handleRemoveCandidate(idx)}
-                            className="text-slate-400 hover:text-rose-600 font-black ml-1 cursor-pointer"
-                          >
-                            ×
-                          </button>
-                        </span>
-                      ))}
-                    </div>
+                    {/* Live Icon Preview */}
+                    {(serviceForm.data.candidates || []).filter(item => item.trim() !== '').length > 0 && (
+                      <div className="space-y-2 pt-1 border-t border-slate-100">
+                        <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400">Xem trước danh sách (Tự động hiển thị icon):</span>
+                        <div className="flex flex-wrap gap-2">
+                          {(serviceForm.data.candidates || []).filter(item => item.trim() !== '').map((item, idx) => (
+                            <span key={idx} className="inline-flex items-center gap-2 px-3 py-1.5 bg-amber-50 text-amber-900 border border-amber-200/70 font-bold rounded-xl text-sm shadow-2xs">
+                              <User size={14} className="text-amber-600 shrink-0" />
+                              <span>{item.trim()}</span>
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                    )}
                   </div>
 
                 </div>
