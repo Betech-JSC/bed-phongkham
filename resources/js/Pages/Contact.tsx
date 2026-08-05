@@ -129,7 +129,7 @@ export default function Contact({ allServices = [], settings = {}, prefillServic
                       <div>
                         <h4 className="font-bold text-text-primary">1. Phòng khám Chuyên khoa Nội - BSCKII Đoàn Khôi:</h4>
                         {settings.working_hours ? (
-                          <p className="text-text-light mt-0.5 font-medium">{settings.working_hours}</p>
+                          <p className="text-text-light mt-0.5 font-medium whitespace-pre-line">{settings.working_hours}</p>
                         ) : (
                           <>
                             <p className="text-text-light mt-0.5 font-medium">Thứ 2 – Thứ 6: 17h15 – 20h00</p>

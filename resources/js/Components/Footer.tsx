@@ -112,7 +112,7 @@ export default function Footer() {
             </h4>
             <div className="flex flex-col gap-3.5 text-sm">
               {settings.working_hours ? (
-                <p className="text-sm text-text-light leading-relaxed">{settings.working_hours}</p>
+                <p className="text-sm text-text-light leading-relaxed whitespace-pre-line">{settings.working_hours}</p>
               ) : (
                 <div className="flex flex-col gap-2.5">
                   <div>

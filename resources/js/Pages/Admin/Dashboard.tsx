@@ -8196,11 +8196,12 @@ export default function AdminDashboard(props: Props) {
                   <label className="block font-black text-slate-700 uppercase tracking-wider mb-1.5">
                     GIỜ LÀM VIỆC CHI TIẾT
                   </label>
-                  <input
-                    type="text"
+                  <textarea
+                    rows={3}
                     value={settingsData.working_hours || ''}
                     onChange={(e) => setSettingsData({ ...settingsData, working_hours: e.target.value })}
-                    className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3.5 text-sm text-slate-800 outline-none focus:border-[#004b87] focus:bg-white font-bold"
+                    className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3.5 text-sm text-slate-800 outline-none focus:border-[#004b87] focus:bg-white font-bold leading-relaxed resize-y"
+                    placeholder="Nhập giờ làm việc (ấn Enter để xuống dòng)..."
                   />
                 </div>
               </div>
