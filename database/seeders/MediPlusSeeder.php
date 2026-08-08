@@ -492,7 +492,15 @@ class MediPlusSeeder extends Seeder
             ['slug' => 'chinh-sach-bao-mat'],
             [
                 'title' => 'Chính sách bảo mật thông tin bệnh nhân',
-                'content' => 'MediPlus HP cam kết bảo mật tuyệt đối toàn bộ hồ sơ bệnh án và thông tin cá nhân của bệnh nhân theo đúng quy định pháp luật y tế.'
+                'content' => 'Phòng khám Chuyên khoa Nội - BSCKII Đoàn Khôi cam kết bảo mật tuyệt đối toàn bộ hồ sơ bệnh án và thông tin cá nhân của bệnh nhân theo đúng quy định pháp luật y tế.'
+            ]
+        );
+
+        Policy::firstOrCreate(
+            ['slug' => 'dieu-khoan-dich-vu'],
+            [
+                'title' => 'Điều khoản sử dụng dịch vụ',
+                'content' => 'Mọi dịch vụ tư vấn, thăm khám và cận lâm sàng tại phòng khám được thực hiện tuân thủ quy trình chuyên môn y tế. Người bệnh vui lòng tham khảo và tuân thủ chỉ dẫn của bác sĩ.'
             ]
         );
 
