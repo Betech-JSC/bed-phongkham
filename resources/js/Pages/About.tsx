@@ -1,5 +1,6 @@
 import React from "react";
-import { Link, Head } from "@inertiajs/react";
+import { Link } from "@inertiajs/react";
+import SEOHead from "@/Components/SEOHead";
 import { 
   Award, 
   BookOpen, 
@@ -117,7 +118,21 @@ export default function About({ settings = {}, doctors = [], faqs = [] }: Props)
 
   return (
     <MainLayout>
-      <Head title="Giới thiệu về Bác sĩ & Phòng Khám" />
+      <SEOHead 
+        title="Giới thiệu Bác sĩ & Phòng Khám"
+        description="Thông tin giới thiệu về BSCKII Đoàn Khôi - Chuyên gia Nội Tim Mạch với hơn 20 năm kinh nghiệm khám và điều trị tại các bệnh viện lớn."
+        schema={{
+          "@context": "https://schema.org",
+          "@type": "Physician",
+          "name": "BSCKII Đoàn Khôi",
+          "medicalSpecialty": "Cardiovascular",
+          "description": "Bác sĩ Chuyên khoa II Nội Tim mạch hơn 20 năm kinh nghiệm điều trị các bệnh lý tim mạch, tăng huyết áp, suy tim và đột quỵ.",
+          "hospitalAffiliation": {
+            "@type": "MedicalClinic",
+            "name": "Phòng Khám Chuyên Khoa Nội - BSCKII Đoàn Khôi"
+          }
+        }}
+      />
       <div className="bg-neutral-bg min-h-screen pt-24 pb-20">
         
         {/* Page Header */}

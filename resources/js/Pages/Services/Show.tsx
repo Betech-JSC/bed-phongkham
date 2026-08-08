@@ -1,5 +1,6 @@
 import React from "react";
-import { Link, Head } from "@inertiajs/react";
+import { Link } from "@inertiajs/react";
+import SEOHead from "@/Components/SEOHead";
 import { 
   CheckCircle2, 
   Calendar, 
@@ -33,7 +34,22 @@ interface Props {
 export default function ServiceShow({ service }: Props) {
   return (
     <MainLayout>
-      <Head title={service?.title ? service.title : "Chi Tiết Dịch Vụ"} />
+      <SEOHead 
+        title={service?.title || "Chi Tiết Dịch Vụ"}
+        description={service?.description || service?.tagline || "Thông tin dịch vụ khám và tầm soát tim mạch tại phòng khám BSCKII Đoàn Khôi."}
+        schema={{
+          "@context": "https://schema.org",
+          "@type": "MedicalProcedure",
+          "name": service?.title,
+          "description": service?.description,
+          "procedureType": "NoninvasiveProcedure",
+          "howPerformed": service?.detailed_description,
+          "provider": {
+            "@type": "MedicalClinic",
+            "name": "Phòng Khám Chuyên Khoa Nội - BSCKII Đoàn Khôi"
+          }
+        }}
+      />
       <div className="bg-neutral-bg min-h-screen pt-24 pb-20">
         
         {/* Breadcrumbs */}

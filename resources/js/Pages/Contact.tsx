@@ -1,5 +1,6 @@
 import React, { useState } from "react";
-import { useForm, usePage, Head } from "@inertiajs/react";
+import { useForm, usePage } from "@inertiajs/react";
+import SEOHead from "@/Components/SEOHead";
 import { motion, AnimatePresence } from "motion/react";
 import { 
   MapPin, 
@@ -49,7 +50,16 @@ export default function Contact({ allServices = [], settings = {}, prefillServic
 
   return (
     <MainLayout>
-      <Head title="Đặt Lịch Khám & Liên Hệ" />
+      <SEOHead 
+        title="Đặt Lịch Khám & Liên Hệ"
+        description="Đặt lịch khám tim mạch trực tuyến với BSCKII Đoàn Khôi. Liên hệ tư vấn các gói tầm soát và quản lý điều trị tăng huyết áp, nhồi máu cơ tim, đột quỵ."
+        schema={{
+          "@context": "https://schema.org",
+          "@type": "ContactPage",
+          "name": "Đặt Lịch Khám & Liên Hệ",
+          "description": "Liên hệ phòng khám chuyên khoa Nội - Tim mạch BSCKII Đoàn Khôi."
+        }}
+      />
       <div className="bg-neutral-bg min-h-screen pt-24 pb-8">
         
         {/* Banner Header */}

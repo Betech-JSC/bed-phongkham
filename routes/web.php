@@ -21,6 +21,10 @@ Route::get('/tin-tuc/{slug}', [NewsController::class, 'show'])->name('news.show'
 Route::get('/lien-he', [AppointmentController::class, 'create'])->name('contact');
 Route::post('/lien-he', [AppointmentController::class, 'store'])->name('contact.store');
 
+// SEO Routes
+Route::get('/sitemap.xml', [\App\Http\Controllers\SitemapController::class, 'index'])->name('sitemap');
+Route::get('/robots.txt', [\App\Http\Controllers\SitemapController::class, 'robots'])->name('robots');
+
 // Admin Redirects
 Route::redirect('/admin', '/admin/dashboard');
 Route::get('/dashboard', fn() => redirect()->route('admin.dashboard'))->name('dashboard');

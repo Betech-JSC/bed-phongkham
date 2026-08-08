@@ -1,5 +1,6 @@
 import React from "react";
-import { Link, usePage, Head } from "@inertiajs/react";
+import { Link, usePage } from "@inertiajs/react";
+import SEOHead from "@/Components/SEOHead";
 import { 
   ArrowLeft, 
   Calendar, 
@@ -44,7 +45,27 @@ export default function NewsShow({ news, relatedNews, authorDetails }: Props) {
 
   return (
     <MainLayout>
-      <Head title={news?.title ? news.title : "Bài Viết Cẩm Nang"} />
+      <SEOHead 
+        title={news?.title || "Bài Viết Cẩm Nang"}
+        description={news?.excerpt || "Bài viết kiến thức y khoa chuyên sâu từ bác sĩ chuyên khoa tim mạch."}
+        image={news?.image}
+        type="article"
+        schema={{
+          "@context": "https://schema.org",
+          "@type": "MedicalWebPage",
+          "headline": news?.title,
+          "description": news?.excerpt,
+          "image": news?.image,
+          "author": {
+            "@type": "Person",
+            "name": news?.author || "BSCKII Đoàn Khôi"
+          },
+          "publisher": {
+            "@type": "MedicalClinic",
+            "name": "Phòng Khám Chuyên Khoa Nội - BSCKII Đoàn Khôi"
+          }
+        }}
+      />
       <div className="bg-neutral-bg min-h-screen pt-24 pb-20">
         
         {/* Breadcrumbs */}

@@ -1,5 +1,6 @@
 import React, { useState } from "react";
-import { Link, Head } from "@inertiajs/react";
+import { Link } from "@inertiajs/react";
+import SEOHead from "@/Components/SEOHead";
 import { ArrowRight, Calendar, Clock } from "lucide-react";
 import MainLayout from "@/Layouts/MainLayout";
 
@@ -34,7 +35,10 @@ export default function NewsIndex({ newsList = [] }: Props) {
 
   return (
     <MainLayout>
-      <Head title="Cẩm Nang Y Khoa & Tin Tức Sức Khỏe" />
+      <SEOHead 
+        title="Cẩm Nang Y Khoa & Tin Tức Sức Khỏe"
+        description="Tổng hợp các bài viết kiến thức y khoa, tư vấn phòng ngừa tăng huyết áp, đột quỵ và chăm sóc sức khỏe tim mạch từ chuyên gia BSCKII Đoàn Khôi."
+      />
       <div className="bg-neutral-bg min-h-screen pt-24 pb-20">
         
         {/* Page Header */}

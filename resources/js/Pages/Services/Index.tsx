@@ -1,5 +1,6 @@
 import React, { useState } from "react";
-import { Link, Head } from "@inertiajs/react";
+import { Link } from "@inertiajs/react";
+import SEOHead from "@/Components/SEOHead";
 import { motion, AnimatePresence } from "motion/react";
 import { 
   Heart, 
@@ -61,7 +62,10 @@ export default function ServicesIndex({ pillars = [], allServices = [] }: Props)
 
   return (
     <MainLayout>
-      <Head title="Dịch Vụ Y Tế & Gói Khám Tim Mạch" />
+      <SEOHead 
+        title="Dịch Vụ Y Tế & Gói Khám Tim Mạch"
+        description="Tổng hợp các gói khám tim mạch tổng quát, tầm soát tăng huyết áp, nhồi máu cơ tim, đột quỵ, rối loạn nhịp tim và dịch vụ theo dõi từ xa."
+      />
       <div className="bg-neutral-bg min-h-screen pt-24 pb-20">
         
         {/* Page Header */}

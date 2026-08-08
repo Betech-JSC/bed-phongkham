@@ -1,5 +1,6 @@
 import React from "react";
-import { Link, Head } from "@inertiajs/react";
+import { Link } from "@inertiajs/react";
+import SEOHead from "@/Components/SEOHead";
 import { 
   Heart, 
   Activity, 
@@ -184,7 +185,22 @@ export default function Home({ servicePillars, latestNews, featuredServices = []
 
   return (
     <MainLayout>
-      <Head title="Trang chủ" />
+      <SEOHead 
+        title="Trang chủ"
+        description="Phòng khám chuyên khoa Nội - Tim Mạch BSCKII Đoàn Khôi. Khám tầm soát, quản lý và điều trị chuyên sâu bệnh tim mạch, tăng huyết áp, nhồi máu cơ tim, đột quỵ."
+        schema={{
+          "@context": "https://schema.org",
+          "@type": "MedicalClinic",
+          "name": "Phòng Khám Chuyên Khoa Nội - BSCKII Đoàn Khôi",
+          "description": "Phòng khám chuyên khoa Nội - Tim mạch hàng đầu với đội ngũ bác sĩ chuyên khoa II.",
+          "medicalSpecialty": "Cardiovascular",
+          "availableService": [
+            { "@type": "MedicalProcedure", "name": "Khám tim mạch tổng quát" },
+            { "@type": "MedicalProcedure", "name": "Tầm soát tăng huyết áp" },
+            { "@type": "MedicalProcedure", "name": "Tầm soát nguy cơ nhồi máu cơ tim" }
+          ]
+        }}
+      />
       {/* 1. HERO BANNER SLIDER */}
       <section className="relative pt-[88px] pb-4 bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
