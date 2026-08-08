@@ -21,6 +21,11 @@ Route::get('/tin-tuc/{slug}', [NewsController::class, 'show'])->name('news.show'
 Route::get('/lien-he', [AppointmentController::class, 'create'])->name('contact');
 Route::post('/lien-he', [AppointmentController::class, 'store'])->name('contact.store');
 
+// Policies Public Routes
+Route::get('/chinh-sach-bao-mat', fn() => app(\App\Http\Controllers\PolicyController::class)->show('chinh-sach-bao-mat'))->name('policy.privacy');
+Route::get('/dieu-khoan-dich-vu', fn() => app(\App\Http\Controllers\PolicyController::class)->show('dieu-khoan-dich-vu'))->name('policy.terms');
+Route::get('/chinh-sach/{slug}', [\App\Http\Controllers\PolicyController::class, 'show'])->name('policy.show');
+
 // SEO Routes
 Route::get('/sitemap.xml', [\App\Http\Controllers\SitemapController::class, 'index'])->name('sitemap');
 Route::get('/robots.txt', [\App\Http\Controllers\SitemapController::class, 'robots'])->name('robots');
