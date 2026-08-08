@@ -1,6 +1,7 @@
 import React from "react";
 import { Link } from "@inertiajs/react";
 import SEOHead from "@/Components/SEOHead";
+import { motion } from "motion/react";
 import { 
   CheckCircle2, 
   Calendar, 
@@ -68,7 +69,12 @@ export default function ServiceShow({ service }: Props) {
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-12">
             
             {/* Left Column */}
-            <div className="lg:col-span-8 bg-white p-6 md:p-10 rounded-card shadow-sm flex flex-col gap-8">
+            <motion.div 
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.4 }}
+              className="lg:col-span-8 bg-white p-6 md:p-10 rounded-card shadow-sm flex flex-col gap-8"
+            >
               <div>
                 <div className="inline-flex items-center gap-2 px-3 py-1 bg-secondary/10 text-secondary rounded-full text-sm font-semibold uppercase tracking-wider mb-4">
                   Trụ cột: {service.pillar_title}
@@ -133,10 +139,15 @@ export default function ServiceShow({ service }: Props) {
                 </div>
               </div>
 
-            </div>
+            </motion.div>
 
             {/* Right Column */}
-            <div className="lg:col-span-4 flex flex-col gap-6">
+            <motion.div 
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.4, delay: 0.15 }}
+              className="lg:col-span-4 flex flex-col gap-6"
+            >
               
               <div className="bg-white p-8 rounded-card shadow-sm flex flex-col gap-6">
                 <div>
@@ -178,7 +189,7 @@ export default function ServiceShow({ service }: Props) {
                 </a>
               </div>
 
-            </div>
+            </motion.div>
 
           </div>
         </div>

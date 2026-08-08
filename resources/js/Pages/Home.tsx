@@ -1,6 +1,7 @@
 import React from "react";
 import { Link } from "@inertiajs/react";
 import SEOHead from "@/Components/SEOHead";
+import { motion } from "motion/react";
 import { 
   Heart, 
   Activity, 
@@ -312,10 +313,15 @@ export default function Home({ servicePillars, latestNews, featuredServices = []
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            {displayFeaturedServices.map((service) => (
-              <div 
-                key={service.id} 
-                className="bg-gradient-to-b from-[#FCFCFC] to-[#E9F5F5] p-6 rounded-card flex flex-col justify-between group shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300"
+            {displayFeaturedServices.map((service, idx) => (
+              <motion.div 
+                key={service.id}
+                initial={{ opacity: 0, y: 24 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true, margin: "-50px" }}
+                transition={{ duration: 0.4, delay: idx * 0.1 }}
+                whileHover={{ y: -6 }}
+                className="bg-gradient-to-b from-[#FCFCFC] to-[#E9F5F5] p-6 rounded-card flex flex-col justify-between group shadow-sm hover:shadow-xl transition-all duration-300"
               >
                 <div>
                   <div className="relative w-full aspect-[16/10] rounded-xl overflow-hidden mb-6 shadow-sm bg-slate-100">
@@ -340,7 +346,7 @@ export default function Home({ servicePillars, latestNews, featuredServices = []
                   Tìm hiểu thêm
                   <ArrowRight size={16} />
                 </Link>
-              </div>
+              </motion.div>
             ))}
           </div>
 
@@ -418,10 +424,15 @@ export default function Home({ servicePillars, latestNews, featuredServices = []
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            {servicePillars.map((pillar) => (
-              <div 
-                key={pillar.id} 
-                className="bg-white p-8 rounded-card border border-slate-100 shadow-[0_4px_12px_rgba(0,75,135,0.02)] hover:shadow-[0_12px_30px_rgba(0,75,135,0.06)] hover:bg-gradient-to-br hover:from-[#f0f9ff]/90 hover:to-[#e0f2fe]/90 transition-all duration-300 flex flex-col justify-between group hover:-translate-y-1 hover:border-primary/15"
+            {servicePillars.map((pillar, idx) => (
+              <motion.div 
+                key={pillar.id}
+                initial={{ opacity: 0, y: 24 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true, margin: "-50px" }}
+                transition={{ duration: 0.4, delay: idx * 0.12 }}
+                whileHover={{ y: -6 }}
+                className="bg-white p-8 rounded-card border border-slate-100 shadow-[0_4px_12px_rgba(0,75,135,0.02)] hover:shadow-[0_12px_30px_rgba(0,75,135,0.06)] hover:bg-gradient-to-br hover:from-[#f0f9ff]/90 hover:to-[#e0f2fe]/90 transition-all duration-300 flex flex-col justify-between group hover:border-primary/15"
               >
                 <div>
                   <div className="w-12 h-12 bg-primary/10 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300">
@@ -452,7 +463,7 @@ export default function Home({ servicePillars, latestNews, featuredServices = []
                   Chi tiết dịch vụ
                   <ArrowRight size={16} />
                 </Link>
-              </div>
+              </motion.div>
             ))}
           </div>
 
@@ -521,9 +532,14 @@ export default function Home({ servicePillars, latestNews, featuredServices = []
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            {latestNews.map((news) => (
-              <article 
+            {latestNews.map((news, idx) => (
+              <motion.article 
                 key={news.id}
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true, margin: "-50px" }}
+                transition={{ duration: 0.4, delay: idx * 0.1 }}
+                whileHover={{ y: -6 }}
                 className="bg-white rounded-card overflow-hidden border border-slate-100 shadow-sm hover:shadow-lg transition-all duration-300 flex flex-col justify-between"
               >
                 <div>
@@ -560,7 +576,7 @@ export default function Home({ servicePillars, latestNews, featuredServices = []
                     <ArrowRight size={12} className="group-hover:translate-x-0.5 transition-transform" />
                   </Link>
                 </div>
-              </article>
+              </motion.article>
             ))}
           </div>
         </div>

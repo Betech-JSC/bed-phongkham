@@ -1,6 +1,7 @@
 import React from "react";
 import { Link } from "@inertiajs/react";
 import SEOHead from "@/Components/SEOHead";
+import { motion } from "motion/react";
 import { 
   Award, 
   BookOpen, 
@@ -171,7 +172,13 @@ export default function About({ settings = {}, doctors = [], faqs = [] }: Props)
               <div className="flex flex-col lg:flex-row gap-8 lg:gap-12 items-start py-2">
                 
                 {/* Doctor Image & Quick Info (BỎ TEXT DƯỚI ẢNH BÁC SĨ, PHỐNG TO ẢNH BÁC SĨ) */}
-                <div className="w-full lg:w-80 shrink-0 flex flex-col gap-4 items-center lg:items-start text-center lg:text-left">
+                <motion.div 
+                  initial={{ opacity: 0, x: -30 }}
+                  whileInView={{ opacity: 1, x: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ duration: 0.5 }}
+                  className="w-full lg:w-80 shrink-0 flex flex-col gap-4 items-center lg:items-start text-center lg:text-left"
+                >
                   <div className="relative w-full aspect-[3/4] max-w-[320px] rounded-2xl overflow-hidden shadow-xs bg-slate-100">
                     <img
                       src={doctors[0]?.avatar || "/assets/doctor_khoi.png"}
@@ -179,10 +186,16 @@ export default function About({ settings = {}, doctors = [], faqs = [] }: Props)
                       className="w-full h-full object-cover"
                     />
                   </div>
-                </div>
+                </motion.div>
 
                 {/* Doctor Detailed Bio Content */}
-                <div className="flex-1 flex flex-col gap-6 text-sm text-text-primary leading-relaxed">
+                <motion.div 
+                  initial={{ opacity: 0, x: 30 }}
+                  whileInView={{ opacity: 1, x: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ duration: 0.5, delay: 0.1 }}
+                  className="flex-1 flex flex-col gap-6 text-sm text-text-primary leading-relaxed"
+                >
                   
                   {/* Name Header */}
                   <div>
@@ -223,7 +236,7 @@ export default function About({ settings = {}, doctors = [], faqs = [] }: Props)
                     </>
                   )}
 
-                </div>
+                </motion.div>
 
               </div>
 
