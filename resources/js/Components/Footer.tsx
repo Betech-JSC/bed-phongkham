@@ -168,8 +168,8 @@ export default function Footer() {
         <div className="flex flex-col sm:flex-row justify-between items-center gap-4 text-xs text-slate-400">
           <p>© {currentYear} {clinicName}. Đã đăng ký bản quyền. Giấy phép hoạt động Sở Y tế Hải Phòng.</p>
           <div className="flex gap-4">
-            <Link href="/lien-he" className="hover:text-primary">Chính sách bảo mật</Link>
-            <Link href="/lien-he" className="hover:text-primary">Điều khoản dịch vụ</Link>
+            <Link href="/chinh-sach-bao-mat" className="hover:text-primary transition-colors">Chính sách bảo mật</Link>
+            <Link href="/dieu-khoan-dich-vu" className="hover:text-primary transition-colors">Điều khoản dịch vụ</Link>
           </div>
         </div>
       </div>
